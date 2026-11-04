@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { shuffledIndices } from '../shuffle';
 import { inline } from '../text';
 
 export interface Prediction {
@@ -25,6 +26,8 @@ export function Stepper({ steps, children }: { steps: Step[]; children: (index: 
   const [playing, setPlaying] = useState(false);
   // Previsões já respondidas, pelo índice do passo, com a opção escolhida.
   const [answers, setAnswers] = useState<Record<number, number>>({});
+  // Ordem das opções de cada previsão, sorteada uma vez. Os índices continuam os originais.
+  const [orders] = useState(() => steps.map((s) => shuffledIndices(s.predict?.options.length ?? 0)));
   const nextIndex = index + 1;
   const next = steps[nextIndex];
   const asking = next?.predict && answers[nextIndex] === undefined;
@@ -56,7 +59,8 @@ export function Stepper({ steps, children }: { steps: Step[]; children: (index: 
         <div className="predict" role="group" aria-label="Previsão">
           <p className="predict-question">Antes de continuar: {inline(next.predict.question)}</p>
           <div className="predict-options">
-            {next.predict.options.map((option, i) => {
+            {orders[nextIndex].map((i) => {
+              const option = next.predict!.options[i];
               const state = picked === undefined ? '' : i === next.predict!.answer ? 'right' : i === picked ? 'wrong' : 'dim';
               return (
                 <button

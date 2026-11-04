@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { problems, subtopicNames, topicOf, type Problem } from './content';
+import { shuffledIndices } from './shuffle';
 import { inline, Paragraphs, StudyLinks } from './text';
 import { VisualPanel } from './visuals';
 import { DIFFICULTY_LABEL } from './RoadmapPage';
 
 export function QuizPage({ problem, solved, onSolved }: { problem: Problem; solved: boolean; onSolved: (slug: string) => void }) {
   const [picked, setPicked] = useState<number | null>(null);
+  // Sorteada uma vez por abertura do problema. `index` continua sendo a posição original no YAML.
+  const [order] = useState(() => shuffledIndices(problem.options!.length));
   const topic = topicOf(problem.slug);
   const next = problems[problems.indexOf(problem) + 1];
   const correct = picked === problem.answer;
@@ -36,7 +39,8 @@ export function QuizPage({ problem, solved, onSolved }: { problem: Problem; solv
       </details>
 
       <div className="options" role="group" aria-label="Opções de resposta">
-        {problem.options!.map((option, index) => {
+        {order.map((index) => {
+          const option = problem.options![index];
           const state = picked === index ? (correct ? 'right' : 'wrong') : '';
           return (
             <div key={option.text}>
