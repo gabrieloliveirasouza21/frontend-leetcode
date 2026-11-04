@@ -9,6 +9,8 @@ import { problems, subtopicNames, topicOf, type Problem } from './content';
 import { isAccepted, judge, previewDocument, type Mode, type Report } from './judge';
 import { SANDBOX } from './judge/frame';
 import { loadDraft, saveDraft } from './progress';
+import type { Card } from './review';
+import { ReviewBadge } from './ReviewPage';
 import { DIFFICULTY_LABEL } from './RoadmapPage';
 import { inline, Paragraphs, StudyLinks } from './text';
 import { VisualPanel } from './visuals';
@@ -142,7 +144,19 @@ function GivenFiles({ problem }: { problem: Problem }) {
   );
 }
 
-export function ProblemPage({ problem, solved, onSolved }: { problem: Problem; solved: boolean; onSolved: (slug: string) => void }) {
+interface PageProps {
+  problem: Problem;
+  solved: boolean;
+  onSolved: (slug: string) => void;
+  /** Histórico de revisão do problema, se já houve tentativa. */
+  card?: Card;
+  /** Registra o resultado da primeira entrega desta abertura. */
+  onAttempt: (slug: string, correct: boolean) => void;
+}
+
+export function ProblemPage({ problem, solved, onSolved, card, onAttempt }: PageProps) {
+  // Só a primeira entrega de cada abertura vale para a revisão. As seguintes são para aprender.
+  const recorded = useRef(false);
   const initialCode = problem.starter ?? defaultStarter(problem);
   const [code, setCode] = useState(() => loadDraft(problem.slug) ?? initialCode);
   // Trocar a chave recria o editor, porque ele nem sempre acompanha uma troca externa de `value`.
@@ -178,12 +192,17 @@ export function ProblemPage({ problem, solved, onSolved }: { problem: Problem; s
       try {
         const report = await judge(problem, code, mode);
         setOutput({ type: 'report', mode, report });
-        if (mode === 'submit' && isAccepted(report)) onSolved(problem.slug);
+        const ok = isAccepted(report);
+        if (mode === 'submit' && !recorded.current) {
+          recorded.current = true;
+          onAttempt(problem.slug, ok);
+        }
+        if (mode === 'submit' && ok) onSolved(problem.slug);
       } catch (error) {
         setOutput({ type: 'failure', message: (error as Error).message });
       }
     },
-    [code, problem, onSolved, refreshPreview],
+    [code, problem, onSolved, onAttempt, refreshPreview],
   );
 
   // Ref evita reconfigurar o editor a cada tecla só porque `evaluate` mudou.
@@ -213,6 +232,7 @@ export function ProblemPage({ problem, solved, onSolved }: { problem: Problem; s
           <h1>{problem.title}</h1>
           <span className={`badge ${problem.difficulty}`}>{DIFFICULTY_LABEL[problem.difficulty]}</span>
           {solved && <span className="badge done">Resolvido</span>}
+          <ReviewBadge card={card} />
         </div>
         <ul className="topics">
           {topic && <li className="topic-name">{topic.title}</li>}

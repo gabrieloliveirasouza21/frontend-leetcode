@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { schedule, type Card } from './review';
 
 const SOLVED_KEY = 'trilha-frontend:solved';
 
@@ -38,5 +39,38 @@ export function useSolved() {
   return { solved, markSolved };
 }
 
-export const loadDraft = (slug: string) => read(`trilha-frontend:draft:${slug}`);
+const REVIEW_KEY = 'trilha-frontend:revisao';
+
+/** Histórico de revisão por problema, salvo no navegador. */
+export function useReview() {
+  const [cards, setCards] = useState<Record<string, Card>>(() => {
+    try {
+      return JSON.parse(read(REVIEW_KEY) ?? '{}') as Record<string, Card>;
+    } catch {
+      return {};
+    }
+  });
+
+  const record = useCallback((slug: string, correct: boolean) => {
+    setCards((previous) => {
+      const next = { ...previous, [slug]: schedule(previous[slug], correct, Date.now()) };
+      write(REVIEW_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  return { cards, record };
+}
+
+/** Hora atual, atualizada a cada 30 segundos, para contadores de revisão. */
+export function useNow(intervalMs = 30_000) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
+export const loadDraft =(slug: string) => read(`trilha-frontend:draft:${slug}`);
 export const saveDraft = (slug: string, code: string) => write(`trilha-frontend:draft:${slug}`, code);

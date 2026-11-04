@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import { problems, subtopicNames, topicOf, type Problem } from './content';
 import { shuffledIndices } from './shuffle';
+import type { Card } from './review';
+import { ReviewBadge } from './ReviewPage';
 import { inline, Paragraphs, StudyLinks } from './text';
 import { VisualPanel } from './visuals';
 import { DIFFICULTY_LABEL } from './RoadmapPage';
 
-export function QuizPage({ problem, solved, onSolved }: { problem: Problem; solved: boolean; onSolved: (slug: string) => void }) {
+export function QuizPage({ problem, solved, onSolved, card, onAttempt }: {
+  problem: Problem;
+  solved: boolean;
+  onSolved: (slug: string) => void;
+  card?: Card;
+  onAttempt: (slug: string, correct: boolean) => void;
+}) {
   const [picked, setPicked] = useState<number | null>(null);
   // Sorteada uma vez por abertura do problema. `index` continua sendo a posição original no YAML.
   const [order] = useState(() => shuffledIndices(problem.options!.length));
@@ -14,6 +22,8 @@ export function QuizPage({ problem, solved, onSolved }: { problem: Problem; solv
   const correct = picked === problem.answer;
 
   const pick = (index: number) => {
+    // Só a primeira escolha vale para a revisão.
+    if (picked === null) onAttempt(problem.slug, index === problem.answer);
     setPicked(index);
     if (index === problem.answer) onSolved(problem.slug);
   };
@@ -25,6 +35,7 @@ export function QuizPage({ problem, solved, onSolved }: { problem: Problem; solv
         <h1>{problem.title}</h1>
         <span className={`badge ${problem.difficulty}`}>{DIFFICULTY_LABEL[problem.difficulty]}</span>
         {solved && <span className="badge done">Resolvido</span>}
+        <ReviewBadge card={card} />
       </div>
       <ul className="topics">
         {topic && <li className="topic-name">{topic.title}</li>}

@@ -266,3 +266,18 @@ kbd { margin-left: 4px; color: var(--muted); font: 11px var(--mono); }
 .statement-list li { margin: 2px 0; }
 .study-panel { margin: 16px 0; }
 .study-panel .study { margin-top: 8px; }
+
+/* Revisão espaçada */
+.topbar-nav { display: flex; align-items: center; gap: 16px; }
+.review-link { color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; }
+.review-link.due { color: var(--accent-ink); background: var(--accent); padding: 3px 10px; border-radius: 12px; }
+.badge.review { color: var(--muted); }
+.badge.review.due { color: var(--accent); }
+.check.missed { background: var(--bad); border-color: var(--bad); color: #1c0605; }
+.review-meta { display: block; color: var(--muted); font-size: 12px; }
+.review-when { flex: none; color: var(--muted); font-size: 13px; }
+.review-list { margin-top: 12px; }
+@media (max-width: 560px) {
+  .review-list .kind, .review-list .badge { display: none; }
+  .topbar-nav { gap: 10px; }
+}

@@ -66,6 +66,16 @@ Crie um arquivo em `content/problems/`, com um problema ou uma lista deles. O ca
 | `visual` | Opcional. Visualização interativa mostrada depois do enunciado, pelo id em `src/visuals/index.tsx` |
 | `study` | Obrigatório. Lista de `label` e `url` com fontes para estudar este exercício, mostradas antes das fontes do tópico |
 
+## Revisão espaçada
+
+A tela Revisar (`#/revisao`) mostra os problemas que venceram e as próximas revisões, e o topo do site mostra quantos estão pendentes. A lógica fica em `src/review.ts`:
+
+- a primeira resposta de cada abertura do problema conta: a primeira opção escolhida numa questão, ou a primeira entrega num exercício de código
+- acertou, o problema vai para o próximo intervalo: 10 min, 1 hora, 5 horas, 10 horas, 1 dia, 3 dias, 1 semana, 1 mês, 3 meses e 6 meses
+- errou, volta para 10 min
+
+O histórico fica no `localStorage`, como o progresso.
+
 ## Fontes de estudo
 
 Todo exercício tem pelo menos uma fonte própria em `study`, e o teste de conteúdo falha sem ela. Nos problemas conceituais, as fontes aparecem antes das opções, para a pessoa estudar antes de responder. Prefira o MDN em português e use a versão em inglês quando a página não tiver tradução, avisando no rótulo, como `(MDN, em inglês)`.
