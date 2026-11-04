@@ -61,6 +61,7 @@
   title: O headliner sumiu no meio
   difficulty: medio
   kind: dom
+  visual: especificidade
   editor: css
   in: [css/Seletores e cascata]
   html: |

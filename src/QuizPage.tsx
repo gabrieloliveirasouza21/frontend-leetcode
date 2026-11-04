@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { problems, subtopicNames, topicOf, type Problem } from './content';
-import { inline, Paragraphs } from './ProblemPage';
+import { inline, Paragraphs } from './text';
+import { VisualPanel } from './visuals';
 import { DIFFICULTY_LABEL } from './RoadmapPage';
 
 export function QuizPage({ problem, solved, onSolved }: { problem: Problem; solved: boolean; onSolved: (slug: string) => void }) {
@@ -27,6 +28,7 @@ export function QuizPage({ problem, solved, onSolved }: { problem: Problem; solv
         {subtopicNames(problem.slug).map((name) => <li key={name}>{name}</li>)}
       </ul>
       <Paragraphs text={problem.statement} />
+      {problem.visual && <VisualPanel id={problem.visual} />}
 
       <div className="options" role="group" aria-label="Opções de resposta">
         {problem.options!.map((option, index) => {

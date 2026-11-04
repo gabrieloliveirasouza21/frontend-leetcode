@@ -1,0 +1,30 @@
+- slug: menu-atras-do-banner
+  title: O menu com z-index 9999 que fica atrás
+  difficulty: dificil
+  kind: quiz
+  visual: empilhamento
+  in: [css/Posicionamento]
+  statement: |
+    O menu suspenso do cabeçalho abre por baixo do banner, mesmo com `z-index: 9999`. O CSS é este:
+
+    ```
+    .cabecalho { position: relative; z-index: 1; }
+    .menu      { position: absolute; z-index: 9999; }
+    .banner    { position: relative; z-index: 2; }
+    ```
+
+    O `.menu` fica dentro do `.cabecalho`. O banner é irmão do cabeçalho. Use a cena para afastar as camadas antes de responder.
+
+    Por que o menu fica atrás?
+  options:
+    - text: O cabeçalho, com position e z-index, cria um contexto de empilhamento. O menu só disputa posição dentro dele, e o cabeçalho inteiro fica abaixo do banner
+      why: Certo. O 9999 vale só entre os filhos do cabeçalho. Para o menu passar por cima, o cabeçalho precisa ficar acima do banner, ou o menu precisa sair dele.
+    - text: 9999 não é grande o bastante. Com 999999 o menu passa por cima
+      why: Nenhum valor resolve, porque o z-index do menu não é comparado com o do banner. Teste na cena.
+    - text: z-index só funciona em elementos com position fixed
+      why: z-index funciona em elementos posicionados, inclusive relative e absolute, e em itens flex e grid.
+    - text: O navegador desenha sempre o último elemento do HTML por cima
+      why: A ordem no HTML só desempata quando o z-index e o contexto são iguais.
+  answer: 0
+  explanation: |
+    Um contexto de empilhamento é um grupo de camadas que o navegador empilha como uma peça só. Um elemento com `position` e `z-index` diferente de `auto` cria um, e o mesmo vale para `opacity` menor que 1, `transform`, `filter` e outras propriedades. O z-index de um filho só ordena dentro do grupo do pai. As saídas são subir o z-index do cabeçalho, tirar o z-index que criou o contexto ou renderizar o menu fora dele, por exemplo com um portal ou o atributo `popover`.

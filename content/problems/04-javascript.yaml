@@ -682,6 +682,7 @@
   title: Três pedidos, uma espera
   difficulty: medio
   kind: js
+  visual: assincrono
   in: [javascript/Assíncrono]
   setup: |
     const api = {

@@ -164,6 +164,7 @@
   title: Mudamos de servidor, mas nem todo mundo viu
   difficulty: medio
   kind: quiz
+  visual: dns
   in: [internet/DNS and how it works?]
   statement: |
     A equipe trocou o registro A de `festivalruido.com.br` para o IP do servidor novo. Uma hora depois, parte do público ainda chega ao servidor antigo. O TTL do registro era de 86400 segundos.
@@ -186,6 +187,7 @@
   title: A página em branco
   difficulty: medio
   kind: quiz
+  visual: renderizacao
   in: [internet/Browsers and how they work?]
   statement: |
     A página do line-up tem `<script src="analytics.js"></script>` no início do `<head>`. Quando o servidor desse script fica lento, a página inteira demora a aparecer.

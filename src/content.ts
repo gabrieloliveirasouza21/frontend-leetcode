@@ -27,6 +27,8 @@ export interface Problem extends JudgedProblem {
   traps: { reason: string; code: string }[];
   options?: QuizOption[];
   answer?: number;
+  /** Visualização interativa mostrada depois do enunciado, pelo id em src/visuals. */
+  visual?: string;
 }
 
 export interface Subtopic {

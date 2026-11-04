@@ -60,6 +60,17 @@ Crie um arquivo em `content/problems/`, com um problema ou uma lista deles. O ca
 | `hints`, `explanation` | Dicas progressivas e solução comentada |
 | `traps` | Respostas erradas comuns, com `reason` e `code`, que o corretor precisa reprovar |
 | `options`, `answer` | Só em `quiz`. Lista de `text` e `why`, e o índice da resposta certa |
+| `visual` | Opcional. Visualização interativa mostrada depois do enunciado, pelo id em `src/visuals/index.tsx` |
+
+## Visualizações
+
+Temas teóricos ganham visualizações interativas em `src/visuals/`, carregadas só quando o problema abre:
+
+- `dns`, `renderizacao` e `assincrono`: animações passo a passo feitas com o componente `Stepper`. Antes de alguns passos, a pessoa prevê o que vai acontecer e só depois vê.
+- `especificidade`: calculadora em que dois seletores disputam a mesma propriedade.
+- `empilhamento`: as camadas da página em 3D, com Three.js, para mostrar contextos de empilhamento.
+
+Para criar uma, escreva o componente em `src/visuals/`, registre o id em `VISUALS` e use `visual: <id>` no problema. Um teste confere que todo id citado existe.
 
 `npm test` valida o conteúdo e roda o autoteste (`selftest.html`) no navegador: cada solução passa, cada armadilha e cada código inicial é reprovado. Uma armadilha aprovada indica que falta um teste oculto. O teste também falha se um problema ficar fora da trilha ou se um tópico ou subtópico ficar sem problema.
 

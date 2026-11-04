@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { css as cssLanguage } from '@codemirror/lang-css';
 import { html as htmlLanguage } from '@codemirror/lang-html';
 import { javascript } from '@codemirror/lang-javascript';
@@ -10,39 +10,8 @@ import { isAccepted, judge, previewDocument, type Mode, type Report } from './ju
 import { SANDBOX } from './judge/frame';
 import { loadDraft, saveDraft } from './progress';
 import { DIFFICULTY_LABEL } from './RoadmapPage';
-
-/** Renderiza `código` inline: enunciados são texto simples, sem Markdown completo. */
-export function inline(text: string): ReactNode[] {
-  return text.split(/(`[^`]+`)/g).map((part, i) =>
-    part.startsWith('`') && part.endsWith('`') && part.length > 2 ? <code key={i}>{part.slice(1, -1)}</code> : part,
-  );
-}
-
-/** Um parágrafo de texto, ou uma lista quando todas as linhas começam com `- ` ou `1. `. */
-function Block({ text }: { text: string }) {
-  const lines = text.trim().split('\n').map((line) => line.trim());
-  if (lines.every((line) => line.startsWith('- '))) {
-    return <ul className="statement-list">{lines.map((line, i) => <li key={i}>{inline(line.slice(2))}</li>)}</ul>;
-  }
-  if (lines.every((line) => /^\d+\.\s/.test(line))) {
-    return <ol className="statement-list">{lines.map((line, i) => <li key={i}>{inline(line.replace(/^\d+\.\s/, ''))}</li>)}</ol>;
-  }
-  return <p>{inline(text)}</p>;
-}
-
-/** Parágrafos separados por linha em branco. Blocos entre ``` viram código. */
-export function Paragraphs({ text }: { text: string }) {
-  const blocks = text.trim().split(/(```[\s\S]*?```)/g).filter((block) => block.trim());
-  return (
-    <>
-      {blocks.flatMap((block, b) =>
-        block.startsWith('```')
-          ? [<pre key={b} className="schema">{block.replace(/^```\w*\n?/, '').replace(/\n?```$/, '')}</pre>]
-          : block.trim().split(/\n\s*\n/).map((paragraph, i) => <Block key={`${b}-${i}`} text={paragraph} />),
-      )}
-    </>
-  );
-}
+import { inline, Paragraphs } from './text';
+import { VisualPanel } from './visuals';
 
 const codeList = (terms: string[]) => terms.flatMap((term, i) => [i ? ', ' : null, <code key={term}>{term}</code>]);
 
@@ -250,6 +219,7 @@ export function ProblemPage({ problem, solved, onSolved }: { problem: Problem; s
           {subtopicNames(problem.slug).map((name) => <li key={name}>{name}</li>)}
         </ul>
         <Paragraphs text={problem.statement} />
+        {problem.visual && <VisualPanel id={problem.visual} />}
         {(problem.must_use?.length || problem.forbid?.length) && (
           <p className="muted">
             {problem.must_use?.length ? <>Precisa usar: {codeList(problem.must_use)}. </> : null}

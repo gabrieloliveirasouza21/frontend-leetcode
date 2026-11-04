@@ -62,6 +62,14 @@ describe('conteúdo', () => {
   });
 });
 
+describe('visualizações', () => {
+  it('todo visual citado existe', async () => {
+    const { VISUALS } = await import('../src/visuals');
+    const missing = problems.filter((p) => p.visual && !VISUALS[p.visual]).map((p) => `${p.slug}: ${p.visual}`);
+    expect(missing).toEqual([]);
+  });
+});
+
 describe('regras', () => {
   const js = { kind: 'js' as const };
   it('ignora comentários e textos entre aspas', () => {
