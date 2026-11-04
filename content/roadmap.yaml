@@ -45,8 +45,8 @@ sections:
             url: https://developer.mozilla.org/pt-BR/docs/Learn/CSS
           - label: Flexbox (MDN)
             url: https://developer.mozilla.org/pt-BR/docs/Learn/CSS/CSS_layout/Flexbox
-          - label: Grid (MDN)
-            url: https://developer.mozilla.org/pt-BR/docs/Learn/CSS/CSS_layout/Grids
+          - label: Grid (MDN, em inglês)
+            url: https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Grids
         subtopics:
           - { name: Seletores e cascata, problems: [] }
           - { name: Box model, problems: [] }
@@ -260,6 +260,7 @@ sections:
           - { name: URL e histórico, problems: [] }
           - { name: Observadores, problems: [] }
           - { name: Cancelamento e tempo, problems: [] }
+          - { name: Workers e animação, problems: [] }
       - id: web-security
         title: Web Security
         summary: Os ataques mais comuns contra o frontend e as defesas que o navegador oferece.

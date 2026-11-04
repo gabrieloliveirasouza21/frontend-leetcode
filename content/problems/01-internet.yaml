@@ -2,7 +2,11 @@
   title: O ingresso atravessou o oceano
   difficulty: facil
   kind: quiz
+  visual: pacotes
   in: [internet/How does the internet work?]
+  study:
+    - { label: "Como a internet funciona (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Howto/Web_mechanics/How_does_the_Internet_work" }
+    - { label: "TCP no glossário do MDN", url: "https://developer.mozilla.org/pt-BR/docs/Glossary/TCP" }
   statement: |
     Uma fã em Lisboa compra ingresso no site do festival, hospedado em São Paulo. A página chega inteira, mas os dados não viajaram por um cabo exclusivo entre as duas cidades.
 
@@ -25,6 +29,9 @@
   difficulty: facil
   kind: quiz
   in: [internet/What is HTTP?]
+  study:
+    - { label: "Métodos de requisição HTTP (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods" }
+    - { label: "Códigos de status HTTP (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status" }
   statement: |
     O formulário de cadastro do fã clube envia nome e e-mail para `/api/fas`. O servidor grava o fã e responde.
 
@@ -47,6 +54,8 @@
   difficulty: facil
   kind: js
   in: [internet/What is HTTP?]
+  study:
+    - { label: "Códigos de status HTTP (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status" }
   statement: |
     O painel de monitoramento do site mostra uma etiqueta para cada resposta HTTP.
 
@@ -121,6 +130,8 @@
   difficulty: facil
   kind: quiz
   in: [internet/What is Domain Name?]
+  study:
+    - { label: "O que é um nome de domínio (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_domain_name" }
   statement: |
     O festival usa o endereço `ingressos.festivalruido.com.br`.
 
@@ -143,6 +154,8 @@
   difficulty: facil
   kind: quiz
   in: [internet/What is hosting?]
+  study:
+    - { label: "O que é um servidor web (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_web_server" }
   statement: |
     O site do festival tem duas partes: as páginas de line-up, iguais para todo mundo e geradas no build, e a venda de ingressos, que consulta estoque e cobra o cartão.
 
@@ -166,6 +179,9 @@
   kind: quiz
   visual: dns
   in: [internet/DNS and how it works?]
+  study:
+    - { label: "DNS no glossário do MDN, em inglês", url: "https://developer.mozilla.org/en-US/docs/Glossary/DNS" }
+    - { label: "Como o DNS funciona, em quadrinhos (em inglês)", url: "https://howdns.works/" }
   statement: |
     A equipe trocou o registro A de `festivalruido.com.br` para o IP do servidor novo. Uma hora depois, parte do público ainda chega ao servidor antigo. O TTL do registro era de 86400 segundos.
 
@@ -189,6 +205,9 @@
   kind: quiz
   visual: renderizacao
   in: [internet/Browsers and how they work?]
+  study:
+    - { label: "Como os navegadores funcionam (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/How_browsers_work" }
+    - { label: "O elemento script, com defer e async (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/script" }
   statement: |
     A página do line-up tem `<script src="analytics.js"></script>` no início do `<head>`. Quando o servidor desse script fica lento, a página inteira demora a aparecer.
 

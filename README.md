@@ -1,6 +1,6 @@
 # Trilha Frontend
 
-Plataforma estilo LeetCode organizada como uma trilha de estudo de frontend. O aluno resolve problemas de HTML, CSS, JavaScript, TypeScript, React e testes, e recebe correção automática no navegador, sem servidor.
+Plataforma estilo LeetCode organizada como uma trilha de estudo de frontend. São 296 exercícios de HTML, CSS, JavaScript, TypeScript, React, testes e conceitos, com correção automática no navegador, sem servidor. Cada exercício tem fontes para estudar, e os temas mais teóricos têm visualizações interativas em 2D e 3D.
 
 ## Rodar
 
@@ -8,9 +8,12 @@ Plataforma estilo LeetCode organizada como uma trilha de estudo de frontend. O a
 npm install
 npm run dev
 npm test
+npm run links
 ```
 
 `npm test` abre um navegador de verdade com o Playwright: o Edge no Windows e o Chrome nos outros sistemas. Para usar outro navegador instalado, defina `BROWSER_CHANNEL`. Para rodar só alguns problemas, use `ONLY=slug1,slug2 npm test`.
+
+`npm run links` confere se todos os links de estudo abrem. Ele fica fora do `npm test` porque depende da rede.
 
 ## Seções da trilha
 
@@ -61,14 +64,20 @@ Crie um arquivo em `content/problems/`, com um problema ou uma lista deles. O ca
 | `traps` | Respostas erradas comuns, com `reason` e `code`, que o corretor precisa reprovar |
 | `options`, `answer` | Só em `quiz`. Lista de `text` e `why`, e o índice da resposta certa |
 | `visual` | Opcional. Visualização interativa mostrada depois do enunciado, pelo id em `src/visuals/index.tsx` |
+| `study` | Obrigatório. Lista de `label` e `url` com fontes para estudar este exercício, mostradas antes das fontes do tópico |
+
+## Fontes de estudo
+
+Todo exercício tem pelo menos uma fonte própria em `study`, e o teste de conteúdo falha sem ela. Nos problemas conceituais, as fontes aparecem antes das opções, para a pessoa estudar antes de responder. Prefira o MDN em português e use a versão em inglês quando a página não tiver tradução, avisando no rótulo, como `(MDN, em inglês)`.
 
 ## Visualizações
 
-Temas teóricos ganham visualizações interativas em `src/visuals/`, carregadas só quando o problema abre:
+Temas teóricos ganham visualizações interativas em `src/visuals/`, carregadas só quando o problema abre. Um mesmo id pode servir a vários problemas.
 
-- `dns`, `renderizacao` e `assincrono`: animações passo a passo feitas com o componente `Stepper`. Antes de alguns passos, a pessoa prevê o que vai acontecer e só depois vê.
-- `especificidade`: calculadora em que dois seletores disputam a mesma propriedade.
-- `empilhamento`: as camadas da página em 3D, com Three.js, para mostrar contextos de empilhamento.
+- **Passo a passo**, com o componente `Stepper`. Antes de alguns passos, a pessoa prevê o que vai acontecer e só depois vê: `dns`, `pacotes`, `renderizacao`, `assincrono`, `event-loop`, `eventos`, `git` e `renderizacao-servidor`.
+- **Diagramas de sequência**, com o `SequenceDiagram`: `cors`, `cache-http`, `service-worker` e `agente`.
+- **Laboratórios**, em que a pessoa mexe nos valores: `especificidade`, `flexbox` e `box-model`.
+- **Cenas 3D** com Three.js: `empilhamento`, para contextos de empilhamento, e `composicao`, para camadas de composição em animações.
 
 Para criar uma, escreva o componente em `src/visuals/`, registre o id em `VISUALS` e use `visual: <id>` no problema. Um teste confere que todo id citado existe.
 

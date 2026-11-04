@@ -3,6 +3,9 @@
   difficulty: medio
   kind: quiz
   in: [auth-strategies]
+  study:
+    - { label: "Cookies HTTP (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Guides/Cookies" }
+    - { label: "Gerenciamento de sessão (OWASP)", url: "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html" }
   statement: |
     Depois do login, o servidor precisa reconhecer o fã nas próximas requisições. O site tem muitos scripts de terceiros, como analytics e chat, e um XSS em qualquer um deles poderia rodar código na página.
 
@@ -25,6 +28,9 @@
   difficulty: medio
   kind: js
   in: [auth-strategies]
+  study:
+    - { label: "Introdução ao JWT", url: "https://jwt.io/introduction" }
+    - { label: "Base64 no glossário do MDN", url: "https://developer.mozilla.org/pt-BR/docs/Glossary/Base64" }
   statement: |
     Um JWT tem três partes separadas por ponto: cabeçalho, carga e assinatura. A carga é um JSON codificado em base64url. O campo `exp` guarda o vencimento em segundos desde 1970.
 
@@ -96,6 +102,8 @@
   difficulty: medio
   kind: quiz
   in: [module-bundlers/Vite]
+  study:
+    - { label: "Por que Vite", url: "https://vite.dev/guide/why.html" }
   statement: |
     Num projeto grande, o servidor de desenvolvimento antigo levava um minuto para abrir. Com o Vite, abre em segundos.
 
@@ -118,6 +126,9 @@
   difficulty: medio
   kind: quiz
   in: [module-bundlers/esbuild, module-bundlers/SWC]
+  study:
+    - { label: "Limitações do TypeScript no esbuild", url: "https://esbuild.github.io/content-types/#typescript-caveats" }
+    - { label: "Documentação do SWC", url: "https://swc.rs/docs/getting-started" }
   statement: |
     O build com esbuild terminou sem reclamar, mas o editor mostra um erro de tipo no TypeScript. Em produção, a função recebeu `undefined` e quebrou.
 
@@ -140,6 +151,9 @@
   difficulty: medio
   kind: quiz
   in: [module-bundlers/Rollup, module-bundlers/Rolldown]
+  study:
+    - { label: "Tree shaking no glossário do MDN, em inglês", url: "https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking" }
+    - { label: "Tree shaking no Rollup", url: "https://rollupjs.org/introduction/#tree-shaking" }
   statement: |
     O site usa só a função `formatarData` de uma biblioteca de utilitários enorme. Mesmo assim, o bundle de produção inclui a biblioteca toda.
 
@@ -162,6 +176,8 @@
   difficulty: facil
   kind: quiz
   in: [module-bundlers/Parcel]
+  study:
+    - { label: "Começando com o Parcel", url: "https://parceljs.org/getting-started/webapp/" }
   statement: |
     Você quer um protótipo com HTML, CSS e TypeScript funcionando em minutos, sem escrever arquivo de configuração. Alguém sugere `parcel index.html`.
 
@@ -184,6 +200,9 @@
   difficulty: facil
   kind: quiz
   in: [linters-formatters/ESLint, linters-formatters/Prettier]
+  study:
+    - { label: "Começando com o ESLint", url: "https://eslint.org/docs/latest/use/getting-started" }
+    - { label: "Prettier e linters", url: "https://prettier.io/docs/comparison" }
   statement: |
     Nas revisões, o time discute aspas simples ou duplas e também deixa passar bugs como variáveis nunca usadas e `await` esquecido em promessas.
 
@@ -206,6 +225,8 @@
   difficulty: facil
   kind: quiz
   in: [linters-formatters/Biome]
+  study:
+    - { label: "Começando com o Biome", url: "https://biomejs.dev/guides/getting-started/" }
   statement: |
     O projeto usa ESLint e Prettier, com plugins e configurações que às vezes brigam entre si. O time avalia o Biome.
 
@@ -228,6 +249,9 @@
   difficulty: medio
   kind: tests
   in: [testing/Vitest, testing/Jest]
+  study:
+    - { label: "Guia do Vitest", url: "https://vitest.dev/guide/" }
+    - { label: "Matchers do Jest", url: "https://jestjs.io/docs/using-matchers" }
   implementation: |
     function precoComCupom(preco, cupom) {
       if (cupom === 'RUIDO10') return Math.round(preco * 0.9 * 100) / 100;
@@ -318,6 +342,9 @@
   difficulty: medio
   kind: tests
   in: [testing/Jest, testing/Vitest]
+  study:
+    - { label: "Mocks no Vitest", url: "https://vitest.dev/guide/mocking.html" }
+    - { label: "Funções mock no Jest", url: "https://jestjs.io/docs/mock-functions" }
   implementation: |
     function avisarMudanca(show, novoHorario, enviar) {
       if (show.horario === novoHorario) return 0;
@@ -388,6 +415,9 @@
   difficulty: dificil
   kind: tests
   in: [testing/Vitest]
+  study:
+    - { label: "Testando código assíncrono (Jest)", url: "https://jestjs.io/docs/asynchronous" }
+    - { label: "resolves e rejects no Vitest", url: "https://vitest.dev/api/expect.html#resolves" }
   implementation: |
     async function reservar(api, setor, quantidade) {
       if (quantidade < 1 || quantidade > 6) throw new Error('Quantidade inválida');
@@ -488,6 +518,8 @@
   difficulty: medio
   kind: quiz
   in: [testing/Playwright]
+  study:
+    - { label: "Localizadores do Playwright", url: "https://playwright.dev/docs/locators" }
   statement: |
     O teste de ponta a ponta do checkout usa `page.locator('div.btn-wrapper > span.btn-primary:nth-child(2)')`. Toda vez que o design muda, o teste quebra, mesmo com o checkout funcionando.
 
@@ -510,6 +542,9 @@
   difficulty: medio
   kind: quiz
   in: [testing/Cypress, testing/Playwright]
+  study:
+    - { label: "Espera automática no Playwright", url: "https://playwright.dev/docs/actionability" }
+    - { label: "Retentativas no Cypress", url: "https://docs.cypress.io/app/core-concepts/retry-ability" }
   statement: |
     Um teste clica em `Comprar` e confere a mensagem de sucesso. Na sua máquina passa, na CI falha uma vez a cada dez, porque a API às vezes demora. Alguém sugere acrescentar `cy.wait(3000)`.
 
@@ -532,6 +567,9 @@
   difficulty: medio
   kind: js
   in: [web-apis/Armazenamento]
+  study:
+    - { label: "localStorage (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Window/localStorage" }
+    - { label: "Usando a Web Storage API (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API" }
   statement: |
     O app guarda as preferências do visitante no armazenamento do navegador, que recebe como parâmetro algo com a interface do `localStorage`: `getItem`, `setItem` e `removeItem`.
 
@@ -622,6 +660,9 @@
   difficulty: medio
   kind: js
   in: [web-apis/URL e histórico]
+  study:
+    - { label: "URLSearchParams (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/URLSearchParams" }
+    - { label: "History API (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/History_API" }
   statement: |
     Os filtros da agenda devem ir para a URL, para quem compartilha o link ver a mesma lista.
 
@@ -698,6 +739,8 @@
   difficulty: medio
   kind: quiz
   in: [web-apis/Observadores]
+  study:
+    - { label: "Intersection Observer (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API" }
   statement: |
     A página do line-up tem 200 cartões com vídeos de apresentação. Para não baixar tudo de uma vez, cada vídeo deve carregar só quando o cartão estiver perto de entrar na tela.
 
@@ -720,6 +763,8 @@
   difficulty: dificil
   kind: js
   in: [web-apis/Cancelamento e tempo]
+  study:
+    - { label: "AbortController (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/AbortController" }
   statement: |
     A busca de bandas dispara um `fetch` a cada pesquisa. Uma resposta lenta de uma pesquisa antiga não pode sobrescrever a mais recente, e o download antigo deve ser cancelado.
 
@@ -818,7 +863,11 @@
   title: Bloqueado por CORS
   difficulty: medio
   kind: quiz
+  visual: cors
   in: [web-security/CORS]
+  study:
+    - { label: "CORS (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Guides/CORS" }
+    - { label: "Política de mesma origem (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy" }
   statement: |
     O site em `https://ruido.com.br` chama `https://api.ruido.com.br/bandas` com `fetch`. O console mostra: "blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present".
 
@@ -841,6 +890,8 @@
   difficulty: facil
   kind: quiz
   in: [web-security/HTTPS]
+  study:
+    - { label: "Conteúdo misto (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Security/Mixed_content" }
   statement: |
     O site é servido em HTTPS, mas o navegador bloqueia o script do mapa do local, carregado de `http://mapas.exemplo.com/mapa.js`.
 
@@ -863,6 +914,8 @@
   difficulty: medio
   kind: quiz
   in: [web-security/CSP]
+  study:
+    - { label: "Content Security Policy (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Guides/CSP" }
   statement: |
     O site envia o cabeçalho `Content-Security-Policy: script-src 'self'`. Depois disso, um `onclick="comprar()"` escrito direto no HTML parou de funcionar, e um script injetado por XSS num comentário também foi bloqueado.
 
@@ -885,6 +938,9 @@
   difficulty: medio
   kind: js
   in: [web-security/OWASP Risks]
+  study:
+    - { label: "Prevenção de XSS (OWASP)", url: "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" }
+    - { label: "Entidades HTML (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Glossary/Entity" }
   statement: |
     O mural de recados monta HTML a partir do texto enviado pelos fãs. Antes de a equipe migrar para `textContent`, escreva `escaparHTML(texto)`, que troca os caracteres especiais pelas entidades HTML:
 
@@ -941,6 +997,9 @@
   kind: dom
   editor: js
   in: [web-security/OWASP Risks]
+  study:
+    - { label: "Prevenção de XSS no DOM (OWASP)", url: "https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html" }
+    - { label: "textContent (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Node/textContent" }
   html: |
     <form id="mural">
       <label for="recado">Recado</label>

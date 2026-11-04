@@ -1,0 +1,368 @@
+- slug: rebase-ou-merge
+  title: Atualizar o branch da tarefa
+  difficulty: medio
+  kind: quiz
+  visual: git
+  in: [version-control/Git]
+  study:
+    - { label: "Rebase (Pro Git)", url: "https://git-scm.com/book/pt-br/v2/Ramifica%c3%a7%c3%a3o-Branching-no-Git-Rebase-Rebasing" }
+  statement: |
+    Seu branch `filtro` saiu da `main` há uma semana, e a `main` recebeu vários commits. Só você trabalha no `filtro`, que ainda não foi publicado. Você quer o histórico linear, como se tivesse começado o trabalho hoje.
+
+    Qual comando faz isso?
+  options:
+    - text: "`git rebase main`, estando no `filtro`, que reaplica seus commits em cima da main atual"
+      why: Certo. O rebase recria seus commits com novos pais, o que deixa a história linear. É seguro porque o branch não foi compartilhado.
+    - text: "`git merge main`, que é igual ao rebase"
+      why: O merge também traz as mudanças, mas cria um commit de merge e mantém a bifurcação no histórico.
+    - text: "`git reset --hard main`"
+      why: Isso descarta todos os seus commits do filtro.
+    - text: "`git push --force` na main"
+      why: Isso reescreve a main de todo mundo e não atualiza seu branch.
+  answer: 0
+  explanation: |
+    Merge e rebase integram mudanças de formas diferentes. O merge preserva a história como aconteceu, com um commit que junta os dois lados. O rebase reescreve seus commits como se tivessem sido feitos depois. A regra de ouro: não faça rebase de commits que outras pessoas já baixaram.
+
+- slug: ignorar-arquivos
+  title: O node_modules no repositório
+  difficulty: facil
+  kind: quiz
+  in: [version-control/Git]
+  study:
+    - { label: "gitignore (documentação oficial)", url: "https://git-scm.com/docs/gitignore" }
+  statement: |
+    O primeiro commit do projeto incluiu a pasta `node_modules`, com 40 mil arquivos, e o arquivo `.env`, com a senha do banco. Você criou um `.gitignore` com essas duas entradas, mas o Git continua rastreando os arquivos.
+
+    O que falta?
+  options:
+    - text: O `.gitignore` só vale para arquivos não rastreados. Tire-os do índice com `git rm -r --cached`, faça commit e troque a senha, que já está no histórico
+      why: Certo. Ignorar não apaga o que já foi commitado, e uma senha que entrou no histórico deve ser considerada vazada.
+    - text: Basta esperar o próximo commit, e o Git aplica o .gitignore
+      why: O Git continua rastreando arquivos que já fazem parte do repositório, mesmo listados no .gitignore.
+    - text: Renomear o .gitignore para .gitignore.txt
+      why: O nome precisa ser exatamente .gitignore.
+    - text: Apagar o repositório no GitHub resolve a senha
+      why: Quem clonou ou baixou antes ainda tem o histórico. A senha precisa ser trocada.
+  answer: 0
+  explanation: |
+    O `.gitignore` impede que arquivos novos entrem no Git, mas não remove os que já estão rastreados. `git rm --cached` tira do índice sem apagar do disco. Segredos commitados ficam no histórico, então troque a credencial e, se precisar limpar o histórico, use ferramentas como `git filter-repo`.
+
+- slug: achar-o-commit-com-bug
+  title: Qual commit quebrou?
+  difficulty: medio
+  kind: quiz
+  visual: git
+  in: [version-control/Git]
+  study:
+    - { label: "git bisect (documentação oficial)", url: "https://git-scm.com/docs/git-bisect" }
+  statement: |
+    A busca do line-up funcionava na versão de um mês atrás e hoje está quebrada. Há 200 commits no meio.
+
+    Qual é o jeito mais rápido de achar o commit culpado?
+  options:
+    - text: "`git bisect`, marcando um commit bom e um ruim, e testando o commit do meio a cada passo"
+      why: Certo. A busca binária acha o culpado entre 200 commits em cerca de 8 testes.
+    - text: Ler os 200 commits um por um
+      why: Funciona, mas leva muito mais tempo do que dividir o intervalo ao meio.
+    - text: "`git revert` de todos os commits do mês"
+      why: Isso desfaz o trabalho de todo mundo, sem saber qual commit causou o problema.
+    - text: "`git log --oneline` mostra o commit com bug"
+      why: O log lista os commits, mas não diz qual deles introduziu o defeito.
+  answer: 0
+  explanation: |
+    `git bisect` faz busca binária no histórico: a cada passo, o Git escolhe o commit do meio e você diz se ele está bom ou ruim. Com um script de teste, `git bisect run` automatiza tudo.
+
+- slug: commit-pequeno
+  title: Um commit, uma mudança
+  difficulty: facil
+  kind: quiz
+  in: [version-control/Git]
+  study:
+    - { label: "Gravando alterações (Pro Git)", url: "https://git-scm.com/book/pt-br/v2/Fundamentos-do-Git-Gravando-Altera%c3%a7%c3%b5es-no-Reposit%c3%b3rio" }
+    - { label: "git add --patch (documentação oficial)", url: "https://git-scm.com/docs/git-add" }
+  statement: |
+    No mesmo arquivo, você corrigiu um bug no cálculo de preço e também renomeou variáveis por estilo. Quer que a correção vá num commit separado, para poder ser revertida sozinha.
+
+    Como fazer?
+  options:
+    - text: "`git add -p`, escolhendo só os trechos da correção, e commitar. Depois, commitar o resto"
+      why: Certo. O modo interativo deixa escolher pedaços de um arquivo para o próximo commit.
+    - text: Fazer um commit só, com uma mensagem explicando as duas coisas
+      why: Funciona, mas a correção não pode mais ser revertida ou levada para outro branch sozinha.
+    - text: Copiar o arquivo, desfazer tudo e refazer as mudanças em duas etapas
+      why: É trabalhoso e arriscado. O Git já permite separar os trechos.
+    - text: Commitar e depois apagar o histórico
+      why: Isso perde informação e não separa as mudanças.
+  answer: 0
+  explanation: |
+    Commits pequenos e coesos tornam o histórico útil: fica fácil revisar, reverter e achar bugs com bisect. A área de preparação, o staging, existe para montar cada commit com exatamente o que ele deve conter.
+
+- slug: fork-ou-branch
+  title: Contribuir com um projeto aberto
+  difficulty: facil
+  kind: quiz
+  in: [vcs-hosting/GitHub]
+  study:
+    - { label: "Sobre forks (GitHub)", url: "https://docs.github.com/pt/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks" }
+  statement: |
+    Você quer corrigir um erro na documentação de uma biblioteca de código aberto no GitHub. Você não tem permissão de escrita no repositório.
+
+    Como propor a mudança?
+  options:
+    - text: Fazer um fork, criar um branch nele, commitar a correção e abrir um pull request para o repositório original
+      why: Certo. O fork é uma cópia sua, onde você pode escrever, e o pull request propõe a mudança aos mantenedores.
+    - text: Fazer push direto na main do projeto
+      why: Sem permissão de escrita, o push é recusado.
+    - text: Mandar o arquivo corrigido por e-mail aos mantenedores
+      why: Pode funcionar em alguns projetos, mas perde a revisão, os testes da CI e o histórico que o pull request oferece.
+    - text: Abrir uma issue com o texto corrigido e esperar alguém aplicar
+      why: Issues são boas para discutir, mas a forma de entregar a mudança é o pull request.
+  answer: 0
+  explanation: |
+    Num repositório em que você não pode escrever, o fork é o seu espaço para trabalhar. O pull request compara um branch do fork com o original e passa pela revisão e pela CI do projeto. Em times com acesso de escrita, branches no próprio repositório cumprem o mesmo papel.
+
+- slug: segredo-na-ci
+  title: A chave da API no workflow
+  difficulty: medio
+  kind: quiz
+  in: [vcs-hosting/GitHub, deployment/GitHub Pages]
+  study:
+    - { label: "Usando segredos no GitHub Actions", url: "https://docs.github.com/pt/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets" }
+  statement: |
+    O workflow de deploy precisa de uma chave de API para avisar o Slack. Alguém escreveu a chave direto no arquivo `.github/workflows/deploy.yml`.
+
+    Qual é o jeito certo?
+  options:
+    - text: Cadastrar a chave como segredo do repositório e usar `${{ secrets.SLACK_TOKEN }}` no workflow, trocando a chave que já vazou
+      why: Certo. Segredos ficam cifrados, não aparecem nos logs e não entram no código. A chave que esteve no arquivo já deve ser considerada exposta.
+    - text: Deixar no arquivo, porque o repositório é privado
+      why: Quem tem acesso ao repositório, ou a qualquer cópia dele, vê a chave. Repositórios privados também vazam.
+    - text: Codificar a chave em base64 no arquivo
+      why: Base64 não é criptografia. Qualquer pessoa decodifica em segundos.
+    - text: Imprimir a chave no log para conferir
+      why: Logs são visíveis para quem acessa o repositório. Segredos nunca devem ser impressos.
+  answer: 0
+  explanation: |
+    Plataformas de CI guardam segredos fora do código e os injetam como variáveis de ambiente durante a execução. Um segredo que já foi para o repositório deve ser revogado e trocado, porque continua no histórico.
+
+- slug: dependencia-par
+  title: O plugin e a versão do React
+  difficulty: dificil
+  kind: quiz
+  in: [package-managers/npm]
+  study:
+    - { label: "peerDependencies (npm)", url: "https://docs.npmjs.com/cli/v10/configuring-npm/package-json#peerdependencies" }
+  statement: |
+    Você publica um componente de calendário para React. Ele funciona com React 18 ou 19 e não deve instalar uma segunda cópia do React no projeto de quem usa.
+
+    Como declarar o React no `package.json` do componente?
+  options:
+    - text: Em `peerDependencies`, com a faixa `^18.0.0 || ^19.0.0`
+      why: Certo. A dependência par diz que o projeto anfitrião precisa ter o React, e o componente usa essa mesma cópia.
+    - text: Em `dependencies`, com `^18.0.0`
+      why: Isso pode instalar outra cópia do React, e duas cópias no mesmo app quebram os hooks.
+    - text: Não declarar, porque todo projeto React já tem React
+      why: Sem declarar, o gerenciador de pacotes não avisa quando a versão do projeto é incompatível.
+    - text: Copiar o código do React para dentro do componente
+      why: Isso duplica a biblioteca e causa os mesmos problemas de duas cópias.
+  answer: 0
+  explanation: |
+    `peerDependencies` é para plugins e componentes que funcionam dentro de outra biblioteca. Em vez de trazer a própria cópia, o pacote exige que o projeto tenha uma versão compatível. Isso evita duplicação, que no caso do React causa o erro de hooks inválidos.
+
+- slug: npx-e-scripts
+  title: Rodar o Vite sem instalar global
+  difficulty: facil
+  kind: quiz
+  in: [package-managers/npm, package-managers/pnpm]
+  study:
+    - { label: "npm run (npm)", url: "https://docs.npmjs.com/cli/v10/commands/npm-run-script" }
+    - { label: "npx (npm)", url: "https://docs.npmjs.com/cli/v10/commands/npx" }
+  statement: |
+    O Vite está em `devDependencies`. Uma pessoa nova no time tenta rodar `vite` no terminal e recebe `command not found`.
+
+    Qual é o jeito recomendado de rodar a ferramenta do projeto?
+  options:
+    - text: Usar um script do `package.json`, como `npm run dev`, ou `npx vite`, que procuram o executável em `node_modules/.bin`
+      why: Certo. Assim todos usam a versão do projeto, sem instalação global.
+    - text: Instalar o Vite globalmente com `npm install -g vite`
+      why: Funciona, mas cada pessoa pode ter uma versão diferente da que o projeto espera.
+    - text: Copiar o executável para a área de trabalho
+      why: Isso não tem relação com a forma como o terminal encontra comandos.
+    - text: Reinstalar o Node.js
+      why: O Node está funcionando. O executável do Vite só não está no PATH do terminal.
+  answer: 0
+  explanation: |
+    Pacotes com executáveis põem um link em `node_modules/.bin`. Scripts do `package.json` rodam com essa pasta no PATH, e `npx`, ou `pnpm exec`, faz o mesmo na linha de comando. Assim a versão usada é a do lockfile.
+
+- slug: ordenar-versoes
+  title: A versão mais nova
+  difficulty: medio
+  kind: js
+  in: [package-managers/npm]
+  study:
+    - { label: "Versionamento semântico", url: "https://semver.org/lang/pt-BR/" }
+  statement: |
+    Escreva `maisNova(versoes)`, que recebe uma lista de versões como `'1.9.0'` e `'1.10.2'` e devolve a maior. Versões com um sufixo de pré-lançamento, como `'2.0.0-beta.1'`, são menores que a versão final de mesmo número (`2.0.0`) e devem ser ignoradas se houver alguma versão final na lista.
+  solution: |
+    function maisNova(versoes) {
+      const partes = (v) => v.split('-')[0].split('.').map(Number);
+      const comparar = (a, b) => {
+        const [x, y] = [partes(a), partes(b)];
+        return x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || (a.includes('-') ? -1 : 0) - (b.includes('-') ? -1 : 0);
+      };
+      const finais = versoes.filter((v) => !v.includes('-'));
+      const candidatas = finais.length ? finais : versoes;
+      return [...candidatas].sort(comparar).at(-1);
+    }
+  tests:
+    - name: números com dois dígitos
+      code: |
+        expect(maisNova(['1.9.0', '1.10.2', '1.2.0'])).toBe('1.10.2');
+    - name: ignora pré-lançamento
+      hidden: true
+      code: |
+        expect(maisNova(['1.9.0', '2.0.0-beta.1'])).toBe('1.9.0');
+        expect(maisNova(['2.0.0-beta.1', '2.0.0'])).toBe('2.0.0');
+    - name: só pré-lançamentos
+      hidden: true
+      code: |
+        expect(maisNova(['2.0.0-beta.1', '1.0.0-rc.1'])).toBe('2.0.0-beta.1');
+    - name: maior versão principal
+      hidden: true
+      code: |
+        expect(maisNova(['10.0.0', '9.9.9'])).toBe('10.0.0');
+  hints:
+    - Compare número por número, não o texto inteiro.
+    - Filtre os pré-lançamentos primeiro, quando houver alguma versão final.
+  explanation: |
+    Comparar versões como texto falha em casos como `10.0.0` e `9.9.9`. Pelo versionamento semântico, pré-lançamentos têm precedência menor que a versão final e não são instalados por uma faixa comum como `^1.0.0`.
+  traps:
+    - reason: Compara como texto
+      code: |
+        function maisNova(v) { return [...v].sort().at(-1); }
+    - reason: Escolhe o pré-lançamento
+      code: |
+        function maisNova(v) { const p = (s) => s.split('-')[0].split('.').map(Number); return [...v].sort((a, b) => { const [x, y] = [p(a), p(b)]; return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; }).at(-1); }
+
+- slug: divisao-de-codigo
+  title: O mapa que pesa no bundle
+  difficulty: medio
+  kind: quiz
+  in: [module-bundlers/Vite, module-bundlers/Rollup, performance/Lighthouse]
+  study:
+    - { label: "import() dinâmico (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import" }
+    - { label: "Divisão de código (web.dev)", url: "https://web.dev/articles/reduce-javascript-payloads-with-code-splitting" }
+  statement: |
+    A página inicial carrega 900 KB de JavaScript, e 600 KB são de uma biblioteca de mapas usada só na página Local, que poucos visitantes abrem.
+
+    O que reduz o carregamento inicial?
+  options:
+    - text: Carregar o mapa com `import()` dinâmico quando a página Local abrir, e o bundler gera um arquivo separado para ele
+      why: Certo. O código do mapa sai do bundle inicial e só é baixado por quem precisa.
+    - text: Minificar a biblioteca de mapas
+      why: Ela provavelmente já vem minificada, e continuaria sendo baixada por todo mundo.
+    - text: Juntar todo o JavaScript num arquivo só
+      why: Isso não muda a quantidade de bytes baixados na página inicial.
+    - text: Mover o script do mapa para o fim do body
+      why: Ele seria baixado do mesmo jeito, só um pouco depois.
+  answer: 0
+  explanation: |
+    `import()` devolve uma promessa e indica ao bundler um ponto de divisão: Vite, Rollup e outros geram um chunk separado que só é baixado quando o código roda. O mesmo vale para rotas, em `React.lazy` e nos roteadores de cada framework.
+
+- slug: mapa-de-fonte
+  title: O erro na linha 1, coluna 48231
+  difficulty: medio
+  kind: quiz
+  in: [module-bundlers/esbuild, module-bundlers/Vite, performance/DevTools Usage]
+  study:
+    - { label: "Source map no glossário do MDN, em inglês", url: "https://developer.mozilla.org/en-US/docs/Glossary/Source_map" }
+  statement: |
+    O monitoramento de erros mostra `TypeError` em `index-a3f9.js:1:48231`. O arquivo é o JavaScript minificado de produção, e ninguém sabe a que parte do código aquilo corresponde.
+
+    O que resolve?
+  options:
+    - text: Gerar source maps no build e enviá-los à ferramenta de monitoramento, que traduz a posição para o arquivo e a linha originais
+      why: Certo. O source map liga cada trecho do código gerado ao código-fonte. Ele pode ficar privado, enviado só à ferramenta.
+    - text: Desativar a minificação em produção
+      why: Ajudaria a ler, mas aumenta os arquivos para todo mundo. O source map resolve sem esse custo.
+    - text: Procurar a coluna 48231 no arquivo à mão
+      why: Dá para achar o trecho minificado, mas com nomes encurtados e sem a estrutura original.
+    - text: Mudar o nome do arquivo para index.js
+      why: O nome não muda o conteúdo minificado.
+  answer: 0
+  explanation: |
+    Bundlers como Vite e esbuild podem gerar arquivos `.map` junto com o código. O DevTools e as ferramentas de monitoramento usam o mapa para mostrar o código-fonte original. Em produção, é comum gerar os mapas e enviá-los só ao serviço de erros, sem publicá-los.
+
+- slug: modos-de-build
+  title: A URL da API em cada ambiente
+  difficulty: medio
+  kind: quiz
+  in: [module-bundlers/Vite, deployment/Netlify]
+  study:
+    - { label: "Variáveis de ambiente e modos (Vite)", url: "https://vite.dev/guide/env-and-mode" }
+  statement: |
+    Em desenvolvimento, o site chama `http://localhost:3000/api`. Em produção, chama `https://api.ruido.com.br`. Hoje alguém troca o endereço no código antes de cada deploy, e às vezes esquece.
+
+    Como resolver com o Vite?
+  options:
+    - text: Definir `VITE_API_URL` em `.env.development` e `.env.production`, e ler com `import.meta.env.VITE_API_URL`
+      why: Certo. O Vite escolhe o arquivo pelo modo do build. O endereço da API é público, então pode ir para o cliente.
+    - text: Ler `process.env.API_URL` direto no navegador
+      why: O navegador não tem `process.env`. O Vite expõe variáveis por `import.meta.env`, e só as com prefixo VITE_.
+    - text: Manter um `if` com o nome do computador de cada pessoa
+      why: Isso é frágil e mistura configuração com código.
+    - text: Deixar os dois endereços e tentar um depois do outro
+      why: Isso gasta tempo a cada pedido e esconde erros de configuração.
+  answer: 0
+  explanation: |
+    Configuração que muda por ambiente fica fora do código. O Vite carrega `.env`, `.env.development` e `.env.production` conforme o modo e embute no build as variáveis com prefixo `VITE_`. Valores secretos nunca vão nessas variáveis, porque acabam no bundle.
+
+- slug: regra-dos-hooks
+  title: O aviso do ESLint no useEffect
+  difficulty: medio
+  kind: quiz
+  in: [linters-formatters/ESLint, learn-a-framework/React]
+  study:
+    - { label: "Regras dos hooks (React)", url: "https://react.dev/reference/rules/rules-of-hooks" }
+    - { label: "Removendo dependências de efeitos (React)", url: "https://react.dev/learn/removing-effect-dependencies" }
+  statement: |
+    O ESLint avisa: `React Hook useEffect has a missing dependency: 'dia'`. O efeito busca o line-up do `dia`, que vem por props, e o array de dependências está vazio. Alguém sugere desligar a regra nessa linha.
+
+    O que fazer?
+  options:
+    - text: Pôr `dia` nas dependências. Sem isso, o efeito não roda de novo quando o dia muda e mostra dados velhos
+      why: Certo. A regra existe para pegar exatamente esse bug. O array de dependências deve listar tudo o que o efeito usa.
+    - text: Desligar a regra, porque o efeito deve rodar só uma vez
+      why: O efeito usa dia. Rodar só uma vez significa ignorar as mudanças dele.
+    - text: Desligar o ESLint no projeto
+      why: Isso esconde esse e todos os outros avisos úteis.
+    - text: Copiar `dia` para uma variável global
+      why: Isso tira o valor do controle do React e cria outros bugs.
+  answer: 0
+  explanation: |
+    O plugin `eslint-plugin-react-hooks` confere se os hooks são usados nas regras do React e se as dependências estão completas. Um aviso de dependência faltando costuma indicar um bug de dados desatualizados. A correção é incluir a dependência ou reestruturar o efeito.
+
+- slug: formatar-no-commit
+  title: Formatação que ninguém esquece
+  difficulty: facil
+  kind: quiz
+  in: [linters-formatters/Prettier, linters-formatters/Biome]
+  study:
+    - { label: "Pre-commit hooks (Prettier)", url: "https://prettier.io/docs/precommit" }
+    - { label: "Integração com Git (Biome)", url: "https://biomejs.dev/guides/integrate-in-vcs/" }
+  statement: |
+    Metade do time esquece de rodar o formatador, e os pull requests vêm cheios de diferenças de espaço e aspas.
+
+    Qual combinação garante a formatação sem depender da memória de ninguém?
+  options:
+    - text: Formatar ao salvar no editor, rodar o formatador só nos arquivos alterados num hook de pre-commit e conferir a formatação na CI
+      why: Certo. O editor ajuda no dia a dia, o hook pega o que passou, e a CI garante para todos.
+    - text: Pedir no README que todos rodem o formatador
+      why: Depende da memória das pessoas, que é o problema.
+    - text: Formatar à mão durante a revisão
+      why: Consome o tempo da revisão com algo que uma ferramenta faz sozinha.
+    - text: Proibir pull requests com espaços
+      why: Isso não é uma regra que se possa aplicar sem ferramenta.
+  answer: 0
+  explanation: |
+    Formatação é um problema resolvido por ferramenta, como Prettier ou Biome. Automatizar em três pontos, no editor, no commit e na CI, tira o assunto da revisão. Ferramentas como `lint-staged` rodam o formatador só nos arquivos alterados, o que mantém o commit rápido.

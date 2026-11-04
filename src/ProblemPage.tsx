@@ -10,7 +10,7 @@ import { isAccepted, judge, previewDocument, type Mode, type Report } from './ju
 import { SANDBOX } from './judge/frame';
 import { loadDraft, saveDraft } from './progress';
 import { DIFFICULTY_LABEL } from './RoadmapPage';
-import { inline, Paragraphs } from './text';
+import { inline, Paragraphs, StudyLinks } from './text';
 import { VisualPanel } from './visuals';
 
 const codeList = (terms: string[]) => terms.flatMap((term, i) => [i ? ', ' : null, <code key={term}>{term}</code>]);
@@ -251,16 +251,8 @@ export function ProblemPage({ problem, solved, onSolved }: { problem: Problem; s
           </button>
         ) : null}
 
-        {topic && (
-          <>
-            <h3>Para estudar</h3>
-            <ul className="study">
-              {topic.study.map((link) => (
-                <li key={link.url}><a href={link.url} target="_blank" rel="noreferrer">{link.label}</a></li>
-              ))}
-            </ul>
-          </>
-        )}
+        <h3>Para estudar</h3>
+        <StudyLinks problem={problem} />
 
         {solved && (
           <details className="panel" open={accepted}>

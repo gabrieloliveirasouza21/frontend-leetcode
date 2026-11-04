@@ -3,6 +3,9 @@
   difficulty: facil
   kind: quiz
   in: [ai-assisted-coding/Claude Code, ai-assisted-coding/Antigravity]
+  study:
+    - { label: "Visão geral do Claude Code", url: "https://docs.claude.com/en/docs/claude-code/overview" }
+    - { label: "Memória e CLAUDE.md no Claude Code", url: "https://docs.claude.com/en/docs/claude-code/memory" }
   statement: |
     Você pediu a um agente de código, como o Claude Code ou o Antigravity, para adicionar um filtro de data à agenda. Ele terminou, disse que está tudo pronto e alterou vinte arquivos.
 
@@ -25,6 +28,8 @@
   difficulty: facil
   kind: quiz
   in: [ai-assisted-coding/Copilot, ai-assisted-coding/Cursor]
+  study:
+    - { label: "Boas práticas com o Copilot (GitHub)", url: "https://docs.github.com/pt/copilot/get-started/best-practices" }
   statement: |
     O assistente do editor sugere, com um Tab, uma função `formatarData` inteira. Ela parece certa e usa uma API de datas que você não conhece.
 
@@ -47,6 +52,9 @@
   difficulty: medio
   kind: quiz
   in: [ai-basics/How LLMs work]
+  study:
+    - { label: "Janelas de contexto (Anthropic)", url: "https://docs.claude.com/en/docs/build-with-claude/context-windows" }
+    - { label: "Glossário de termos de LLM (Anthropic)", url: "https://docs.claude.com/en/docs/about-claude/glossary" }
   statement: |
     Você cola no chat um arquivo enorme, de vários megabytes, e pergunta sobre uma função no fim dele. A resposta ignora essa função.
 
@@ -69,6 +77,8 @@
   difficulty: medio
   kind: quiz
   in: [ai-basics/AI vs Traditional Coding]
+  study:
+    - { label: "Glossário de termos de LLM (Anthropic)", url: "https://docs.claude.com/en/docs/about-claude/glossary" }
   statement: |
     O checkout calcula o total com taxas e descontos. Alguém sugere mandar o carrinho para um LLM e usar o número que ele devolver.
 
@@ -91,6 +101,8 @@
   difficulty: facil
   kind: quiz
   in: [ai-basics/Applications]
+  study:
+    - { label: "Guias de casos de uso (Anthropic)", url: "https://docs.claude.com/en/docs/about-claude/use-case-guides/overview" }
   statement: |
     O festival quer uma funcionalidade com IA no site. Qual destas aproveita melhor um modelo de linguagem?
   options:
@@ -111,6 +123,8 @@
   difficulty: medio
   kind: quiz
   in: [ai-basics/Code Reviews]
+  study:
+    - { label: "Como fazer code review (Google)", url: "https://google.github.io/eng-practices/review/reviewer/" }
   statement: |
     O time quer usar IA nas revisões de pull request. Qual uso é mais útil e seguro?
   options:
@@ -131,6 +145,9 @@
   difficulty: medio
   kind: quiz
   in: [ai-basics/Refactoring]
+  study:
+    - { label: "Refatoração (Martin Fowler)", url: "https://refactoring.com/" }
+    - { label: "Desenvolvimento guiado por testes (Martin Fowler)", url: "https://martinfowler.com/bliki/TestDrivenDevelopment.html" }
   statement: |
     O módulo de carrinho tem 800 linhas confusas e nenhum teste. Você quer pedir a uma IA para refatorá-lo.
 
@@ -153,6 +170,8 @@
   difficulty: facil
   kind: quiz
   in: [ai-basics/Docs Generation]
+  study:
+    - { label: "Reduzindo alucinações (Anthropic)", url: "https://docs.claude.com/en/docs/test-and-evaluate/strengthen-guardrails/reduce-hallucinations" }
   statement: |
     Você pediu para uma IA gerar o README do projeto. Ficou bem escrito e cita o comando `npm run deploy`, mas esse script não existe no package.json.
 
@@ -175,6 +194,8 @@
   difficulty: facil
   kind: quiz
   in: [prompting-techniques]
+  study:
+    - { label: "Seja claro e direto (Anthropic)", url: "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct" }
   statement: |
     O pedido "melhore este componente" voltou com mudanças em tudo: nomes, estilo e até a biblioteca de datas.
 
@@ -197,6 +218,8 @@
   difficulty: medio
   kind: quiz
   in: [prompting-techniques]
+  study:
+    - { label: "Exemplos no prompt (Anthropic)", url: "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/multishot-prompting" }
   statement: |
     Você quer que um modelo transforme descrições soltas de shows em JSON com `banda`, `dia` e `horario`. As descrições variam muito, e o formato da saída vem errado de vez em quando.
 
@@ -218,7 +241,10 @@
   title: O que faz um agente
   difficulty: medio
   kind: quiz
+  visual: agente
   in: [agents]
+  study:
+    - { label: "Construindo agentes eficazes (Anthropic)", url: "https://www.anthropic.com/engineering/building-effective-agents" }
   statement: |
     Qual descrição melhor define um agente construído sobre um LLM?
   options:
@@ -238,7 +264,11 @@
   title: Escreva o laço do agente
   difficulty: dificil
   kind: js
+  visual: agente
   in: [agents]
+  study:
+    - { label: "Uso de ferramentas (Anthropic)", url: "https://docs.claude.com/en/docs/agents-and-tools/tool-use/overview" }
+    - { label: "Construindo agentes eficazes (Anthropic)", url: "https://www.anthropic.com/engineering/building-effective-agents" }
   statement: |
     Escreva `async function rodarAgente(modelo, ferramentas, pergunta, maxPassos = 5)`.
 
@@ -343,6 +373,8 @@
   difficulty: medio
   kind: quiz
   in: [mcp]
+  study:
+    - { label: "Introdução ao MCP", url: "https://modelcontextprotocol.io/docs/getting-started/intro" }
   statement: |
     O time usa um assistente de IA e quer que ele leia os designs do Figma, os tickets e o banco de testes, sem escrever uma integração diferente para cada assistente.
 
@@ -365,6 +397,8 @@
   difficulty: medio
   kind: quiz
   in: [skills]
+  study:
+    - { label: "Agent Skills (Anthropic)", url: "https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview" }
   statement: |
     Seu time tem um processo longo para publicar matérias no CMS, com regras de estilo, um script de validação e modelos de texto. Colar tudo em cada conversa ocupa o contexto e quase sempre é desnecessário.
 
@@ -387,6 +421,9 @@
   difficulty: medio
   kind: js
   in: [implementing-ai/Anthropic]
+  study:
+    - { label: "API Messages (Anthropic)", url: "https://docs.claude.com/en/api/messages" }
+    - { label: "Visão geral da API (Anthropic)", url: "https://docs.claude.com/en/api/overview" }
   statement: |
     O backend do festival vai responder dúvidas com a API Messages da Anthropic. Escreva `async function perguntar(chave, modelo, pergunta)`:
 
@@ -472,6 +509,9 @@
   difficulty: facil
   kind: quiz
   in: [implementing-ai/Anthropic, implementing-ai/OpenAI, implementing-ai/Gemini]
+  study:
+    - { label: "Autenticação na API (Anthropic)", url: "https://docs.claude.com/en/api/overview" }
+    - { label: "Variáveis de ambiente no Vite", url: "https://vite.dev/guide/env-and-mode" }
   statement: |
     O site do festival é uma SPA hospedada como arquivos estáticos. Você quer chamar a API de um modelo, seja da Anthropic, da OpenAI ou do Google Gemini, a partir do chat de ajuda.
 

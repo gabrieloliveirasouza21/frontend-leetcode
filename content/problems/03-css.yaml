@@ -4,6 +4,8 @@
   kind: dom
   editor: css
   in: [css/Seletores e cascata]
+  study:
+    - { label: ":nth-child (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/:nth-child" }
   html: |
     <table class="agenda">
       <thead><tr><th>Horário</th><th>Banda</th></tr></thead>
@@ -64,6 +66,9 @@
   visual: especificidade
   editor: css
   in: [css/Seletores e cascata]
+  study:
+    - { label: "Especificidade (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/CSS_cascade/Specificity" }
+    - { label: "Cascata e conflitos de regras (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/Styling_basics/Handling_conflicts" }
   html: |
     <style>
       #lineup li { color: rgb(51, 51, 51); font-weight: 400; }
@@ -117,8 +122,12 @@
   title: O cartão estourou
   difficulty: facil
   kind: dom
+  visual: box-model
   editor: css
   in: [css/Box model]
+  study:
+    - { label: "O box model (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/Styling_basics/Box_model" }
+    - { label: "box-sizing (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/box-sizing" }
   html: |
     <div class="cards">
       <article class="card"><h3>Ferrugem</h3><p>Sábado, 16h</p></article>
@@ -176,8 +185,12 @@
   title: O menu empilhado
   difficulty: facil
   kind: dom
+  visual: flexbox
   editor: css
   in: [css/Flexbox]
+  study:
+    - { label: "Flexbox (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/CSS_layout/Flexbox" }
+    - { label: "Guia completo de Flexbox (CSS-Tricks)", url: "https://css-tricks.com/snippets/css/a-guide-to-flexbox/" }
   html: |
     <nav class="menu">
       <a class="logo" href="#">RUÍDO</a>
@@ -257,8 +270,12 @@
   title: O aviso no centro
   difficulty: facil
   kind: dom
+  visual: flexbox
   editor: css
   in: [css/Flexbox]
+  study:
+    - { label: "Alinhamento de caixas (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_box_alignment" }
+    - { label: "Flexbox (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/CSS_layout/Flexbox" }
   html: |
     <style>body { margin: 0; }</style>
     <div class="overlay">
@@ -311,8 +328,12 @@
   title: O rodapé flutuante
   difficulty: medio
   kind: dom
+  visual: flexbox
   editor: css
   in: [css/Flexbox]
+  study:
+    - { label: "A propriedade flex (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/flex" }
+    - { label: "min-height (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/min-height" }
   html: |
     <style>body { margin: 0; }</style>
     <div class="pagina">
@@ -350,7 +371,7 @@
         expect(rect('footer').top).toBeGreaterThan(innerHeight);
   hints:
     - O contêiner precisa ter pelo menos a altura da janela.
-    - Em coluna flex, o filho com `flex: 1` ocupa o espaço que sobrar.
+    - "Em coluna flex, o filho com `flex: 1` ocupa o espaço que sobrar."
   explanation: |
     `min-height: 100vh` deixa a página com pelo menos a altura da janela e permite crescer além dela. Em coluna flex, `flex: 1` no `main` absorve o espaço livre e empurra o rodapé para baixo. `position: fixed` parece funcionar, mas tira o rodapé do fluxo e faz ele cobrir o conteúdo longo.
   traps:
@@ -368,6 +389,9 @@
   kind: dom
   editor: css
   in: [css/Grid]
+  study:
+    - { label: "Grid (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Grids" }
+    - { label: "Guia completo de Grid (CSS-Tricks)", url: "https://css-tricks.com/snippets/css/complete-guide-grid/" }
   html: |
     <div class="galeria">
       <div class="poster">2019</div>
@@ -433,6 +457,8 @@
   kind: dom
   editor: css
   in: [css/Grid]
+  study:
+    - { label: "grid-template-areas (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-areas" }
   html: |
     <div class="layout">
       <header class="topo">Festival Ruído</header>
@@ -507,6 +533,9 @@
   kind: dom
   editor: css
   in: [css/Posicionamento]
+  study:
+    - { label: "Posicionamento (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Positioning" }
+    - { label: "Bloco de contenção (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block" }
   html: |
     <div class="setores">
       <article class="setor"><h3>Pista</h3><p>R$ 300</p><span class="selo">Esgotado</span></article>
@@ -544,7 +573,7 @@
       code: |
         expect(css('.selo', 'position')).toBe('absolute');
   hints:
-    - Um elemento com `position: absolute` se posiciona em relação ao ancestral posicionado mais próximo.
+    - "Um elemento com `position: absolute` se posiciona em relação ao ancestral posicionado mais próximo."
     - Sem nenhum ancestral posicionado, ele usa a página inteira como referência.
   explanation: |
     `position: absolute` tira o selo do fluxo e o posiciona em relação ao bloco de contenção, que é o ancestral mais próximo com `position` diferente de `static`. `position: relative` no cartão não o move, mas faz dele essa referência.
@@ -563,6 +592,8 @@
   kind: dom
   editor: css
   in: [css/Posicionamento]
+  study:
+    - { label: "A propriedade position, com sticky (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/position" }
   html: |
     <style>body { margin: 0; } section { height: 600px; border-bottom: 1px solid #ccc; }</style>
     <header class="topo">Festival Ruído · Line-up · Ingressos</header>
@@ -611,6 +642,9 @@
   kind: dom
   editor: css
   in: [css/Responsividade]
+  study:
+    - { label: "Media queries (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Media_queries" }
+    - { label: "Design responsivo (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/CSS_layout/Responsive_Design" }
   html: |
     <div class="lineup">
       <div class="banda">Ferrugem</div>
@@ -681,6 +715,9 @@
   kind: dom
   editor: css
   in: [css/Variáveis e temas]
+  study:
+    - { label: "Propriedades personalizadas, as variáveis CSS (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/Using_CSS_custom_properties" }
+    - { label: "prefers-color-scheme (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/@media/prefers-color-scheme" }
   html: |
     <main>
       <h1>Line-up</h1>
@@ -760,6 +797,8 @@
   kind: dom
   editor: css
   in: [css/Transições e animações]
+  study:
+    - { label: "Usando transições CSS (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/CSS_transitions/Using_CSS_transitions" }
   html: |
     <button class="comprar">Comprar ingresso</button>
   statement: |

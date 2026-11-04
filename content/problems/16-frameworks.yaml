@@ -1,0 +1,736 @@
+- slug: remover-da-lista
+  title: Tirar uma banda da lista
+  difficulty: facil
+  kind: react
+  in: [learn-a-framework/React]
+  study:
+    - { label: "Atualizando arrays no estado (React)", url: "https://react.dev/learn/updating-arrays-in-state" }
+  statement: |
+    Escreva `App` com a lista de favoritas `['Vórtice', 'Asfalto', 'Ferrugem']`. Cada `li` mostra o nome da banda num `span` e um botão `Remover`, que tira aquela banda da lista. Com a lista vazia, mostre um parágrafo `Nenhuma favorita`.
+  solution: |
+    import { useState } from 'react';
+
+    export default function App() {
+      const [bandas, setBandas] = useState(['Vórtice', 'Asfalto', 'Ferrugem']);
+      if (bandas.length === 0) return <p>Nenhuma favorita</p>;
+      return (
+        <ul>
+          {bandas.map((nome) => (
+            <li key={nome}>
+              <span>{nome}</span>
+              <button onClick={() => setBandas(bandas.filter((b) => b !== nome))}>Remover</button>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+  tests:
+    - name: remove a banda certa
+      code: |
+        click($$('li button')[1]);
+        await tick();
+        expect($$('li span').map((s) => s.textContent)).toEqual(['Vórtice', 'Ferrugem']);
+    - name: lista vazia
+      hidden: true
+      code: |
+        for (let i = 0; i < 3; i++) { click(el('li button')); await tick(); }
+        expect(text('p')).toBe('Nenhuma favorita');
+  hints:
+    - "`filter` cria um array novo sem o item. Não use `splice`, que altera o array do estado."
+  explanation: |
+    Estado em React é tratado como imutável: para remover, crie um array novo com `filter`. Alterar o array existente com `splice` não avisa o React, e a tela não muda.
+  traps:
+    - reason: splice no array do estado
+      code: |
+        import { useState } from 'react';
+        export default function App() {
+          const [b, setB] = useState(['Vórtice', 'Asfalto', 'Ferrugem']);
+          if (!b.length) return <p>Nenhuma favorita</p>;
+          return <ul>{b.map((n, i) => <li key={n}><span>{n}</span><button onClick={() => { b.splice(i, 1); setB(b); }}>Remover</button></li>)}</ul>;
+        }
+
+- slug: selecionar-todos
+  title: Selecionar todos os setores
+  difficulty: medio
+  kind: react
+  in: [learn-a-framework/React]
+  study:
+    - { label: "Escolhendo a estrutura do estado (React)", url: "https://react.dev/learn/choosing-the-state-structure" }
+    - { label: "indeterminate em checkboxes (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/input/checkbox" }
+  statement: |
+    Escreva `App` com uma lista de checkboxes para os setores `Pista`, `Premium` e `Camarote`, cada um com seu rótulo, e um checkbox `Todos` acima deles.
+
+    - marcar `Todos` marca os três, e desmarcar desmarca os três
+    - `Todos` fica marcado só quando os três estão marcados
+    - um parágrafo com `id="resumo"` mostra `<n> selecionados`
+  solution: |
+    import { useState } from 'react';
+
+    const SETORES = ['Pista', 'Premium', 'Camarote'];
+
+    export default function App() {
+      const [marcados, setMarcados] = useState([]);
+      const todos = marcados.length === SETORES.length;
+
+      const alternar = (setor) =>
+        setMarcados(marcados.includes(setor) ? marcados.filter((s) => s !== setor) : [...marcados, setor]);
+
+      return (
+        <>
+          <label>
+            <input type="checkbox" checked={todos} onChange={() => setMarcados(todos ? [] : SETORES)} /> Todos
+          </label>
+          {SETORES.map((setor) => (
+            <label key={setor}>
+              <input type="checkbox" checked={marcados.includes(setor)} onChange={() => alternar(setor)} /> {setor}
+            </label>
+          ))}
+          <p id="resumo">{marcados.length} selecionados</p>
+        </>
+      );
+    }
+  tests:
+    - name: marcar todos
+      code: |
+        click($$('input')[0]);
+        await tick();
+        expect($$('input').map((i) => i.checked)).toEqual([true, true, true, true]);
+        expect(text('#resumo')).toBe('3 selecionados');
+    - name: todos depende dos itens
+      hidden: true
+      code: |
+        click($$('input')[1]);
+        await tick();
+        click($$('input')[2]);
+        await tick();
+        expect($$('input')[0].checked).toBe(false);
+        click($$('input')[3]);
+        await tick();
+        expect($$('input')[0].checked).toBe(true);
+    - name: desmarcar todos
+      hidden: true
+      code: |
+        click($$('input')[0]);
+        await tick();
+        click($$('input')[0]);
+        await tick();
+        expect($$('input').some((i) => i.checked)).toBe(false);
+        expect(text('#resumo')).toBe('0 selecionados');
+  hints:
+    - Guarde só os setores marcados. O estado de `Todos` é calculado a partir deles.
+  explanation: |
+    Se `Todos` tivesse estado próprio, ele sairia de sincronia ao marcar os itens um a um. Derivar o valor a partir dos marcados mantém uma fonte de verdade só. Em interfaces reais, o estado parcial costuma aparecer com a propriedade `indeterminate` do checkbox.
+  traps:
+    - reason: Todos com estado próprio
+      code: |
+        import { useState } from 'react';
+        const S = ['Pista', 'Premium', 'Camarote'];
+        export default function App() {
+          const [m, setM] = useState([]);
+          const [t, setT] = useState(false);
+          return (<><label><input type="checkbox" checked={t} onChange={() => { setT(!t); setM(t ? [] : S); }} /> Todos</label>
+            {S.map((s) => <label key={s}><input type="checkbox" checked={m.includes(s)} onChange={() => setM(m.includes(s) ? m.filter((x) => x !== s) : [...m, s])} /> {s}</label>)}
+            <p id="resumo">{m.length} selecionados</p></>);
+        }
+
+- slug: tema-com-contexto
+  title: O tema em toda a árvore
+  difficulty: medio
+  kind: react
+  in: [learn-a-framework/React]
+  study:
+    - { label: "Passando dados a fundo com contexto (React)", url: "https://react.dev/learn/passing-data-deeply-with-context" }
+  statement: |
+    Escreva `App` com um contexto de tema:
+
+    - `App` guarda o tema, `claro` ou `escuro`, começando em `claro`, e fornece pelo contexto
+    - um componente `BotaoTema` alterna o tema, com o texto `Usar tema escuro` ou `Usar tema claro`
+    - um componente `Cartao`, dentro de um `Pagina`, lê o tema pelo contexto e mostra `Tema atual: <tema>`
+
+    Nem `Pagina` nem `Cartao` recebem o tema por props.
+  must_use: [createContext, useContext]
+  solution: |
+    import { createContext, useContext, useState } from 'react';
+
+    const TemaContexto = createContext(null);
+
+    function BotaoTema() {
+      const { tema, setTema } = useContext(TemaContexto);
+      return (
+        <button onClick={() => setTema(tema === 'claro' ? 'escuro' : 'claro')}>
+          {tema === 'claro' ? 'Usar tema escuro' : 'Usar tema claro'}
+        </button>
+      );
+    }
+
+    function Cartao() {
+      const { tema } = useContext(TemaContexto);
+      return <p className="cartao">Tema atual: {tema}</p>;
+    }
+
+    function Pagina() {
+      return <section><Cartao /></section>;
+    }
+
+    export default function App() {
+      const [tema, setTema] = useState('claro');
+      return (
+        <TemaContexto.Provider value={{ tema, setTema }}>
+          <BotaoTema />
+          <Pagina />
+        </TemaContexto.Provider>
+      );
+    }
+  tests:
+    - name: começa claro
+      code: |
+        expect(text('.cartao')).toBe('Tema atual: claro');
+        expect(text('button')).toBe('Usar tema escuro');
+    - name: alterna
+      hidden: true
+      code: |
+        click('button');
+        await tick();
+        expect(text('.cartao')).toBe('Tema atual: escuro');
+        expect(text('button')).toBe('Usar tema claro');
+  hints:
+    - "`createContext` cria o contexto, o `Provider` fornece o valor e `useContext` lê em qualquer descendente."
+  explanation: |
+    Contexto evita passar a mesma prop por componentes que não a usam. Quem fornece fica no topo, e quem consome lê direto. Use para dados realmente globais, como tema, idioma e usuário, e não como substituto de todo estado.
+  traps:
+    - reason: Valor fixo no Provider
+      code: |
+        import { createContext, useContext, useState } from 'react';
+        const T = createContext('claro');
+        function Cartao() { const t = useContext(T); return <p className="cartao">Tema atual: {t}</p>; }
+        export default function App() {
+          const [t, setT] = useState('claro');
+          return (<T.Provider value="claro"><button onClick={() => setT(t === 'claro' ? 'escuro' : 'claro')}>{t === 'claro' ? 'Usar tema escuro' : 'Usar tema claro'}</button><section><Cartao /></section></T.Provider>);
+        }
+
+- slug: hook-personalizado
+  title: O mesmo contador em dois lugares
+  difficulty: medio
+  kind: react
+  in: [learn-a-framework/React]
+  study:
+    - { label: "Reutilizando lógica com hooks personalizados (React)", url: "https://react.dev/learn/reusing-logic-with-custom-hooks" }
+  statement: |
+    Escreva o hook `useContador(inicial, maximo)`, que devolve `{ valor, mais, menos }`. `mais` soma 1 até o máximo, e `menos` subtrai 1 até zero.
+
+    Use o hook em dois componentes, `Ingressos`, que começa em 1 com máximo 6, e `Copos`, que começa em 0 com máximo 3. Cada um mostra o valor num `output` e tem botões `+` e `−`. `App` mostra os dois, cada um dentro de uma `section` com classes `ingressos` e `copos`.
+  must_use: [useContador]
+  solution: |
+    import { useState } from 'react';
+
+    function useContador(inicial, maximo) {
+      const [valor, setValor] = useState(inicial);
+      return {
+        valor,
+        mais: () => setValor((v) => Math.min(maximo, v + 1)),
+        menos: () => setValor((v) => Math.max(0, v - 1)),
+      };
+    }
+
+    function Contador({ nome, inicial, maximo }) {
+      const { valor, mais, menos } = useContador(inicial, maximo);
+      return (
+        <section className={nome}>
+          <button onClick={menos}>−</button>
+          <output>{valor}</output>
+          <button onClick={mais}>+</button>
+        </section>
+      );
+    }
+
+    export default function App() {
+      return (
+        <>
+          <Contador nome="ingressos" inicial={1} maximo={6} />
+          <Contador nome="copos" inicial={0} maximo={3} />
+        </>
+      );
+    }
+  tests:
+    - name: valores iniciais
+      code: |
+        expect(text('.ingressos output')).toBe('1');
+        expect(text('.copos output')).toBe('0');
+    - name: independentes
+      hidden: true
+      code: |
+        const mais = $$('.copos button').find((b) => b.textContent === '+');
+        click(mais);
+        await tick();
+        expect(text('.copos output')).toBe('1');
+        expect(text('.ingressos output')).toBe('1');
+    - name: limites
+      hidden: true
+      code: |
+        const mais = $$('.copos button').find((b) => b.textContent === '+');
+        for (let i = 0; i < 5; i++) { click(mais); await tick(); }
+        expect(text('.copos output')).toBe('3');
+        const menos = $$('.ingressos button').find((b) => b.textContent === '−');
+        for (let i = 0; i < 3; i++) { click(menos); await tick(); }
+        expect(text('.ingressos output')).toBe('0');
+  hints:
+    - Um hook personalizado é uma função que começa com `use` e chama outros hooks.
+    - Cada componente que chama o hook tem o próprio estado.
+  explanation: |
+    Hooks personalizados reaproveitam lógica com estado, não o estado em si: cada chamada cria um estado independente. A atualização com função, `setValor((v) => ...)`, garante o valor mais recente mesmo com cliques rápidos.
+  traps:
+    - reason: Estado compartilhado fora do componente
+      code: |
+        let v = 0;
+        function useContador(inicial, maximo) { const [, r] = useState(0); return { valor: v, mais: () => { v = Math.min(maximo, v + 1); r((x) => x + 1); }, menos: () => { v = Math.max(0, v - 1); r((x) => x + 1); } }; }
+        function C({ nome, inicial, maximo }) { const { valor, mais, menos } = useContador(inicial, maximo); return <section className={nome}><button onClick={menos}>−</button><output>{valor}</output><button onClick={mais}>+</button></section>; }
+        export default function App() { return <><C nome="ingressos" inicial={1} maximo={6} /><C nome="copos" inicial={0} maximo={3} /></>; }
+
+- slug: foco-com-ref
+  title: Foco no campo de busca
+  difficulty: facil
+  kind: react
+  in: [learn-a-framework/React, accessibility]
+  study:
+    - { label: "Manipulando o DOM com refs (React)", url: "https://react.dev/learn/manipulating-the-dom-with-refs" }
+  statement: |
+    Escreva `App` com um campo de busca com o rótulo `Buscar banda` e um botão `Buscar` acima dele. Clicar no botão põe o foco no campo, para a pessoa já começar a digitar.
+  must_use: [useRef]
+  solution: |
+    import { useRef } from 'react';
+
+    export default function App() {
+      const campo = useRef(null);
+      return (
+        <>
+          <button onClick={() => campo.current.focus()}>Buscar</button>
+          <label htmlFor="busca">Buscar banda</label>
+          <input id="busca" ref={campo} />
+        </>
+      );
+    }
+  tests:
+    - name: foco no campo
+      code: |
+        let focou = false;
+        el('input').addEventListener('focus', () => { focou = true; });
+        click('button');
+        await tick();
+        expect(focou).toBe(true);
+    - name: campo com rótulo
+      hidden: true
+      code: |
+        expect(el('input').labels[0].textContent).toBe('Buscar banda');
+  hints:
+    - "`useRef` guarda uma referência ao elemento do DOM, ligada pelo atributo `ref`."
+  explanation: |
+    Refs são a saída de emergência para o DOM quando o React não oferece um jeito declarativo, como foco, seleção de texto e medidas. Elas não causam renderização ao mudar. Por isso, não servem para guardar dados que aparecem na tela.
+  traps:
+    - reason: Busca o elemento pelo id
+      code: |
+        export default function App() { return <><button onClick={() => {}}>Buscar</button><label htmlFor="busca">Buscar banda</label><input id="busca" /></>; }
+
+- slug: busca-sem-pedidos-demais
+  title: Busca com espera
+  difficulty: dificil
+  kind: react
+  in: [learn-a-framework/React, performance/DevTools Usage]
+  study:
+    - { label: "Sincronizando com efeitos (React)", url: "https://react.dev/learn/synchronizing-with-effects" }
+  setup: |
+    window.pedidos = [];
+    window.fetch = (url) => {
+      window.pedidos.push(url);
+      const q = decodeURIComponent(url.split('q=')[1] ?? '');
+      const todas = ['Vórtice', 'Asfalto', 'Maré Negra'];
+      return Promise.resolve({ ok: true, json: async () => todas.filter((b) => b.toLowerCase().includes(q.toLowerCase())) });
+    };
+  statement: |
+    Escreva `App` com um campo com rótulo `Buscar` e uma lista de resultados. A busca chama `fetch('/api/busca?q=' + encodeURIComponent(texto))` e mostra os nomes devolvidos como `li`.
+
+    Para não chamar a API a cada tecla, espere 300ms sem digitação antes de buscar. Com o campo vazio, não busque e mostre a lista vazia.
+  solution: |
+    import { useEffect, useState } from 'react';
+
+    export default function App() {
+      const [texto, setTexto] = useState('');
+      const [resultados, setResultados] = useState([]);
+
+      useEffect(() => {
+        if (!texto.trim()) {
+          setResultados([]);
+          return;
+        }
+        let ativo = true;
+        const timer = setTimeout(async () => {
+          const resposta = await fetch('/api/busca?q=' + encodeURIComponent(texto));
+          const dados = await resposta.json();
+          if (ativo) setResultados(dados);
+        }, 300);
+        return () => {
+          ativo = false;
+          clearTimeout(timer);
+        };
+      }, [texto]);
+
+      return (
+        <>
+          <label htmlFor="q">Buscar</label>
+          <input id="q" value={texto} onChange={(e) => setTexto(e.target.value)} />
+          <ul>{resultados.map((r) => <li key={r}>{r}</li>)}</ul>
+        </>
+      );
+    }
+  tests:
+    - name: busca depois da pausa
+      code: |
+        type('input', 'mar');
+        await wait(400);
+        expect($$('li').map((li) => li.textContent)).toEqual(['Maré Negra']);
+    - name: um pedido por rajada
+      hidden: true
+      code: |
+        for (const t of ['v', 'vo', 'vor', 'vort']) { type('input', t); await wait(40); }
+        await wait(400);
+        expect(window.pedidos).toEqual(['/api/busca?q=vort']);
+    - name: campo vazio
+      hidden: true
+      code: |
+        type('input', 'a');
+        await wait(400);
+        type('input', '');
+        await wait(400);
+        expect($$('li')).toHaveLength(0);
+        expect(window.pedidos).toHaveLength(1);
+  hints:
+    - Agende a busca com `setTimeout` dentro do efeito, e cancele na função de limpeza.
+    - A limpeza roda antes do próximo efeito, ou seja, a cada nova tecla.
+  explanation: |
+    A função de limpeza do efeito é o lugar natural do debounce: cada mudança de texto cancela o timer anterior antes de criar outro. A flag `ativo` ainda descarta respostas que chegam depois de o texto mudar.
+  traps:
+    - reason: Busca a cada tecla
+      code: |
+        import { useEffect, useState } from 'react';
+        export default function App() {
+          const [t, setT] = useState(''); const [r, setR] = useState([]);
+          useEffect(() => { if (!t) { setR([]); return; } fetch('/api/busca?q=' + encodeURIComponent(t)).then((x) => x.json()).then(setR); }, [t]);
+          return (<><label htmlFor="q">Buscar</label><input id="q" value={t} onChange={(e) => setT(e.target.value)} /><ul>{r.map((x) => <li key={x}>{x}</li>)}</ul></>);
+        }
+    - reason: Timer sem limpeza
+      code: |
+        import { useEffect, useState } from 'react';
+        export default function App() {
+          const [t, setT] = useState(''); const [r, setR] = useState([]);
+          useEffect(() => { if (!t) { setR([]); return; } setTimeout(() => fetch('/api/busca?q=' + encodeURIComponent(t)).then((x) => x.json()).then(setR), 300); }, [t]);
+          return (<><label htmlFor="q">Buscar</label><input id="q" value={t} onChange={(e) => setT(e.target.value)} /><ul>{r.map((x) => <li key={x}>{x}</li>)}</ul></>);
+        }
+
+- slug: estado-preso-na-banda
+  title: A nota que vai para a banda errada
+  difficulty: dificil
+  kind: react
+  in: [learn-a-framework/React, conserte/Componentes]
+  study:
+    - { label: "Preservando e reiniciando o estado (React)", url: "https://react.dev/learn/preserving-and-resetting-state" }
+  starter: |
+    import { useState } from 'react';
+
+    function Anotacao({ banda }) {
+      const [nota, setNota] = useState('');
+      return (
+        <label>
+          Nota sobre {banda}
+          <textarea value={nota} onChange={(e) => setNota(e.target.value)} />
+        </label>
+      );
+    }
+
+    export default function App() {
+      const [banda, setBanda] = useState('Vórtice');
+      return (
+        <>
+          <button onClick={() => setBanda('Vórtice')}>Vórtice</button>
+          <button onClick={() => setBanda('Asfalto')}>Asfalto</button>
+          <Anotacao banda={banda} />
+        </>
+      );
+    }
+  statement: |
+    Você escreve uma nota sobre a Vórtice, troca para a Asfalto e a nota continua lá, como se fosse da Asfalto. Ao trocar de banda, a anotação deve começar vazia.
+
+    Corrija sem usar `useEffect`.
+  forbid: [useEffect]
+  solution: |
+    import { useState } from 'react';
+
+    function Anotacao({ banda }) {
+      const [nota, setNota] = useState('');
+      return (
+        <label>
+          Nota sobre {banda}
+          <textarea value={nota} onChange={(e) => setNota(e.target.value)} />
+        </label>
+      );
+    }
+
+    export default function App() {
+      const [banda, setBanda] = useState('Vórtice');
+      return (
+        <>
+          <button onClick={() => setBanda('Vórtice')}>Vórtice</button>
+          <button onClick={() => setBanda('Asfalto')}>Asfalto</button>
+          <Anotacao key={banda} banda={banda} />
+        </>
+      );
+    }
+  tests:
+    - name: começa vazia ao trocar
+      code: |
+        type('textarea', 'Show incrível');
+        await tick();
+        click($$('button')[1]);
+        await tick();
+        expect(el('textarea').value).toBe('');
+        expect(text('label')).toContain('Asfalto');
+    - name: mesma banda mantém a nota
+      hidden: true
+      code: |
+        type('textarea', 'Guardar isso');
+        await tick();
+        click($$('button')[0]);
+        await tick();
+        expect(el('textarea').value).toBe('Guardar isso');
+  hints:
+    - O React reaproveita o estado de um componente que continua na mesma posição da árvore, mesmo com props diferentes.
+    - Uma `key` diferente faz o React tratar o componente como outro, com estado novo.
+  explanation: |
+    O estado pertence à posição do componente na árvore. Trocar só a prop mantém o mesmo componente e o mesmo estado. Dar `key={banda}` diz ao React que cada banda é um componente distinto, então ele descarta o estado antigo. É mais simples e mais correto que zerar o estado num efeito.
+  traps:
+    - reason: Key fixa
+      code: |
+        import { useState } from 'react';
+        function A({ banda }) { const [n, setN] = useState(''); return <label>Nota sobre {banda}<textarea value={n} onChange={(e) => setN(e.target.value)} /></label>; }
+        export default function App() { const [b, setB] = useState('Vórtice'); return <><button onClick={() => setB('Vórtice')}>Vórtice</button><button onClick={() => setB('Asfalto')}>Asfalto</button><A key="nota" banda={b} /></>; }
+
+- slug: computed-no-vue
+  title: O total do carrinho no Vue
+  difficulty: medio
+  kind: quiz
+  in: [learn-a-framework/Vue.js]
+  study:
+    - { label: "Propriedades computadas (Vue)", url: "https://vuejs.org/guide/essentials/computed.html" }
+    - { label: "Observadores (Vue)", url: "https://vuejs.org/guide/essentials/watchers.html" }
+  statement: |
+    No Vue, o carrinho tem `const itens = ref([...])`. O total depende dos itens. Uma pessoa escreveu um `watch` que, a cada mudança, calcula o total e grava num outro `ref`.
+
+    Qual é a forma mais adequada?
+  options:
+    - text: "`const total = computed(() => itens.value.reduce(...))`, que deriva o valor e só recalcula quando os itens mudam"
+      why: Certo. computed é para valores derivados. Ele guarda o resultado em cache e se atualiza sozinho.
+    - text: Manter o watch, que é o jeito recomendado para valores derivados
+      why: watch serve para efeitos colaterais, como chamar uma API quando algo muda. Para derivar um valor, computed é mais simples e não sai de sincronia.
+    - text: Calcular o total dentro do template com um laço
+      why: Funciona, mas recalcula a cada renderização e deixa o template difícil de ler.
+    - text: Guardar o total no localStorage
+      why: Isso não tem relação com reatividade e cria outra fonte de verdade.
+  answer: 0
+  explanation: |
+    Valores que dependem de outros estados são derivados: no Vue, `computed`, no React, um cálculo durante a renderização ou `useMemo`. Guardar uma cópia derivada em outro estado, atualizada à mão, cria duas fontes de verdade, que eventualmente divergem.
+
+- slug: sinais-no-angular
+  title: O Angular com signals
+  difficulty: medio
+  kind: quiz
+  in: [learn-a-framework/Angular]
+  study:
+    - { label: "Signals (Angular)", url: "https://angular.dev/guide/signals" }
+  statement: |
+    Num componente Angular recente:
+
+    ```
+    quantidade = signal(1);
+    total = computed(() => this.quantidade() * 300);
+    ```
+
+    O template mostra `{{ total() }}`. Ao chamar `this.quantidade.set(2)`, o que acontece?
+  options:
+    - text: O computed `total` recalcula para 600, e o Angular atualiza só as partes do template que leem esse signal
+      why: Certo. Signals registram quem lê cada valor, e o framework atualiza com precisão.
+    - text: Nada, porque signals precisam de `detectChanges()` manual
+      why: Signals avisam o Angular automaticamente quando mudam.
+    - text: O componente é recriado do zero
+      why: Só o que depende do valor é atualizado. O componente continua o mesmo.
+    - text: "`total` continua 300, porque computed calcula uma vez só"
+      why: computed recalcula quando um signal que ele leu muda.
+  answer: 0
+  explanation: |
+    Signals são valores reativos: lidos como função, alterados com `set` ou `update`. `computed` deriva valores e `effect` reage a mudanças. O Angular, como Solid, Vue e Svelte, usa essa ideia para saber exatamente o que atualizar.
+
+- slug: runas-do-svelte
+  title: As runas do Svelte 5
+  difficulty: medio
+  kind: quiz
+  in: [learn-a-framework/Svelte]
+  study:
+    - { label: "$state (Svelte)", url: "https://svelte.dev/docs/svelte/$state" }
+    - { label: "$derived (Svelte)", url: "https://svelte.dev/docs/svelte/$derived" }
+  statement: |
+    Num componente Svelte 5:
+
+    ```
+    let quantidade = $state(1);
+    let total = $derived(quantidade * 300);
+    ```
+
+    Um botão faz `quantidade++`. O que acontece com `total`?
+  options:
+    - text: Passa a valer 600, porque `$derived` recalcula quando o estado de que depende muda
+      why: Certo. `$state` declara estado reativo e `$derived` declara um valor calculado a partir dele.
+    - text: Continua 300, porque foi calculado uma vez só
+      why: Esse seria o caso de uma variável comum. $derived mantém o valor atualizado.
+    - text: Dá erro, porque não se pode usar ++ em estado
+      why: No Svelte, o estado é alterado com atribuição comum, inclusive ++.
+    - text: É preciso chamar uma função de atualização, como no React
+      why: O compilador do Svelte transforma a atribuição em atualização reativa.
+  answer: 0
+  explanation: |
+    As runas do Svelte 5 são marcadores que o compilador entende: `$state` para estado, `$derived` para valores calculados, `$effect` para efeitos e `$props` para propriedades. A escrita continua parecendo JavaScript comum, e o compilador gera o código reativo.
+
+- slug: props-no-solid
+  title: A prop que parou de atualizar
+  difficulty: dificil
+  kind: quiz
+  in: [learn-a-framework/Solid JS]
+  study:
+    - { label: "Props (Solid)", url: "https://docs.solidjs.com/concepts/components/props" }
+  statement: |
+    No Solid, este componente mostra o nome da banda que vem por props:
+
+    ```
+    function Titulo({ banda }) {
+      return <h2>{banda}</h2>;
+    }
+    ```
+
+    Quando a banda muda no pai, o título não atualiza. Por quê?
+  options:
+    - text: Desestruturar as props lê o valor uma vez, na criação. Lendo `props.banda` dentro do JSX, o Solid mantém a ligação reativa
+      why: Certo. No Solid, a função do componente roda uma vez só, e as props são reativas só enquanto lidas no ponto de uso.
+    - text: Faltou chamar `setBanda` dentro do componente filho
+      why: O filho não é dono do valor. O problema é como ele lê a prop.
+    - text: Props não podem ser texto no Solid
+      why: Podem ser de qualquer tipo.
+    - text: Faltou uma key no h2
+      why: Keys não têm esse papel no Solid.
+  answer: 0
+  explanation: |
+    Como o componente do Solid roda uma vez, qualquer leitura feita fora do JSX, ou de efeitos, congela o valor. Por isso o Solid recomenda não desestruturar props, ou usar `splitProps` e `mergeProps`, que preservam a reatividade.
+
+- slug: menu-responsivo-tailwind
+  title: O menu que só aparece no computador
+  difficulty: medio
+  kind: dom
+  editor: html
+  tailwind: true
+  in: [css-frameworks/Tailwind]
+  study:
+    - { label: "Design responsivo no Tailwind", url: "https://tailwindcss.com/docs/responsive-design" }
+    - { label: "display no Tailwind", url: "https://tailwindcss.com/docs/display" }
+  statement: |
+    Com classes do Tailwind, escreva um `nav` com:
+
+    - um botão `Menu`, com a classe extra `botao-menu`, visível só abaixo do breakpoint `md`
+    - uma `ul` com a classe extra `links`, com três links, escondida abaixo de `md` e a partir de `md` exibida em flex, com 24px entre os itens
+
+    Não escreva CSS.
+  forbid: ['style=', '<style']
+  solution: |
+    <nav>
+      <button class="botao-menu md:hidden">Menu</button>
+      <ul class="links hidden md:flex gap-6">
+        <li><a href="#lineup">Line-up</a></li>
+        <li><a href="#ingressos">Ingressos</a></li>
+        <li><a href="#local">Local</a></li>
+      </ul>
+    </nav>
+  tests:
+    - name: celular
+      width: 400
+      code: |
+        await wait(60);
+        expect(css('.links', 'display')).toBe('none');
+        expect(css('.botao-menu', 'display')).not.toBe('none');
+    - name: computador
+      width: 1000
+      code: |
+        await wait(60);
+        expect(css('.links', 'display')).toBe('flex');
+        expect(css('.botao-menu', 'display')).toBe('none');
+    - name: espaço entre links
+      hidden: true
+      width: 1000
+      code: |
+        await wait(60);
+        expect(css('.links', 'column-gap')).toBe('24px');
+        expect($$('.links a')).toHaveLength(3);
+  hints:
+    - "`hidden` esconde, e `md:flex` mostra em flex a partir de `md`."
+    - "`md:hidden` esconde a partir de `md`."
+  explanation: |
+    No Tailwind, classes sem prefixo valem para todas as larguras e prefixos como `md:` sobrescrevem a partir do breakpoint. Combinar `hidden` com `md:flex` é o padrão para mostrar coisas só em telas maiores.
+  traps:
+    - reason: Invertido
+      code: |
+        <nav><button class="botao-menu hidden md:block">Menu</button><ul class="links flex md:hidden gap-6"><li><a href="#">Line-up</a></li><li><a href="#">Ingressos</a></li><li><a href="#">Local</a></li></ul></nav>
+    - reason: Sem gap
+      code: |
+        <nav><button class="botao-menu md:hidden">Menu</button><ul class="links hidden md:flex"><li><a href="#">Line-up</a></li><li><a href="#">Ingressos</a></li><li><a href="#">Local</a></li></ul></nav>
+
+- slug: cartao-tailwind
+  title: O cartão da banda em Tailwind
+  difficulty: facil
+  kind: dom
+  editor: html
+  tailwind: true
+  in: [css-frameworks/Tailwind]
+  study:
+    - { label: "text-overflow e truncate no Tailwind", url: "https://tailwindcss.com/docs/text-overflow" }
+    - { label: "box-shadow no Tailwind", url: "https://tailwindcss.com/docs/box-shadow" }
+  statement: |
+    Com classes do Tailwind, monte um `article` com a classe extra `cartao` e, dentro dele, um `h3` com a classe extra `nome` e o texto `Os Cavaleiros do Asfalto Quente e a Orquestra Elétrica`:
+
+    - o cartão tem 256px de largura, padding de 16px, cantos arredondados de 12px e uma sombra
+    - o nome fica numa linha só, cortado com reticências
+
+    Não escreva CSS.
+  forbid: ['style=', '<style']
+  solution: |
+    <article class="cartao w-64 p-4 rounded-xl shadow-md">
+      <h3 class="nome truncate">Os Cavaleiros do Asfalto Quente e a Orquestra Elétrica</h3>
+    </article>
+  tests:
+    - name: tamanho e espaço
+      code: |
+        await wait(60);
+        expect(rect('.cartao').width).toBe(256);
+        expect(css('.cartao', 'padding-left')).toBe('16px');
+        expect(css('.cartao', 'border-top-left-radius')).toBe('12px');
+    - name: nome cortado
+      hidden: true
+      code: |
+        await wait(60);
+        expect(css('.nome', 'text-overflow')).toBe('ellipsis');
+        expect(css('.nome', 'white-space')).toBe('nowrap');
+    - name: sombra
+      hidden: true
+      code: |
+        await wait(60);
+        expect(css('.cartao', 'box-shadow')).not.toBe('none');
+  hints:
+    - "`w-64` vale 16rem, ou 256px. `truncate` junta as três propriedades da reticência."
+  explanation: |
+    `truncate` aplica de uma vez `overflow: hidden`, `text-overflow: ellipsis` e `white-space: nowrap`. Classes como `shadow-md` e `rounded-xl` vêm de uma escala de design, o que mantém sombras e cantos consistentes no site.
+  traps:
+    - reason: Sem truncate
+      code: |
+        <article class="cartao w-64 p-4 rounded-xl shadow-md"><h3 class="nome">Os Cavaleiros do Asfalto Quente e a Orquestra Elétrica</h3></article>

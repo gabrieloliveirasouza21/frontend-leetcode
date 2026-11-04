@@ -3,6 +3,8 @@
   difficulty: facil
   kind: react
   in: [learn-a-framework/React]
+  study:
+    - { label: "Estado: a memória de um componente (React)", url: "https://react.dev/learn/state-a-components-memory" }
   statement: |
     Escreva o componente `App` com um botão que mostra `Curtir (0)` e soma 1 a cada clique: `Curtir (1)`, `Curtir (2)`, e assim por diante.
   solution: |
@@ -45,6 +47,9 @@
   difficulty: medio
   kind: react
   in: [learn-a-framework/React]
+  study:
+    - { label: "Renderizando listas e keys (React)", url: "https://react.dev/learn/rendering-lists" }
+    - { label: "Escolhendo a estrutura do estado (React)", url: "https://react.dev/learn/choosing-the-state-structure" }
   setup: |
     window.BANDAS = [
       { id: 1, nome: 'Vórtice', genero: 'thrash' },
@@ -139,6 +144,8 @@
   difficulty: medio
   kind: react
   in: [learn-a-framework/React]
+  study:
+    - { label: "O componente input e campos controlados (React)", url: "https://react.dev/reference/react-dom/components/input" }
   statement: |
     Escreva `App` com um formulário de lista de espera:
 
@@ -226,6 +233,8 @@
   difficulty: medio
   kind: react
   in: [learn-a-framework/React]
+  study:
+    - { label: "Compartilhando estado entre componentes (React)", url: "https://react.dev/learn/sharing-state-between-components" }
   starter: |
     import { useState } from 'react';
 
@@ -343,6 +352,9 @@
   difficulty: dificil
   kind: react
   in: [learn-a-framework/React]
+  study:
+    - { label: "Sincronizando com efeitos (React)", url: "https://react.dev/learn/synchronizing-with-effects" }
+    - { label: "Talvez você não precise de um efeito (React)", url: "https://react.dev/learn/you-might-not-need-an-effect" }
   setup: |
     window.fetch = (url) => new Promise((resolve) => {
       const dia = new URL(url, 'https://festival.test').searchParams.get('dia');
@@ -440,6 +452,8 @@
   difficulty: dificil
   kind: react
   in: [learn-a-framework/React]
+  study:
+    - { label: "Extraindo a lógica para um reducer (React)", url: "https://react.dev/learn/extracting-state-logic-into-a-reducer" }
   statement: |
     Escreva `App` com o carrinho de ingressos usando `useReducer`:
 
@@ -541,6 +555,8 @@
   difficulty: medio
   kind: quiz
   in: [learn-a-framework/Vue.js]
+  study:
+    - { label: "Fundamentos de reatividade (Vue)", url: "https://vuejs.org/guide/essentials/reactivity-fundamentals.html" }
   statement: |
     Num componente Vue com `<script setup>`:
 
@@ -568,6 +584,8 @@
   difficulty: medio
   kind: quiz
   in: [learn-a-framework/Angular]
+  study:
+    - { label: "Injeção de dependência (Angular)", url: "https://angular.dev/guide/di" }
   statement: |
     No app em Angular, o carrinho aparece no cabeçalho, na página de checkout e num painel lateral. Hoje cada componente busca e guarda os itens por conta própria, e eles ficam diferentes entre si.
 
@@ -590,6 +608,8 @@
   difficulty: medio
   kind: quiz
   in: [learn-a-framework/Svelte]
+  study:
+    - { label: "Visão geral do Svelte", url: "https://svelte.dev/docs/svelte/overview" }
   statement: |
     Uma pessoa do time diz que o Svelte "manda pouco framework para o navegador".
 
@@ -612,6 +632,8 @@
   difficulty: dificil
   kind: quiz
   in: [learn-a-framework/Solid JS]
+  study:
+    - { label: "Sinais no Solid", url: "https://docs.solidjs.com/concepts/signals" }
   statement: |
     Vindo do React, você escreve no Solid:
 
@@ -644,6 +666,9 @@
   editor: html
   tailwind: true
   in: [css-frameworks/Tailwind]
+  study:
+    - { label: "Padding no Tailwind", url: "https://tailwindcss.com/docs/padding" }
+    - { label: "Estilizando com classes utilitárias (Tailwind)", url: "https://tailwindcss.com/docs/styling-with-utility-classes" }
   statement: |
     O Tailwind CSS está carregado na página. Escreva um `button` com o texto `Comprar ingresso`, estilizado só com classes utilitárias:
 
@@ -694,6 +719,9 @@
   editor: html
   tailwind: true
   in: [css-frameworks/Tailwind]
+  study:
+    - { label: "Design responsivo no Tailwind", url: "https://tailwindcss.com/docs/responsive-design" }
+    - { label: "grid-template-columns no Tailwind", url: "https://tailwindcss.com/docs/grid-template-columns" }
   statement: |
     Com classes do Tailwind, monte uma `div` com 6 cartões `article`, numerados de 1 a 6, em grade:
 

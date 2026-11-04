@@ -27,6 +27,8 @@ export interface Problem extends JudgedProblem {
   traps: { reason: string; code: string }[];
   options?: QuizOption[];
   answer?: number;
+  /** Fontes para estudar este problema, mostradas antes das do tópico. */
+  study: { label: string; url: string }[];
   /** Visualização interativa mostrada depois do enunciado, pelo id em src/visuals. */
   visual?: string;
 }
@@ -79,6 +81,7 @@ const loaded = Object.values(files).flatMap((raw) => parse(raw) as Problem | Pro
 for (const problem of loaded) {
   problem.hints ??= [];
   problem.traps ??= [];
+  problem.study ??= [];
 }
 
 // Só a primeira barra separa tópico de subtópico.

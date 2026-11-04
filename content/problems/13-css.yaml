@@ -1,0 +1,700 @@
+- slug: foco-visivel
+  title: Onde está o foco?
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Seletores e cascata, accessibility]
+  study:
+    - { label: ":focus-visible (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-visible" }
+    - { label: "outline (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/outline" }
+  html: |
+    <style>a, button { outline: none; }</style>
+    <a href="#lineup" class="link">Line-up</a>
+    <button class="comprar">Comprar</button>
+  statement: |
+    Alguém escreveu `outline: none` para tirar o contorno de foco, e agora quem navega pelo teclado não sabe onde está. Você não pode apagar essa regra, que vem de um tema.
+
+    Mostre um contorno sólido de 3px na cor `#5cc8e6`, afastado 2px do elemento, em links e botões quando o foco vem do teclado. Use a pseudo-classe que não mostra o contorno ao clicar com o mouse.
+  solution: |
+    a:focus-visible,
+    button:focus-visible {
+      outline: 3px solid #5cc8e6;
+      outline-offset: 2px;
+    }
+  must_use: [':focus-visible']
+  tests:
+    - name: contorno no foco pelo teclado
+      code: |
+        const rule = Array.from(document.styleSheets).flatMap((s) => Array.from(s.cssRules)).find((r) => r.selectorText?.includes('button:focus-visible'));
+        expect(rule).toBeDefined();
+        expect(rule.style.outlineWidth).toBe('3px');
+        expect(rule.style.outlineStyle).toBe('solid');
+    - name: links também
+      hidden: true
+      code: |
+        const rules = Array.from(document.styleSheets).flatMap((s) => Array.from(s.cssRules)).filter((r) => r.selectorText?.includes(':focus-visible'));
+        expect(rules.some((r) => r.selectorText.includes('a:focus-visible'))).toBe(true);
+        const r = rules.find((r) => r.selectorText.includes('a:focus-visible'));
+        expect(r.style.outlineOffset).toBe('2px');
+        const probe = document.createElement('div');
+        probe.style.color = r.style.outlineColor;
+        document.body.append(probe);
+        expect(getComputedStyle(probe).color).toBe('rgb(92, 200, 230)');
+  hints:
+    - "`:focus` vale para qualquer foco, inclusive o clique. `:focus-visible` vale quando o navegador acha que o indicador ajuda, como no Tab."
+    - Um seletor com pseudo-classe é mais específico que só `a`, então vence a regra do tema.
+  explanation: |
+    Tirar o contorno de foco sem colocar outro deixa a página inutilizável pelo teclado. `:focus-visible` mostra o indicador quando a navegação é por teclado e esconde no clique do mouse, o que costuma agradar ao design. `outline-offset` afasta o contorno para ele não grudar no texto.
+  traps:
+    - reason: Contorno em qualquer foco, inclusive clique
+      code: |
+        a:focus, button:focus { outline: 3px solid #5cc8e6; outline-offset: 2px; }
+    - reason: Só nos botões
+      code: |
+        button:focus-visible { outline: 3px solid #5cc8e6; outline-offset: 2px; }
+
+- slug: seletor-de-atributo
+  title: Links que saem do site
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Seletores e cascata]
+  study:
+    - { label: "Seletores de atributo (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/Attribute_selectors" }
+    - { label: "::after (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/::after" }
+  html: |
+    <ul class="links">
+      <li><a href="/lineup">Line-up</a></li>
+      <li><a href="https://exemplo.com/vortice">Site da Vórtice</a></li>
+      <li><a href="https://festivalruido.com.br/faq">FAQ</a></li>
+      <li><a href="http://exemplo.org/maré">Blog da Maré Negra</a></li>
+    </ul>
+  statement: |
+    Links para fora do site devem mostrar ` ↗` depois do texto. Um link é externo quando o `href` começa com `http`, exceto os que apontam para `https://festivalruido.com.br`, que é o próprio site.
+
+    Faça isso só com CSS, usando seletores de atributo e `::after`.
+  solution: |
+    a[href^="http"]:not([href^="https://festivalruido.com.br"])::after {
+      content: " ↗";
+    }
+  tests:
+    - name: link externo
+      code: |
+        expect(getComputedStyle($$('a')[1], '::after').content).toBe('" ↗"');
+    - name: link interno sem seta
+      code: |
+        expect(getComputedStyle($$('a')[0], '::after').content).toBe('none');
+    - name: o próprio domínio e http sem s
+      hidden: true
+      code: |
+        expect(getComputedStyle($$('a')[2], '::after').content).toBe('none');
+        expect(getComputedStyle($$('a')[3], '::after').content).toBe('" ↗"');
+  hints:
+    - "`[href^=\"http\"]` casa com atributos que começam com `http`."
+    - "`:not()` exclui o que casar com outro seletor."
+  explanation: |
+    Seletores de atributo testam o valor: `^=` começa com, `$=` termina com, `*=` contém. Combinados com `:not()`, expressam regras como "externo, mas não o próprio domínio". O `content` de `::after` é decorativo: para leitores de tela, o aviso de link externo também pode ir no texto.
+  traps:
+    - reason: Marca também o próprio site
+      code: |
+        a[href^="http"]::after { content: " ↗"; }
+    - reason: Só https
+      code: |
+        a[href^="https"]:not([href^="https://festivalruido.com.br"])::after { content: " ↗"; }
+
+- slug: cartao-com-has
+  title: O cartão que sabe o que tem dentro
+  difficulty: dificil
+  kind: dom
+  editor: css
+  in: [css/Seletores e cascata]
+  study:
+    - { label: ":has() (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/:has" }
+  html: |
+    <article class="cartao"><h3>Pista</h3><p>R$ 300</p></article>
+    <article class="cartao"><h3>Camarote</h3><p>R$ 900</p><span class="selo">Esgotado</span></article>
+    <article class="cartao"><h3>Premium</h3><p>R$ 520</p></article>
+  statement: |
+    Cartões que contêm um `.selo` devem ficar com opacidade `0.5` e borda tracejada de 2px, sem mexer no HTML e sem JavaScript. Cartões sem selo continuam com opacidade 1.
+
+    Se um selo for adicionado depois a outro cartão, ele também muda.
+  must_use: [':has(']
+  solution: |
+    .cartao:has(.selo) {
+      opacity: 0.5;
+      border: 2px dashed currentColor;
+    }
+  tests:
+    - name: cartão esgotado
+      code: |
+        const c = $$('.cartao')[1];
+        expect(css(c, 'opacity')).toBe('0.5');
+        expect(css(c, 'border-top-style')).toBe('dashed');
+        expect(css(c, 'border-top-width')).toBe('2px');
+    - name: outros intactos
+      code: |
+        expect(css($$('.cartao')[0], 'opacity')).toBe('1');
+    - name: selo adicionado depois
+      hidden: true
+      code: |
+        const c = $$('.cartao')[2];
+        c.insertAdjacentHTML('beforeend', '<span class="selo">Esgotado</span>');
+        expect(css(c, 'opacity')).toBe('0.5');
+  hints:
+    - "`:has()` seleciona um elemento a partir do que existe dentro dele."
+  explanation: |
+    `:has()` é o seletor "pai" que o CSS não tinha: ele escolhe um elemento pelo conteúdo. Antes, isso exigia JavaScript para pôr uma classe no cartão. Como os seletores são reavaliados sozinhos, um selo novo já muda o cartão.
+  traps:
+    - reason: Estiliza o selo, não o cartão
+      code: |
+        .selo { opacity: 0.5; border: 2px dashed currentColor; }
+
+- slug: crescer-em-proporcao
+  title: Duas colunas, uma o dobro da outra
+  difficulty: medio
+  kind: dom
+  editor: css
+  visual: flexbox
+  in: [css/Flexbox]
+  study:
+    - { label: "flex-grow (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-grow" }
+    - { label: "flex-basis (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-basis" }
+  html: |
+    <style>body { margin: 0; }</style>
+    <div class="linha">
+      <aside class="filtros">Filtros</aside>
+      <main class="resultados">Resultados com muito texto, muito mais que a barra de filtros</main>
+    </div>
+  statement: |
+    Na `.linha`, a área de `.resultados` deve ter exatamente o dobro da largura de `.filtros`, não importa quanto texto cada uma tenha. Não use larguras fixas nem porcentagens.
+  forbid: ['%', 'width']
+  solution: |
+    .linha {
+      display: flex;
+    }
+    .filtros {
+      flex: 1 1 0;
+    }
+    .resultados {
+      flex: 2 1 0;
+    }
+  tests:
+    - name: o dobro da largura
+      code: |
+        const f = rect('.filtros').width;
+        const r = rect('.resultados').width;
+        expect(Math.abs(r - 2 * f)).toBeLessThanOrEqual(1);
+    - name: ocupam a linha toda
+      hidden: true
+      code: |
+        expect(Math.round(rect('.filtros').width + rect('.resultados').width)).toBe(Math.round(rect('.linha').width));
+    - name: mesmo com mais texto nos filtros
+      hidden: true
+      code: |
+        el('.filtros').textContent = 'Filtros com um texto bem mais comprido agora, ocupando bastante espaço na linha inteira';
+        await frame();
+        expect(Math.abs(rect('.resultados').width - 2 * rect('.filtros').width)).toBeLessThanOrEqual(1);
+  hints:
+    - "`flex-grow` divide o espaço livre, mas o tamanho inicial vem do `flex-basis`."
+    - Com `flex-basis` 0, todo o espaço é livre, e a proporção vale para a largura total.
+  explanation: |
+    `flex: 2` com base `auto` divide só o espaço que sobra depois do tamanho do conteúdo, então mais texto muda a proporção. Com `flex-basis: 0`, o espaço inteiro é dividido pelos fatores de crescimento, e a proporção fica exata. A forma curta `flex: 1` já usa base 0.
+  traps:
+    - reason: flex-grow com base auto
+      code: |
+        .linha { display: flex; }
+        .filtros { flex: 1 1 auto; }
+        .resultados { flex: 2 1 auto; }
+
+- slug: ordem-no-celular
+  title: O botão de compra primeiro
+  difficulty: medio
+  kind: dom
+  editor: css
+  visual: flexbox
+  in: [css/Flexbox, css/Responsividade]
+  study:
+    - { label: "order (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/order" }
+    - { label: "flex-direction (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/flex-direction" }
+  html: |
+    <section class="show">
+      <img class="foto" alt="Vórtice no palco" width="200" height="120">
+      <div class="info">Vórtice, sábado às 22h</div>
+      <a class="cta" href="#comprar">Comprar</a>
+    </section>
+  statement: |
+    O `.show` mostra foto, informação e botão lado a lado, nessa ordem. Abaixo de 600px de largura, os três ficam em coluna e o botão `.cta` aparece primeiro, acima da foto, sem mudar o HTML.
+  must_use: ['@media']
+  solution: |
+    .show {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    @media (max-width: 599px) {
+      .show {
+        flex-direction: column;
+      }
+      .cta {
+        order: -1;
+      }
+    }
+  tests:
+    - name: lado a lado na tela larga
+      width: 1000
+      code: |
+        expect(rect('.info').left).toBeGreaterThan(rect('.foto').left);
+        expect(rect('.cta').left).toBeGreaterThan(rect('.info').left);
+    - name: botão primeiro no celular
+      width: 400
+      code: |
+        expect(rect('.cta').top).toBeLessThan(rect('.foto').top);
+        expect(rect('.info').top).toBeGreaterThan(rect('.foto').top);
+    - name: no limite
+      hidden: true
+      width: 600
+      code: |
+        expect(rect('.cta').left).toBeGreaterThan(rect('.info').left);
+  hints:
+    - "`order` muda a ordem visual de um item flex. O valor padrão é 0."
+    - "Em coluna, `flex-direction: column` empilha os itens."
+  explanation: |
+    `order` reorganiza só a apresentação, e o leitor de tela e o Tab continuam seguindo o HTML. Use para ajustes como este, em que a ordem do HTML também faz sentido. Quando a ordem lógica muda de verdade, mude o HTML.
+  traps:
+    - reason: Coluna sem reordenar
+      code: |
+        .show { display: flex; gap: 12px; align-items: center; }
+        @media (max-width: 599px) { .show { flex-direction: column; } }
+    - reason: Reordena em todas as larguras
+      code: |
+        .show { display: flex; gap: 12px; align-items: center; }
+        .cta { order: -1; }
+        @media (max-width: 599px) { .show { flex-direction: column; } }
+
+- slug: grade-automatica
+  title: Quantos cartões cabem
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Grid, css/Responsividade]
+  study:
+    - { label: "repeat() com auto-fill e auto-fit (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/repeat" }
+    - { label: "minmax() (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/minmax" }
+  html: |
+    <style>body { margin: 0; }</style>
+    <div class="cartoes">
+      <div class="c">1</div><div class="c">2</div><div class="c">3</div><div class="c">4</div><div class="c">5</div><div class="c">6</div>
+    </div>
+  statement: |
+    A grade de cartões deve caber em qualquer largura, sem media query: quantas colunas couberem, cada uma com pelo menos 220px, dividindo o espaço igualmente. O espaço entre cartões é 16px.
+  forbid: ['@media']
+  solution: |
+    .cartoes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+  tests:
+    - name: quatro colunas em 1000px
+      width: 1000
+      code: |
+        const c = $$('.c').map(rect);
+        expect(c[3].top).toBe(c[0].top);
+        expect(c[4].top).toBeGreaterThan(c[0].top);
+    - name: uma coluna em 400px
+      width: 400
+      code: |
+        const c = $$('.c').map(rect);
+        expect(c[1].top).toBeGreaterThan(c[0].top);
+        expect(Math.round(c[0].width)).toBe(400);
+    - name: largura mínima respeitada
+      hidden: true
+      width: 700
+      code: |
+        const c = $$('.c').map(rect);
+        expect(c[0].width).toBeGreaterThanOrEqual(220);
+        expect(c[1].top).toBe(c[0].top);
+        expect(c[3].top).toBeGreaterThan(c[0].top);
+  hints:
+    - "`repeat(auto-fill, ...)` cria quantas colunas couberem."
+    - "`minmax(220px, 1fr)` dá a cada coluna no mínimo 220px e divide o que sobra."
+  explanation: |
+    `repeat(auto-fill, minmax(220px, 1fr))` é o padrão de grade responsiva sem media query: o navegador calcula quantas colunas de 220px cabem e estica todas para ocupar o espaço. `auto-fit` faz o mesmo, mas colapsa colunas vazias quando há poucos itens.
+  traps:
+    - reason: Colunas fixas de 220px
+      code: |
+        .cartoes { display: grid; grid-template-columns: repeat(auto-fill, 220px); gap: 16px; }
+    - reason: Quatro colunas sempre
+      code: |
+        .cartoes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+
+- slug: destaque-na-grade
+  title: O headliner ocupa duas colunas
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Grid]
+  study:
+    - { label: "grid-column (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column" }
+  html: |
+    <div class="lineup">
+      <div class="banda headliner">Vórtice</div>
+      <div class="banda">Asfalto</div>
+      <div class="banda">Ferrugem</div>
+      <div class="banda">Maré Negra</div>
+      <div class="banda">Concreto</div>
+    </div>
+  statement: |
+    A `.lineup` tem 3 colunas iguais com 10px de espaço. O `.headliner` ocupa duas colunas e duas linhas, no canto superior esquerdo. As outras bandas preenchem o resto em ordem.
+  solution: |
+    .lineup {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 80px;
+      gap: 10px;
+    }
+    .headliner {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+  tests:
+    - name: duas colunas de largura
+      code: |
+        const h = rect('.headliner');
+        const b = rect($$('.banda')[1]);
+        expect(Math.round(h.width)).toBe(Math.round(b.width * 2 + 10));
+    - name: duas linhas de altura
+      hidden: true
+      code: |
+        const h = rect('.headliner');
+        const [ , a, f] = $$('.banda').map(rect);
+        expect(Math.round(h.height)).toBe(Math.round(a.height + f.height + 10));
+        expect(a.left).toBe(f.left);
+        expect(f.top).toBeGreaterThan(a.top);
+    - name: resto em ordem
+      hidden: true
+      code: |
+        const b = $$('.banda').map(rect);
+        expect(b[3].top).toBeGreaterThan(b[2].top);
+        expect(b[4].left).toBeGreaterThan(b[3].left);
+  hints:
+    - "`grid-column: span 2` faz o item ocupar duas colunas a partir de onde ele cair."
+    - Para a altura das linhas ficar previsível, defina `grid-auto-rows`.
+  explanation: |
+    `span` faz um item ocupar várias trilhas sem você dizer em qual coluna ele começa, e o posicionamento automático encaixa os outros nos espaços livres. Isso permite destaques em grades de cartões sem calcular posições à mão.
+  traps:
+    - reason: Só duas colunas, uma linha
+      code: |
+        .lineup { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 80px; gap: 10px; }
+        .headliner { grid-column: span 2; }
+
+- slug: proporcao-do-video
+  title: O vídeo sem faixas pretas
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Box model, css/Responsividade]
+  study:
+    - { label: "aspect-ratio (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio" }
+    - { label: "object-fit (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/object-fit" }
+  html: |
+    <div class="capa"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%23d7263d'/%3E%3C/svg%3E" alt="Capa do álbum" class="foto"></div>
+    <div class="player"></div>
+  statement: |
+    Duas regras para a página do álbum:
+
+    - `.player` ocupa a largura toda e sempre tem proporção 16:9
+    - `.capa` é um quadrado de 240px, e a imagem dentro dele preenche o quadrado sem distorcer, cortando o que sobrar
+  solution: |
+    .player {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+    }
+    .capa {
+      width: 240px;
+      height: 240px;
+    }
+    .foto {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  tests:
+    - name: player em 16:9
+      code: |
+        const r = rect('.player');
+        expect(Math.abs(r.width / r.height - 16 / 9)).toBeLessThan(0.01);
+    - name: proporção em outra largura
+      hidden: true
+      width: 500
+      code: |
+        const r = rect('.player');
+        expect(Math.abs(r.width / r.height - 16 / 9)).toBeLessThan(0.01);
+    - name: capa preenchida
+      hidden: true
+      code: |
+        expect(rect('.foto').width).toBe(240);
+        expect(rect('.foto').height).toBe(240);
+        expect(css('.foto', 'object-fit')).toBe('cover');
+  hints:
+    - "`aspect-ratio: 16 / 9` calcula a altura a partir da largura."
+    - "`object-fit: cover` preenche a caixa mantendo a proporção da imagem."
+  explanation: |
+    `aspect-ratio` substitui o truque antigo do `padding-top: 56.25%`. `object-fit` faz para imagens o que `background-size` faz para fundos: `cover` preenche cortando, `contain` mostra inteira com sobra.
+  traps:
+    - reason: Altura fixa no player
+      code: |
+        .player { width: 100%; height: 540px; }
+        .capa { width: 240px; height: 240px; }
+        .foto { width: 100%; height: 100%; object-fit: cover; }
+    - reason: Imagem esticada
+      code: |
+        .player { width: 100%; aspect-ratio: 16 / 9; }
+        .capa { width: 240px; height: 240px; }
+        .foto { width: 100%; height: 100%; }
+
+- slug: fonte-fluida
+  title: O título que acompanha a tela
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Responsividade]
+  study:
+    - { label: "clamp() (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/clamp" }
+  html: |
+    <h1 class="titulo">Festival Ruído 2026</h1>
+  statement: |
+    O `.titulo` deve crescer com a largura da tela, valendo `5vw`, mas nunca menor que 24px nem maior que 64px. Escreva numa única declaração, sem media query.
+  forbid: ['@media']
+  must_use: ['clamp(']
+  solution: |
+    .titulo {
+      font-size: clamp(24px, 5vw, 64px);
+    }
+  tests:
+    - name: no meio
+      width: 800
+      code: |
+        expect(css('.titulo', 'font-size')).toBe('40px');
+    - name: mínimo
+      hidden: true
+      width: 300
+      code: |
+        expect(css('.titulo', 'font-size')).toBe('24px');
+    - name: máximo
+      hidden: true
+      width: 1600
+      code: |
+        expect(css('.titulo', 'font-size')).toBe('64px');
+  hints:
+    - "`clamp(mínimo, preferido, máximo)` limita um valor entre dois extremos."
+  explanation: |
+    `clamp()` junta um valor fluido com limites, o que antes pedia várias media queries. Em produção, combine `vw` com `rem`, como `clamp(1.5rem, 1rem + 3vw, 4rem)`, para o tamanho também respeitar o zoom e a fonte escolhida pela pessoa.
+  traps:
+    - reason: Só vw
+      code: |
+        .titulo { font-size: 5vw; }
+
+- slug: texto-com-reticencias
+  title: Nome de banda comprido
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Box model]
+  study:
+    - { label: "text-overflow (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/text-overflow" }
+  html: |
+    <ul class="lista">
+      <li class="nome">Os Cavaleiros do Asfalto Quente e a Orquestra Elétrica do Fim do Mundo</li>
+      <li class="nome">Vórtice</li>
+    </ul>
+  statement: |
+    Cada `.nome` tem 200px de largura e deve caber numa linha. Quando o texto não couber, corte com reticências `…` no fim.
+  solution: |
+    .nome {
+      width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  tests:
+    - name: uma linha
+      code: |
+        const n = $$('.nome')[0];
+        expect(rect(n).height).toBe(rect($$('.nome')[1]).height);
+        expect(rect(n).width).toBe(200);
+    - name: reticências
+      hidden: true
+      code: |
+        const n = $$('.nome')[0];
+        expect(css(n, 'text-overflow')).toBe('ellipsis');
+        expect(css(n, 'overflow-x')).toBe('hidden');
+        expect(n.scrollWidth).toBeGreaterThan(n.clientWidth);
+  hints:
+    - "`text-overflow: ellipsis` só funciona com `overflow: hidden` e `white-space: nowrap` juntos."
+  explanation: |
+    As três propriedades trabalham juntas: `nowrap` impede a quebra de linha, `overflow: hidden` esconde o excesso e `text-overflow: ellipsis` mostra as reticências. Para um texto cortado continuar acessível, ponha o nome completo num `title` ou mostre ele inteiro em outro lugar.
+  traps:
+    - reason: Sem nowrap
+      code: |
+        .nome { width: 200px; overflow: hidden; text-overflow: ellipsis; }
+
+- slug: modal-centralizado
+  title: O aviso por cima de tudo
+  difficulty: medio
+  kind: dom
+  editor: css
+  visual: empilhamento
+  in: [css/Posicionamento]
+  study:
+    - { label: "position: fixed (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/position" }
+    - { label: "inset (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/inset" }
+  html: |
+    <style>body { margin: 0; } main { height: 2000px; }</style>
+    <main>Conteúdo longo</main>
+    <div class="fundo">
+      <div class="aviso">Últimos ingressos!</div>
+    </div>
+  statement: |
+    `.fundo` cobre a janela inteira, sempre, mesmo com a página rolada, com fundo `rgba(0, 0, 0, 0.6)`. O `.aviso` fica no centro da janela, por cima do conteúdo.
+  solution: |
+    .fundo {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: grid;
+      place-items: center;
+      z-index: 10;
+    }
+  tests:
+    - name: cobre a janela
+      code: |
+        const r = rect('.fundo');
+        expect(r.top).toBe(0);
+        expect(r.left).toBe(0);
+        expect(Math.round(r.width)).toBe(innerWidth);
+        expect(Math.round(r.height)).toBe(innerHeight);
+    - name: aviso no centro
+      code: |
+        const a = rect('.aviso');
+        expect(Math.abs((a.left + a.right) / 2 - innerWidth / 2)).toBeLessThanOrEqual(1);
+        expect(Math.abs((a.top + a.bottom) / 2 - innerHeight / 2)).toBeLessThanOrEqual(1);
+    - name: continua depois de rolar
+      hidden: true
+      code: |
+        scrollTo(0, 800);
+        await frame();
+        expect(rect('.fundo').top).toBe(0);
+        expect(css('.fundo', 'background-color')).toBe('rgba(0, 0, 0, 0.6)');
+  hints:
+    - "`position: fixed` posiciona em relação à janela, não à página."
+    - "`inset: 0` é o mesmo que `top`, `right`, `bottom` e `left` iguais a 0."
+  explanation: |
+    `position: fixed` com `inset: 0` estica o elemento até as bordas da janela e o mantém lá na rolagem. Com grid e `place-items: center`, o aviso fica centrado sem saber o próprio tamanho. Um modal de verdade também precisa de foco e teclado, que o elemento `dialog` já resolve.
+  traps:
+    - reason: Absoluto, some ao rolar
+      code: |
+        .fundo { position: absolute; inset: 0; height: 100vh; background: rgba(0, 0, 0, 0.6); display: grid; place-items: center; }
+
+- slug: animacao-de-pulsar
+  title: O botão que pulsa
+  difficulty: medio
+  kind: dom
+  editor: css
+  visual: composicao
+  in: [css/Transições e animações, performance/DevTools Usage]
+  study:
+    - { label: "Usando animações CSS (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/CSS_animations/Using_CSS_animations" }
+    - { label: "Animações de alto desempenho (web.dev)", url: "https://web.dev/articles/animations-guide" }
+  html: |
+    <button class="ao-vivo">Ao vivo agora</button>
+  statement: |
+    O botão `.ao-vivo` deve pulsar sem parar: crescer até 1.1 vezes o tamanho e voltar, num ciclo de 1.5s.
+
+    Escreva a animação com `@keyframes` chamada `pulsar` e anime só `transform`, que não exige recalcular o layout da página.
+  must_use: ['@keyframes', transform]
+  forbid: [width, height, font-size, padding]
+  solution: |
+    @keyframes pulsar {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .ao-vivo {
+      animation: pulsar 1.5s ease-in-out infinite;
+    }
+  tests:
+    - name: animação aplicada
+      code: |
+        expect(css('.ao-vivo', 'animation-name')).toBe('pulsar');
+        expect(css('.ao-vivo', 'animation-duration')).toBe('1.5s');
+        expect(css('.ao-vivo', 'animation-iteration-count')).toBe('infinite');
+    - name: quadros da animação
+      hidden: true
+      code: |
+        const kf = Array.from(document.styleSheets).flatMap((s) => Array.from(s.cssRules)).find((r) => r instanceof CSSKeyframesRule && r.name === 'pulsar');
+        expect(kf).toBeDefined();
+        const meio = Array.from(kf.cssRules).find((r) => r.keyText.includes('50%'));
+        expect(meio.style.transform.replace(/\s/g, '')).toMatch(/scale\(1\.1\)/);
+  hints:
+    - "`@keyframes` descreve os estados, e `animation` aplica com duração e repetição."
+    - "`transform: scale()` aumenta visualmente sem mudar o espaço que o botão ocupa."
+  explanation: |
+    Animar `transform` e `opacity` permite ao navegador mover a camada do elemento na composição, sem refazer layout e pintura a cada quadro. Animar `width` ou `font-size` empurra os vizinhos e recalcula o layout 60 vezes por segundo. Em produção, desative animações contínuas com `prefers-reduced-motion`.
+  traps:
+    - reason: Duração errada
+      code: |
+        @keyframes pulsar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .ao-vivo { animation: pulsar 3s ease-in-out infinite; }
+    - reason: Roda uma vez só
+      code: |
+        @keyframes pulsar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .ao-vivo { animation: pulsar 1.5s ease-in-out; }
+
+- slug: margens-que-somem
+  title: A margem que sumiu
+  difficulty: dificil
+  kind: quiz
+  visual: box-model
+  in: [css/Box model]
+  study:
+    - { label: "Colapso de margens (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/CSS_box_model/Mastering_margin_collapsing" }
+  statement: |
+    Dois parágrafos seguidos têm `margin-bottom: 24px` e `margin-top: 16px`. A distância entre eles na tela é 24px, e não 40px.
+
+    O que aconteceu?
+  options:
+    - text: As margens verticais de blocos vizinhos se fundem, e vale a maior delas
+      why: Certo. É o colapso de margens. Só acontece na vertical, entre blocos no fluxo normal.
+    - text: O navegador ignora `margin-top` quando existe `margin-bottom`
+      why: As duas existem. Elas se sobrepõem, e o resultado é a maior.
+    - text: O `box-sizing` está como `border-box`
+      why: box-sizing muda o cálculo de width e height, não das margens entre blocos.
+    - text: 'Margens só funcionam com `display: flex`'
+      why: Margens funcionam em blocos comuns. Em flex e grid, aliás, elas não colapsam.
+  answer: 0
+  explanation: |
+    Margens verticais adjacentes colapsam: a distância é a maior das duas. A margem de um filho também pode vazar para fora do pai sem padding ou borda. Em flex, grid ou com `gap`, não há colapso, o que é um motivo para preferir `gap` no espaçamento entre itens.
+
+- slug: unidades-relativas
+  title: O zoom quebrou o layout
+  difficulty: medio
+  kind: quiz
+  in: [css/Responsividade, accessibility]
+  study:
+    - { label: "Valores e unidades CSS (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Values_and_units" }
+  statement: |
+    Uma pessoa com baixa visão configurou o navegador com fonte padrão de 24px. No site do festival, o texto continua pequeno, porque todo o CSS usa `font-size` em `px`.
+
+    O que respeita a preferência dela?
+  options:
+    - text: Usar `rem` nos tamanhos de fonte, que são relativos à fonte raiz escolhida pela pessoa
+      why: Certo. 1rem passa a valer 24px para ela, e o resto da escala acompanha.
+    - text: Aumentar todas as fontes para 24px
+      why: Isso força um tamanho para todo mundo e continua ignorando a preferência de cada pessoa.
+    - text: Bloquear o zoom com `user-scalable=no`
+      why: Isso piora o problema e falha nos critérios de acessibilidade.
+    - text: Usar `vw` em todas as fontes
+      why: vw acompanha a largura da janela, não a preferência de fonte.
+  answer: 0
+  explanation: |
+    `px` é uma medida fixa, `em` é relativo à fonte do elemento pai e `rem` é relativo à fonte do elemento raiz, que segue a configuração do navegador. Fontes em `rem` respeitam essa preferência, e o zoom da página funciona com qualquer unidade.

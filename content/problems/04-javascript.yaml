@@ -3,6 +3,9 @@
   difficulty: facil
   kind: js
   in: [javascript/Tipos e operadores]
+  study:
+    - { label: "Coalescência nula, o ?? (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing" }
+    - { label: "Math.round (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Math/round" }
   statement: |
     Escreva `precoFinal(ingresso)`. O ingresso tem `preco`, em reais, e pode ter `desconto`, uma fração entre 0 e 1. Por exemplo, `0.5` é meia-entrada.
 
@@ -52,6 +55,9 @@
   difficulty: medio
   kind: js
   in: [javascript/Tipos e operadores]
+  study:
+    - { label: "Number (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Number" }
+    - { label: "String.prototype.replace (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/replace" }
   statement: |
     A planilha de patrocínio exporta valores como texto no formato brasileiro, como `"R$ 1.250,50"`.
 
@@ -101,6 +107,8 @@
   difficulty: facil
   kind: js
   in: [javascript/Funções e escopo]
+  study:
+    - { label: "Closures (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Closures" }
   statement: |
     Cada palco tem um contador de público. Escreva `criarContador(inicial)`, que devolve um objeto com:
 
@@ -173,6 +181,9 @@
   difficulty: medio
   kind: js
   in: [javascript/Funções e escopo]
+  study:
+    - { label: "Debounce no glossário do MDN, em inglês", url: "https://developer.mozilla.org/en-US/docs/Glossary/Debounce" }
+    - { label: "setTimeout (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout" }
   statement: |
     A busca de bandas chama a API a cada tecla. Escreva `debounce(funcao, espera)`, que devolve uma nova função. Ela só chama `funcao` depois de `espera` milissegundos sem novas chamadas.
 
@@ -245,6 +256,9 @@
   difficulty: facil
   kind: js
   in: [javascript/Arrays]
+  study:
+    - { label: "Array.prototype.reduce (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce" }
+    - { label: "Array.prototype.filter (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/filter" }
   statement: |
     Escreva `faturamento(vendas)`. Cada venda tem `setor`, `quantidade`, `preco` e `status`. Some `quantidade * preco` só das vendas com `status` igual a `'pago'`.
 
@@ -297,6 +311,9 @@
   difficulty: medio
   kind: js
   in: [javascript/Arrays]
+  study:
+    - { label: "Object.groupBy (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/groupBy" }
+    - { label: "localeCompare (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare" }
   statement: |
     Escreva `agruparPorGenero(bandas)`, que recebe uma lista de `{ nome, genero }` e devolve um objeto em que cada chave é um gênero e o valor é a lista de nomes desse gênero, em ordem alfabética.
 
@@ -360,6 +377,9 @@
   difficulty: medio
   kind: js
   in: [javascript/Arrays]
+  study:
+    - { label: "Array.prototype.sort (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/sort" }
+    - { label: "Array.prototype.toSorted (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted" }
   statement: |
     Escreva `ordenarShows(shows)`. Cada show tem `dia`, de 1 a 3, `horario`, como `'21:30'`, e `banda`. Devolva uma nova lista ordenada por dia e, dentro do dia, por horário.
 
@@ -411,6 +431,9 @@
   difficulty: medio
   kind: js
   in: [javascript/Objetos e classes]
+  study:
+    - { label: "Classes (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Classes" }
+    - { label: "Campos privados com # (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_properties" }
   statement: |
     Escreva a classe `Carrinho`:
 
@@ -512,6 +535,9 @@
   difficulty: medio
   kind: js
   in: [javascript/Objetos e classes]
+  study:
+    - { label: "Sintaxe de espalhamento (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Operators/Spread_syntax" }
+    - { label: "Atualizando objetos no estado (React)", url: "https://react.dev/learn/updating-objects-in-state" }
   statement: |
     O estado do app guarda a programação assim:
 
@@ -564,7 +590,7 @@
         const novo = mudarPalco(estado, 'zz', 'Sul');
         expect(novo.dias[0]).toBe(estado.dias[0]);
   hints:
-    - O spread `{ ...obj, campo: valor }` cria um objeto novo com um campo trocado.
+    - "O spread `{ ...obj, campo: valor }` cria um objeto novo com um campo trocado."
     - Só copie o caminho até o show alterado. O resto pode ser o mesmo objeto.
   explanation: |
     Atualização imutável copia apenas o caminho até o que mudou e reaproveita o resto. Assim, `antigo !== novo` em cada nível alterado e `antigo === novo` no que ficou igual. React e outras bibliotecas usam essa comparação barata para decidir o que redesenhar. `structuredClone` copiaria tudo e faria a tela redesenhar o que não mudou.
@@ -588,6 +614,9 @@
   difficulty: medio
   kind: js
   in: [javascript/Strings e regex]
+  study:
+    - { label: "String.prototype.normalize (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/normalize" }
+    - { label: "Expressões regulares (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Regular_expressions" }
   statement: |
     Cada banda tem uma página em `/bandas/<slug>`. Escreva `criarSlug(nome)`:
 
@@ -641,6 +670,8 @@
   difficulty: facil
   kind: js
   in: [javascript/Strings e regex]
+  study:
+    - { label: "Expressões regulares (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Regular_expressions" }
   statement: |
     Os cupons do festival têm o formato `RUIDO-` seguido de 4 dígitos e de uma letra maiúscula: `RUIDO-2026A`.
 
@@ -684,6 +715,9 @@
   kind: js
   visual: assincrono
   in: [javascript/Assíncrono]
+  study:
+    - { label: "Promise.all (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Promise/all" }
+    - { label: "Promise.allSettled (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled" }
   setup: |
     const api = {
       bandas: () => new Promise((r) => setTimeout(() => r(['Vórtice', 'Asfalto']), 40)),
@@ -740,6 +774,9 @@
   difficulty: dificil
   kind: js
   in: [javascript/Assíncrono]
+  study:
+    - { label: "Funções async (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Statements/async_function" }
+    - { label: "try...catch (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Statements/try...catch" }
   statement: |
     A API de pagamento falha de vez em quando e funciona na tentativa seguinte. Escreva `async function comRetentativa(operacao, tentativas, espera)`:
 
@@ -822,6 +859,9 @@
   difficulty: medio
   kind: js
   in: [javascript/Fetch e JSON]
+  study:
+    - { label: "Usando a Fetch API (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Fetch_API/Using_Fetch" }
+    - { label: "Response.ok (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Response/ok" }
   statement: |
     Escreva `async function buscarLineup(dia)`, que busca `GET /api/lineup?dia=<dia>` com `fetch` e devolve a lista de bandas do JSON.
 
@@ -869,6 +909,9 @@
   kind: dom
   editor: js
   in: [javascript/DOM]
+  study:
+    - { label: "document.createElement (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Document/createElement" }
+    - { label: "textContent (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Node/textContent" }
   html: |
     <ul id="bandas"></ul>
   setup: |
@@ -938,6 +981,9 @@
   kind: dom
   editor: js
   in: [javascript/DOM, javascript/Eventos]
+  study:
+    - { label: "addEventListener (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/EventTarget/addEventListener" }
+    - { label: "O atributo disabled (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/disabled" }
   html: |
     <div class="seletor">
       <button id="menos" aria-label="Diminuir">−</button>
@@ -1019,8 +1065,12 @@
   title: Favoritar bandas
   difficulty: medio
   kind: dom
+  visual: eventos
   editor: js
   in: [javascript/Eventos]
+  study:
+    - { label: "Propagação de eventos (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/Scripting/Event_bubbling" }
+    - { label: "Element.closest (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Element/closest" }
   html: |
     <ul id="lineup">
       <li data-banda="vortice">Vórtice</li>
@@ -1078,6 +1128,9 @@
   kind: dom
   editor: js
   in: [javascript/Eventos]
+  study:
+    - { label: "O evento submit (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/HTMLFormElement/submit_event" }
+    - { label: "preventDefault (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Event/preventDefault" }
   html: |
     <form id="newsletter">
       <label for="email">Seu e-mail</label>
@@ -1145,6 +1198,9 @@
   difficulty: facil
   kind: js
   in: [javascript/Erros]
+  study:
+    - { label: "JSON.parse (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse" }
+    - { label: "SyntaxError (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError" }
   statement: |
     O app guarda preferências como texto JSON. Às vezes o texto chega corrompido ou vazio.
 
@@ -1199,6 +1255,8 @@
   difficulty: medio
   kind: js
   in: [javascript/Erros]
+  study:
+    - { label: "Error e tipos de erro personalizados (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Error" }
   statement: |
     O formulário de compra precisa saber qual campo falhou, para destacá-lo na tela.
 

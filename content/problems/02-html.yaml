@@ -4,6 +4,9 @@
   kind: dom
   editor: html
   in: [html/Estrutura e semântica]
+  study:
+    - { label: "Estruturando documentos (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/Structuring_content/Structuring_documents" }
+    - { label: "Semântica no HTML (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Glossary/Semantics" }
   statement: |
     A página inicial do festival foi feita só com `div`. Ela aparece certa na tela, mas leitores de tela e buscadores não sabem o que é cabeçalho, menu ou conteúdo principal.
 
@@ -86,6 +89,10 @@
   kind: dom
   editor: html
   in: [html/Estrutura e semântica]
+  study:
+    - { label: "O elemento article (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/article" }
+    - { label: "O elemento time (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/time" }
+    - { label: "Títulos h1 a h6 (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/Heading_Elements" }
   statement: |
     A página de notícias tem o título `Notícias` em `h1`. Abaixo dele, escreva a notícia do anúncio do line-up como um `article`:
 
@@ -148,6 +155,9 @@
   kind: dom
   editor: html
   in: ["html/Textos, listas e links"]
+  study:
+    - { label: "O elemento ol (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/ol" }
+    - { label: "rel=\"noopener\" (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel/noopener" }
   statement: |
     Publique o setlist da banda de abertura. A ordem das músicas importa: é a ordem em que serão tocadas.
 
@@ -208,6 +218,10 @@
   kind: dom
   editor: html
   in: [html/Imagens e mídia]
+  study:
+    - { label: "O elemento img (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/img" }
+    - { label: "O elemento figure (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/figure" }
+    - { label: "Carregamento lento (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/Lazy_loading" }
   statement: |
     Mostre o pôster oficial, o arquivo `poster.jpg`, com 600 por 800 pixels, e a legenda `Arte de Marina Couto`.
 
@@ -259,6 +273,9 @@
   kind: dom
   editor: html
   in: [html/Tabelas]
+  study:
+    - { label: "Tabelas acessíveis (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content/Table_accessibility" }
+    - { label: "O elemento th e o atributo scope (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/th" }
   statement: |
     Monte a tabela de preços com o título `Preços dos ingressos`. As colunas são `Setor`, `Inteira` e `Meia`. As linhas são:
 
@@ -325,6 +342,9 @@
   kind: dom
   editor: html
   in: [html/Formulários]
+  study:
+    - { label: "O elemento label (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/label" }
+    - { label: "input type=\"email\" (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/email" }
   statement: |
     Crie o formulário da newsletter com um campo de e-mail e o botão `Assinar`.
 
@@ -379,6 +399,10 @@
   kind: dom
   editor: html
   in: [html/Formulários]
+  study:
+    - { label: "O elemento fieldset (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/fieldset" }
+    - { label: "input type=\"radio\" (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/radio" }
+    - { label: "input type=\"number\" (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/number" }
   statement: |
     Monte o formulário de compra com três escolhas:
 
@@ -463,6 +487,9 @@
   kind: dom
   editor: html
   in: [html/Metadados e SEO]
+  study:
+    - { label: "Metadados no head (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Core/Structuring_content/Webpage_metadata" }
+    - { label: "Protocolo Open Graph", url: "https://ogp.me/" }
   statement: |
     A página do line-up aparece mal no Google e nas prévias de link das redes sociais. Complete o documento:
 

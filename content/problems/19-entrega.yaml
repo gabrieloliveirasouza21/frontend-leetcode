@@ -1,0 +1,1214 @@
+- slug: ssr-em-streaming
+  title: A página que chega em partes
+  difficulty: dificil
+  kind: quiz
+  visual: renderizacao-servidor
+  in: [ssr/Next.js, performance/Streamed Responses]
+  study:
+    - { label: "Streaming e Suspense (Next.js)", url: "https://nextjs.org/docs/app/api-reference/file-conventions/loading" }
+    - { label: "Suspense (React)", url: "https://react.dev/reference/react/Suspense" }
+  statement: |
+    A página de uma banda renderiza no servidor. O cabeçalho e a biografia ficam prontos em 50ms, mas as avaliações dos fãs vêm de um serviço lento, que leva 2 segundos. Hoje a pessoa espera 2 segundos para ver qualquer coisa.
+
+    Qual recurso do Next.js com React resolve?
+  options:
+    - text: Envolver as avaliações num `Suspense` com um fallback. O servidor envia o resto da página na hora, em streaming, e as avaliações chegam depois
+      why: Certo. O HTML é enviado em partes, e o que é lento não segura o que já está pronto.
+    - text: Mover a página toda para o cliente
+      why: A pessoa veria uma página vazia até o JavaScript carregar e buscar os dados.
+    - text: Aumentar o tempo limite do servidor
+      why: Isso não muda o tempo que a pessoa espera.
+    - text: Gerar a página no build com as avaliações
+      why: As avaliações mudam o tempo todo e ficariam desatualizadas.
+  answer: 0
+  explanation: |
+    Com streaming, o servidor manda o HTML em pedaços conforme cada parte fica pronta. `Suspense` marca as fronteiras: o fallback vai primeiro, e o conteúdo real é inserido quando chega. A primeira tela aparece cedo, e as partes lentas não bloqueiam o resto.
+
+- slug: revalidar-pagina-estatica
+  title: O line-up estático que muda às vezes
+  difficulty: medio
+  kind: quiz
+  visual: renderizacao-servidor
+  in: [ssg/Next.js]
+  study:
+    - { label: "Regeneração estática incremental (Next.js)", url: "https://nextjs.org/docs/app/guides/incremental-static-regeneration" }
+  statement: |
+    A página do line-up é gerada no build e muda algumas vezes por dia, quando a produção confirma uma banda. Fazer um build completo a cada mudança é lento.
+
+    Qual recurso do Next.js resolve?
+  options:
+    - text: Regeneração estática incremental, com `revalidate`, que serve a página estática e a regenera ao fundo depois do intervalo, ou sob demanda
+      why: Certo. A página continua rápida como estática e se atualiza sem um build completo.
+    - text: Renderizar no servidor a cada pedido
+      why: Funciona, mas gasta processamento a cada visita para uma página que muda poucas vezes por dia.
+    - text: Desligar o cache do CDN
+      why: Isso deixa tudo mais lento e não regenera a página.
+    - text: Pedir às pessoas que recarreguem a página
+      why: Recarregar não muda o arquivo gerado no build.
+  answer: 0
+  explanation: |
+    A regeneração incremental mistura estático e dinâmico: a página é servida pronta, e o framework a regenera depois de um tempo ou quando você pede, por exemplo num webhook do CMS. Quem chega durante a regeneração ainda recebe a versão anterior, que logo é trocada.
+
+- slug: dados-sem-buscar-duas-vezes
+  title: O pedido que acontece duas vezes
+  difficulty: medio
+  kind: quiz
+  in: [ssr/Nuxt.js]
+  study:
+    - { label: "Busca de dados (Nuxt)", url: "https://nuxt.com/docs/getting-started/data-fetching" }
+  statement: |
+    Numa página Nuxt renderizada no servidor, o line-up é buscado com `fetch` direto no `setup`. Os logs mostram dois pedidos por visita: um no servidor e outro no navegador, durante a hidratação.
+
+    O que o Nuxt oferece para isso?
+  options:
+    - text: "`useFetch` ou `useAsyncData`, que buscam no servidor e enviam o resultado junto com a página, para o navegador reaproveitar sem buscar de novo"
+      why: Certo. O resultado viaja no payload da página e o cliente hidrata com ele.
+    - text: Buscar só no navegador, com `onMounted`
+      why: Assim a página chega sem os dados, e o SSR perde o sentido.
+    - text: Duplicar o código para o servidor e o cliente
+      why: Isso mantém os dois pedidos.
+    - text: Desligar a hidratação
+      why: Sem hidratação, a página não fica interativa.
+  answer: 0
+  explanation: |
+    Em SSR, o mesmo componente roda no servidor e no cliente. Os utilitários de dados dos frameworks serializam o que foi buscado no servidor e entregam ao cliente, evitando pedidos duplicados e diferenças de hidratação.
+
+- slug: escolher-por-rota
+  title: Estático aqui, servidor ali
+  difficulty: medio
+  kind: quiz
+  visual: renderizacao-servidor
+  in: [ssr/Astro, ssg/Astro]
+  study:
+    - { label: "Renderização sob demanda (Astro)", url: "https://docs.astro.build/en/guides/on-demand-rendering/" }
+  statement: |
+    No site em Astro, as páginas de notícias são estáticas, mas a página `minha-conta` mostra dados de quem está logado.
+
+    Como o Astro trata isso?
+  options:
+    - text: Cada rota pode ser pré-renderizada no build ou renderizada sob demanda no servidor, com o adaptador e a opção `prerender` daquela página
+      why: Certo. O Astro permite misturar páginas estáticas e dinâmicas no mesmo projeto.
+    - text: O site inteiro precisa ser estático ou inteiro no servidor
+      why: A escolha pode ser feita por página.
+    - text: Basta usar JavaScript no cliente para buscar a conta
+      why: Funciona para partes da página, mas não serve se a página precisa de dados do servidor antes de aparecer.
+    - text: O Astro não permite páginas com login
+      why: Permite, com renderização sob demanda num servidor ou em funções.
+  answer: 0
+  explanation: |
+    Frameworks modernos escolhem a estratégia por rota: estático para o que é igual para todos, sob demanda para o que depende de quem pede. No Astro, isso exige um adaptador para a plataforma de deploy e a opção `prerender` em cada página.
+
+- slug: previa-por-pull-request
+  title: Ver a mudança antes de publicar
+  difficulty: facil
+  kind: quiz
+  in: [deployment/Vercel, deployment/Netlify]
+  study:
+    - { label: "Deploys de prévia (Vercel)", url: "https://vercel.com/docs/deployments/environments#preview-environment-pre-production" }
+    - { label: "Deploy previews (Netlify)", url: "https://docs.netlify.com/deploy/deploy-types/deploy-previews/" }
+  statement: |
+    A designer quer ver cada mudança no site funcionando antes de ela ir para produção, sem rodar nada na máquina dela.
+
+    O que Vercel e Netlify oferecem?
+  options:
+    - text: Um deploy de prévia por pull request, com uma URL própria, que se atualiza a cada push no branch
+      why: 'Certo. A revisão fica concreta: a pessoa abre o link e testa a mudança como ela vai ficar.'
+    - text: Um botão que publica direto em produção
+      why: Isso publica sem revisão, que é o oposto do pedido.
+    - text: Um servidor de desenvolvimento local
+      why: Exige que a designer rode o projeto na máquina dela.
+    - text: Screenshots automáticos do código
+      why: Uma imagem não mostra interações nem comportamento.
+  answer: 0
+  explanation: |
+    Plataformas de deploy criam um ambiente para cada branch ou pull request, com URL única. A revisão de produto e design acontece junto com a de código. Cuidado com variáveis de ambiente das prévias: use credenciais de teste, não as de produção.
+
+- slug: funcao-na-borda
+  title: Redirecionar pelo país
+  difficulty: medio
+  kind: quiz
+  in: [deployment/Cloudflare]
+  study:
+    - { label: "Cloudflare Workers", url: "https://developers.cloudflare.com/workers/" }
+  statement: |
+    O site deve mandar quem acessa de Portugal para a versão `/pt-pt` e o resto do mundo para `/pt-br`, com o menor atraso possível.
+
+    Por que uma função na borda, como um Cloudflare Worker, combina com isso?
+  options:
+    - text: Ela roda em servidores perto de cada visitante, antes do pedido chegar à origem, e pode responder com um redirecionamento na hora
+      why: Certo. Lógicas pequenas e rápidas, como redirecionamentos e cabeçalhos, ganham com a proximidade.
+    - text: Ela roda no navegador da pessoa
+      why: Funções na borda rodam nos servidores da rede, não no navegador.
+    - text: Ela substitui o banco de dados
+      why: Funções na borda são código, não armazenamento. Elas têm limites de tempo e recursos.
+    - text: Ela só funciona com sites estáticos
+      why: Ela pode ficar na frente de qualquer origem, estática ou dinâmica.
+  answer: 0
+  explanation: |
+    Plataformas de borda executam código nos pontos de presença da CDN, a poucos milissegundos de cada usuário. Servem para redirecionamentos, autenticação leve, testes A/B e personalização simples. Para trabalho pesado ou que depende de um banco central, a latência até o banco pode anular o ganho.
+
+- slug: documentacao-estatica
+  title: A documentação da API do festival
+  difficulty: facil
+  kind: quiz
+  in: [ssg/Vuepress, ssg/Eleventy]
+  study:
+    - { label: "Guia do VuePress", url: "https://vuepress.vuejs.org/guide/introduction.html" }
+    - { label: "Documentação do Eleventy", url: "https://www.11ty.dev/docs/" }
+  statement: |
+    O time quer publicar a documentação da API para parceiros: dezenas de páginas em Markdown, com busca e navegação lateral, atualizadas a cada versão.
+
+    Por que um gerador de site estático, como VuePress ou Eleventy, combina com isso?
+  options:
+    - text: Ele transforma os arquivos Markdown em HTML no build, com navegação e temas, e o resultado é servido como arquivos simples e rápidos
+      why: Certo. Conteúdo que muda a cada versão, igual para todos, é o caso ideal de geração estática.
+    - text: Ele exige um banco de dados para cada página
+      why: O conteúdo vem dos arquivos do repositório, sem banco.
+    - text: Ele só funciona com páginas sem texto
+      why: É justamente feito para conteúdo em texto, como documentação e blogs.
+    - text: Ele renderiza cada página no servidor a cada visita
+      why: As páginas são geradas no build, uma vez.
+  answer: 0
+  explanation: |
+    Geradores estáticos leem arquivos de conteúdo, aplicam modelos e produzem HTML. O VuePress usa Vue nos temas e é comum em documentação, e o Eleventy aceita várias linguagens de template. A documentação fica versionada junto do código e é publicada pela CI.
+
+- slug: pegar-por-chave
+  title: Ler um campo com o tipo certo
+  difficulty: medio
+  kind: ts
+  in: [type-checkers/TypeScript]
+  study:
+    - { label: "keyof (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/keyof-types.html" }
+    - { label: "Tipos de acesso indexado (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/indexed-access-types.html" }
+  statement: |
+    Escreva `function pegar(objeto, chave)`, que devolve `objeto[chave]`. O tipo deve:
+
+    - aceitar só chaves que existem no objeto
+    - devolver o tipo exato daquele campo: com `{ nome: string; ano: number }`, `pegar(b, 'ano')` é `number`
+
+    Não use `any`.
+  forbid: [any]
+  solution: |
+    function pegar<T, K extends keyof T>(objeto: T, chave: K): T[K] {
+      return objeto[chave];
+    }
+  types: |
+    const banda = { nome: 'Vórtice', ano: 1998 };
+    const ano: number = pegar(banda, 'ano');
+    const nome: string = pegar(banda, 'nome');
+    // @ts-expect-error a chave não existe
+    pegar(banda, 'pais');
+    // @ts-expect-error ano é número, não texto
+    const anoTexto: string = pegar(banda, 'ano');
+  tests:
+    - name: devolve o campo
+      code: |
+        expect(pegar({ nome: 'Vórtice', ano: 1998 }, 'ano')).toBe(1998);
+    - name: outro campo
+      hidden: true
+      code: |
+        expect(pegar({ a: 1, b: 'x' }, 'b')).toBe('x');
+  hints:
+    - "`keyof T` é a união das chaves de `T`."
+    - "`T[K]` é o tipo do campo `K` de `T`."
+  explanation: |
+    `K extends keyof T` limita a chave às que existem, e `T[K]` devolve o tipo exato daquele campo. Juntos, fazem o compilador saber que `pegar(b, 'ano')` é número. Com `string` no lugar de `K`, qualquer texto seria aceito e o retorno perderia o tipo.
+  traps:
+    - reason: Chave como string qualquer
+      code: |
+        function pegar<T extends object>(objeto: T, chave: string): unknown { return (objeto as Record<string, unknown>)[chave]; }
+    - reason: Retorno como união de todos os campos
+      code: |
+        function pegar<T>(objeto: T, chave: keyof T): T[keyof T] { return objeto[chave]; }
+
+- slug: mapa-de-precos
+  title: Um preço para cada setor
+  difficulty: medio
+  kind: ts
+  in: [type-checkers/TypeScript]
+  study:
+    - { label: "Record (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type" }
+  statement: |
+    Declare o tipo `Setor` como `'pista' | 'premium' | 'camarote'` e a constante `PRECOS`, com o preço de cada setor: 300, 520 e 900.
+
+    O tipo de `PRECOS` deve exigir exatamente um número para cada setor: faltar um setor ou incluir um que não existe deve dar erro. Escreva também `function preco(setor: Setor): number`.
+  must_use: [Record]
+  solution: |
+    type Setor = 'pista' | 'premium' | 'camarote';
+
+    const PRECOS: Record<Setor, number> = {
+      pista: 300,
+      premium: 520,
+      camarote: 900,
+    };
+
+    function preco(setor: Setor): number {
+      return PRECOS[setor];
+    }
+  types: |
+    const p: number = preco('premium');
+    // @ts-expect-error setor que não existe
+    preco('backstage');
+    // @ts-expect-error falta o camarote
+    const incompleto: Record<Setor, number> = { pista: 1, premium: 2 };
+    // @ts-expect-error setor a mais
+    const extra: typeof PRECOS = { pista: 1, premium: 2, camarote: 3, vip: 4 };
+  tests:
+    - name: preços
+      code: |
+        expect(preco('pista')).toBe(300);
+        expect(preco('camarote')).toBe(900);
+    - name: premium
+      hidden: true
+      code: |
+        expect(preco('premium')).toBe(520);
+  hints:
+    - "`Record<Chaves, Valor>` cria um objeto com exatamente essas chaves."
+  explanation: |
+    `Record<Setor, number>` amarra as chaves do objeto à união de setores. Ao acrescentar um setor ao tipo, o compilador aponta todos os mapas que esqueceram dele. Um objeto tipado como `{ [k: string]: number }` aceitaria qualquer chave e não avisaria nada.
+  traps:
+    - reason: Índice com string
+      code: |
+        type Setor = 'pista' | 'premium' | 'camarote';
+        const PRECOS: { [k: string]: number } = { pista: 300, premium: 520, camarote: 900 };
+        function preco(setor: Setor): number { return PRECOS[setor]; }
+        type Record_ = Record<string, number>;
+
+- slug: guarda-de-tipo
+  title: O JSON que pode ser qualquer coisa
+  difficulty: medio
+  kind: ts
+  in: [type-checkers/TypeScript]
+  study:
+    - { label: "Predicados de tipo (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates" }
+  statement: |
+    A API devolve `unknown`. Declare o tipo `Banda` com `nome: string` e `ano: number`, e escreva `function ehBanda(valor: unknown): valor is Banda`, que confere em tempo de execução se o valor tem esse formato.
+
+    Depois de `if (ehBanda(x))`, o TypeScript deve saber que `x` é uma `Banda`.
+  solution: |
+    type Banda = { nome: string; ano: number };
+
+    function ehBanda(valor: unknown): valor is Banda {
+      return (
+        typeof valor === 'object' &&
+        valor !== null &&
+        typeof (valor as Banda).nome === 'string' &&
+        typeof (valor as Banda).ano === 'number'
+      );
+    }
+  types: |
+    const x: unknown = JSON.parse('{}');
+    if (ehBanda(x)) {
+      const n: string = x.nome;
+      const a: number = x.ano;
+    }
+    // @ts-expect-error fora do if, x continua unknown
+    const fora: string = x.nome;
+  tests:
+    - name: reconhece banda
+      code: |
+        expect(ehBanda({ nome: 'Vórtice', ano: 1998 })).toBe(true);
+        expect(ehBanda({ nome: 'Vórtice' })).toBe(false);
+    - name: valores estranhos
+      hidden: true
+      code: |
+        expect(ehBanda(null)).toBe(false);
+        expect(ehBanda('Vórtice')).toBe(false);
+        expect(ehBanda({ nome: 'Vórtice', ano: '1998' })).toBe(false);
+  hints:
+    - O retorno `valor is Banda` diz ao compilador o que vale quando a função devolve `true`.
+    - Confira `null` à parte, porque `typeof null` é `'object'`.
+  explanation: |
+    Tipos somem em tempo de execução, e dados externos podem vir com qualquer formato. Um predicado de tipo junta as duas coisas: a checagem roda de verdade e o compilador estreita o tipo depois do `if`. Para esquemas grandes, bibliotecas como Zod geram o tipo e a validação juntos.
+  traps:
+    - reason: Retorna boolean, sem estreitar
+      code: |
+        type Banda = { nome: string; ano: number };
+        function ehBanda(v: unknown): boolean { return typeof v === 'object' && v !== null && typeof (v as Banda).nome === 'string' && typeof (v as Banda).ano === 'number'; }
+    - reason: Esquece de conferir o ano
+      code: |
+        type Banda = { nome: string; ano: number };
+        function ehBanda(v: unknown): v is Banda { return typeof v === 'object' && v !== null && typeof (v as Banda).nome === 'string'; }
+
+- slug: lista-como-tipo
+  title: Uma lista e um tipo, sem repetir
+  difficulty: medio
+  kind: ts
+  in: [type-checkers/TypeScript]
+  study:
+    - { label: "Asserções const (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-4.html#const-assertions" }
+    - { label: "typeof em tipos (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/typeof-types.html" }
+  statement: |
+    O site precisa da lista `DIAS` com `'sexta'`, `'sabado'` e `'domingo'`, para montar os botões, e do tipo `Dia` com esses mesmos valores.
+
+    Escreva a lista uma vez só e derive o tipo `Dia` dela, sem escrever os valores de novo. Escreva também `function ehDia(texto: string): texto is Dia`.
+  forbid: ["'sexta' |", '"sexta" |']
+  solution: |
+    const DIAS = ['sexta', 'sabado', 'domingo'] as const;
+
+    type Dia = (typeof DIAS)[number];
+
+    function ehDia(texto: string): texto is Dia {
+      return (DIAS as readonly string[]).includes(texto);
+    }
+  types: |
+    const d: Dia = 'sabado';
+    // @ts-expect-error não é um dia do festival
+    const errado: Dia = 'segunda';
+    // @ts-expect-error a lista não pode ser alterada
+    DIAS.push('segunda');
+  tests:
+    - name: confere dias
+      code: |
+        expect(ehDia('domingo')).toBe(true);
+        expect(ehDia('segunda')).toBe(false);
+    - name: lista
+      hidden: true
+      code: |
+        expect(DIAS).toEqual(['sexta', 'sabado', 'domingo']);
+  hints:
+    - "`as const` faz o TypeScript guardar os valores literais, e não só `string[]`."
+    - "`(typeof DIAS)[number]` é a união dos itens do array."
+  explanation: |
+    Com `as const`, o array vira uma tupla somente leitura de literais. `typeof DIAS[number]` extrai a união dos itens. Assim, acrescentar um dia na lista atualiza o tipo sozinho, sem duas listas para manter em sincronia.
+  traps:
+    - reason: Sem as const, o tipo vira string
+      code: |
+        const DIAS = ['sexta', 'sabado', 'domingo'];
+        type Dia = (typeof DIAS)[number];
+        function ehDia(t: string): t is Dia { return DIAS.includes(t); }
+
+- slug: tipo-do-retorno
+  title: O tipo que a função devolve
+  difficulty: dificil
+  kind: ts
+  in: [type-checkers/TypeScript]
+  study:
+    - { label: "ReturnType e Awaited (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/utility-types.html" }
+  statement: |
+    A função `carregarPerfil` já existe e devolve uma promessa com um objeto grande. Em vez de copiar o formato à mão, declare o tipo `Perfil` como o valor que a promessa resolve, a partir da própria função.
+
+    Depois, escreva `function saudacao(perfil: Perfil): string`, que devolve `Olá, <nome>!`.
+  starter: |
+    async function carregarPerfil(id: number) {
+      return { id, nome: 'Ana', favoritas: ['Vórtice'], vip: false };
+    }
+
+    type Perfil = unknown;
+
+    function saudacao(perfil: Perfil): string {
+      return `Olá, ${perfil.nome}!`;
+    }
+  must_use: [ReturnType, Awaited]
+  solution: |
+    async function carregarPerfil(id: number) {
+      return { id, nome: 'Ana', favoritas: ['Vórtice'], vip: false };
+    }
+
+    type Perfil = Awaited<ReturnType<typeof carregarPerfil>>;
+
+    function saudacao(perfil: Perfil): string {
+      return `Olá, ${perfil.nome}!`;
+    }
+  types: |
+    const p: Perfil = { id: 1, nome: 'Bia', favoritas: [], vip: true };
+    const v: boolean = p.vip;
+    // @ts-expect-error falta o nome
+    const semNome: Perfil = { id: 1, favoritas: [], vip: true };
+    // @ts-expect-error Perfil não é uma promessa
+    const comoPromessa: Promise<unknown> = p;
+  tests:
+    - name: saudação
+      code: |
+        expect(saudacao({ id: 1, nome: 'Ana', favoritas: [], vip: false })).toBe('Olá, Ana!');
+    - name: outro nome
+      hidden: true
+      code: |
+        expect(saudacao({ id: 2, nome: 'Bia', favoritas: [], vip: true })).toBe('Olá, Bia!');
+  hints:
+    - "`ReturnType<typeof f>` dá o tipo do retorno, que aqui é uma `Promise`."
+    - "`Awaited<...>` tira o tipo de dentro da promessa."
+  explanation: |
+    Derivar tipos da implementação evita que eles fiquem desatualizados: se `carregarPerfil` ganhar um campo, `Perfil` ganha junto. `ReturnType` pega o retorno, e `Awaited` desembrulha a promessa, inclusive promessas aninhadas.
+  traps:
+    - reason: Fica com a promessa
+      code: |
+        async function carregarPerfil(id: number) { return { id, nome: 'Ana', favoritas: ['Vórtice'], vip: false }; }
+        type Perfil = ReturnType<typeof carregarPerfil>;
+        type _A = Awaited<Perfil>;
+        function saudacao(perfil: Perfil): string { return `Olá, ${(perfil as any).nome}!`; }
+
+- slug: somente-leitura
+  title: A configuração que ninguém altera
+  difficulty: medio
+  kind: ts
+  in: [type-checkers/TypeScript]
+  study:
+    - { label: "Readonly (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/utility-types.html#readonlytype" }
+    - { label: "Arrays somente leitura (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/objects.html#the-readonlyarray-type" }
+  statement: |
+    Declare o tipo `Config` com `api: string` e `bandas: string[]`, mas somente leitura: nem os campos nem a lista podem ser alterados depois de criados.
+
+    Escreva `function comBanda(config: Config, banda: string): Config`, que devolve uma configuração nova com a banda no fim, sem alterar a original.
+  solution: |
+    type Config = {
+      readonly api: string;
+      readonly bandas: readonly string[];
+    };
+
+    function comBanda(config: Config, banda: string): Config {
+      return { ...config, bandas: [...config.bandas, banda] };
+    }
+  types: |
+    const c: Config = { api: '/api', bandas: ['Vórtice'] };
+    const d: Config = comBanda(c, 'Asfalto');
+    // @ts-expect-error campo somente leitura
+    c.api = '/outra';
+    // @ts-expect-error lista somente leitura
+    c.bandas.push('Ferrugem');
+    // @ts-expect-error item somente leitura
+    c.bandas[0] = 'Maré';
+  tests:
+    - name: acrescenta
+      code: |
+        const c = { api: '/api', bandas: ['Vórtice'] };
+        expect(comBanda(c, 'Asfalto').bandas).toEqual(['Vórtice', 'Asfalto']);
+    - name: não altera a original
+      hidden: true
+      code: |
+        const c = { api: '/api', bandas: ['Vórtice'] };
+        comBanda(c, 'Asfalto');
+        expect(c.bandas).toEqual(['Vórtice']);
+  hints:
+    - "`readonly` num campo impede reatribuir o campo. `readonly string[]` impede `push` e troca de itens."
+  explanation: |
+    `readonly` é uma checagem do compilador: o código que tenta alterar não compila. Para listas, o campo `readonly` sozinho não basta, porque ainda dá para chamar `push`, então o tipo da lista também precisa ser `readonly string[]`. Em tempo de execução, `Object.freeze` faz algo parecido.
+  traps:
+    - reason: Campo readonly, lista mutável
+      code: |
+        type Config = { readonly api: string; readonly bandas: string[] };
+        function comBanda(c: Config, b: string): Config { return { ...c, bandas: [...c.bandas, b] }; }
+
+- slug: layout-que-pula
+  title: O botão que foge do dedo
+  difficulty: medio
+  kind: quiz
+  in: [performance/Lighthouse]
+  study:
+    - { label: "Cumulative Layout Shift (web.dev)", url: "https://web.dev/articles/cls" }
+    - { label: "Otimizando o CLS (web.dev)", url: "https://web.dev/articles/optimize-cls" }
+  statement: |
+    Na página de ingressos, a pessoa vai tocar em "Comprar" e, nesse instante, um banner carregado depois empurra tudo para baixo. Ela toca em outra coisa. O Lighthouse aponta um CLS alto.
+
+    Quais correções ajudam?
+  options:
+    - text: Reservar o espaço do banner e das imagens antes de carregarem, com dimensões ou `aspect-ratio`, e não inserir conteúdo acima do que já está na tela
+      why: Certo. CLS mede o quanto o conteúdo visível se desloca de forma inesperada. Espaço reservado não se move.
+    - text: Carregar o banner mais rápido
+      why: Ajuda um pouco, mas ele continua empurrando o conteúdo quando chega.
+    - text: Diminuir o tamanho do botão
+      why: O botão menor continua sendo empurrado.
+    - text: Desligar o Lighthouse
+      why: A métrica mede um problema real para as pessoas.
+  answer: 0
+  explanation: |
+    Mudanças de layout inesperadas vêm de imagens sem dimensões, anúncios e banners injetados, e fontes que trocam de tamanho. Reserve espaço com `width` e `height`, `aspect-ratio` ou `min-height`. Conteúdo novo entra abaixo do que a pessoa está vendo, ou em resposta a uma ação dela.
+
+- slug: fonte-sem-texto-invisivel
+  title: O texto que demora a aparecer
+  difficulty: medio
+  kind: quiz
+  in: [performance/Lighthouse]
+  study:
+    - { label: "font-display (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display" }
+  statement: |
+    O site usa uma fonte personalizada de 300 KB. Em conexões lentas, o texto da página fica invisível por alguns segundos, até a fonte chegar.
+
+    Qual ajuste mostra o texto imediatamente?
+  options:
+    - text: "`font-display: swap` no `@font-face`, que mostra o texto com uma fonte do sistema e troca quando a personalizada chegar"
+      why: Certo. O texto fica legível desde o início, e a troca acontece depois.
+    - text: Esconder o texto até a fonte carregar
+      why: Isso é o comportamento que causa o problema.
+    - text: Usar a fonte em mais lugares
+      why: Não muda quando o texto aparece.
+    - text: Colocar a fonte no fim do HTML
+      why: A fonte é pedida pelo CSS quando um texto precisa dela, não pela posição no HTML.
+  answer: 0
+  explanation: |
+    Por padrão, muitos navegadores escondem o texto por um tempo enquanto a fonte baixa. `font-display: swap` prioriza a leitura. Para reduzir o salto da troca, use fontes de reserva com métricas parecidas, subconjuntos menores da fonte e `preload` da fonte principal.
+
+- slug: avisar-o-navegador-antes
+  title: O que o navegador descobre tarde
+  difficulty: dificil
+  kind: quiz
+  visual: renderizacao
+  in: [performance/Lighthouse, performance/Cache-Control]
+  study:
+    - { label: "rel=preload (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel/preload" }
+    - { label: "rel=preconnect (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel/preconnect" }
+  statement: |
+    A imagem principal da página, que é o LCP, está num CSS de fundo, e o navegador só descobre que ela existe depois de baixar e ler o CSS. As fontes vêm de outro domínio.
+
+    Que dicas no `head` ajudam o navegador a começar antes?
+  options:
+    - text: "`<link rel=\"preload\">` para a imagem principal e `<link rel=\"preconnect\">` para o domínio das fontes"
+      why: Certo. preload pede o recurso cedo, antes de o CSS revelar que ele existe, e preconnect abre a conexão antes de a primeira fonte ser pedida.
+    - text: "`rel=\"prefetch\"` para a imagem principal"
+      why: prefetch é para recursos da próxima navegação, com baixa prioridade, e não para a página atual.
+    - text: Mover o CSS para o fim do body
+      why: A página apareceria sem estilo, e a imagem seria descoberta ainda mais tarde.
+    - text: Converter a imagem em base64 dentro do CSS
+      why: Isso aumenta o CSS, que bloqueia a renderização, e impede o cache separado da imagem.
+  answer: 0
+  explanation: |
+    O navegador só pede o que descobre. Recursos escondidos em CSS ou em JavaScript são descobertos tarde. `preload` antecipa um recurso da página atual, `preconnect` adianta DNS, TCP e TLS de outra origem, e `fetchpriority` ajusta a prioridade. Use com moderação: tudo com alta prioridade é o mesmo que nada.
+
+- slug: cache-que-revalida-ao-fundo
+  title: Rápido e quase sempre atual
+  difficulty: dificil
+  kind: quiz
+  visual: cache-http
+  in: [performance/Cache-Control]
+  study:
+    - { label: "Cache-Control e stale-while-revalidate (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Headers/Cache-Control" }
+    - { label: "stale-while-revalidate (web.dev)", url: "https://web.dev/articles/stale-while-revalidate" }
+  statement: |
+    O endpoint `/api/lineup` muda poucas vezes por dia. Responder sempre do servidor é lento, mas cache longo deixa os dados velhos por muito tempo.
+
+    O que faz `Cache-Control: max-age=60, stale-while-revalidate=3600`?
+  options:
+    - text: Por 60 segundos a resposta vale. Depois, por até uma hora, o cache entrega a versão guardada na hora e busca uma nova ao fundo para a próxima vez
+      why: Certo. A pessoa nunca espera pelo servidor nesse intervalo, e os dados se atualizam logo.
+    - text: A resposta vale por uma hora e depois some
+      why: O max-age é de 60 segundos. A hora é a janela em que a cópia velha ainda pode ser usada enquanto revalida.
+    - text: O navegador pede ao servidor a cada 60 segundos, mesmo sem ninguém na página
+      why: A revalidação só acontece quando a resposta é pedida.
+    - text: O cache é desligado
+      why: É o contrário. O cache é usado de forma mais agressiva.
+  answer: 0
+  explanation: |
+    `stale-while-revalidate` troca um pouco de atualidade por velocidade: a resposta antiga é servida na hora, e a atualização acontece em paralelo. CDNs e bibliotecas como SWR e TanStack Query usam a mesma ideia no cliente.
+
+- slug: animar-sem-layout
+  title: A animação que trava no celular
+  difficulty: medio
+  kind: quiz
+  visual: composicao
+  in: [performance/DevTools Usage, css/Transições e animações]
+  study:
+    - { label: "Animações de alto desempenho (web.dev)", url: "https://web.dev/articles/animations-guide" }
+    - { label: "will-change (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/will-change" }
+  statement: |
+    O cartão da banda desliza para dentro da tela animando `left` de -300px até 0. No celular, a animação engasga. Use a cena para comparar `left` com `transform`.
+
+    Por que `transform: translateX()` costuma ser mais suave?
+  options:
+    - text: Com transform, o cartão pode ir para uma camada própria, e cada quadro só recompõe as camadas, sem recalcular layout nem repintar
+      why: Certo. Composição é barata e pode rodar fora da thread principal.
+    - text: transform deixa o cartão mais leve em bytes
+      why: O tamanho do arquivo não muda. A diferença está no trabalho feito a cada quadro.
+    - text: left não funciona em celulares
+      why: Funciona, mas exige layout e pintura a cada quadro, o que pesa em aparelhos mais fracos.
+    - text: transform pula a animação e mostra o fim direto
+      why: A animação acontece normalmente, só que com menos trabalho por quadro.
+  answer: 0
+  explanation: |
+    Cada quadro passa por estilo, layout, pintura e composição. Animar `left`, `top`, `width` ou `margin` refaz o layout e a pintura. Animar `transform` e `opacity` permite ao navegador mover ou desbotar uma camada pronta. O DevTools mostra isso na aba Performance e no realce de áreas repintadas.
+
+- slug: slot-no-cartao
+  title: O cartão com espaço para conteúdo
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [web-components/Shadow DOM, web-components/HTML Templates]
+  study:
+    - { label: "Usando templates e slots (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_templates_and_slots" }
+  html: |
+    <cartao-banda>
+      <span slot="nome">Vórtice</span>
+      <span slot="horario">Sábado, 22h</span>
+    </cartao-banda>
+    <cartao-banda>
+      <span slot="nome">Asfalto</span>
+    </cartao-banda>
+  statement: |
+    Defina `<cartao-banda>` com Shadow DOM. O shadow root tem:
+
+    - um `h3` com um `slot` chamado `nome`
+    - um `p` com um `slot` chamado `horario`, que mostra `Horário a confirmar` quando a página não fornecer esse conteúdo
+
+    O conteúdo do HTML da página deve aparecer nos lugares certos, sem copiar o texto para dentro do shadow root.
+  must_use: [attachShadow]
+  solution: |
+    class CartaoBanda extends HTMLElement {
+      constructor() {
+        super();
+        const raiz = this.attachShadow({ mode: 'open' });
+        const titulo = document.createElement('h3');
+        const nome = document.createElement('slot');
+        nome.name = 'nome';
+        titulo.append(nome);
+        const paragrafo = document.createElement('p');
+        const horario = document.createElement('slot');
+        horario.name = 'horario';
+        horario.textContent = 'Horário a confirmar';
+        paragrafo.append(horario);
+        raiz.append(titulo, paragrafo);
+      }
+    }
+
+    customElements.define('cartao-banda', CartaoBanda);
+  tests:
+    - name: conteúdo no slot do nome
+      code: |
+        const raiz = $$('cartao-banda')[0].shadowRoot;
+        const slot = raiz.querySelector('h3 slot[name="nome"]');
+        expect(slot.assignedNodes()[0].textContent).toBe('Vórtice');
+    - name: horário com reserva
+      hidden: true
+      code: |
+        const [a, b] = $$('cartao-banda').map((c) => c.shadowRoot.querySelector('p slot[name="horario"]'));
+        expect(a.assignedNodes()[0].textContent).toBe('Sábado, 22h');
+        expect(b.assignedNodes()).toHaveLength(0);
+        expect(b.textContent).toBe('Horário a confirmar');
+    - name: sem copiar o texto
+      hidden: true
+      code: |
+        const raiz = $$('cartao-banda')[0].shadowRoot;
+        expect(raiz.textContent).not.toContain('Vórtice');
+  hints:
+    - Um `<slot name="x">` mostra os filhos da página que têm `slot="x"`.
+    - O conteúdo dentro do próprio `slot` é a reserva, usada quando nada é atribuído a ele.
+  explanation: |
+    Slots ligam a estrutura do componente ao conteúdo de quem usa. O texto continua no DOM da página, acessível e estilizável por fora, e só é exibido na posição do slot. O conteúdo padrão do slot cobre o caso em que nada foi fornecido.
+  traps:
+    - reason: Copia o texto para o shadow root
+      code: |
+        class C extends HTMLElement {
+          connectedCallback() { const r = this.attachShadow({ mode: 'open' }); const n = this.querySelector('[slot="nome"]')?.textContent ?? ''; const h = this.querySelector('[slot="horario"]')?.textContent ?? 'Horário a confirmar'; r.innerHTML = `<h3>${n}</h3><p>${h}</p><slot></slot>`; }
+        }
+        customElements.define('cartao-banda', C);
+
+- slug: evento-do-componente
+  title: Avisar a página de fora
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [web-components/Custom Elements, javascript/Eventos]
+  study:
+    - { label: "Criando e disparando eventos (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Events/Creating_and_triggering_events" }
+    - { label: "CustomEvent (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent" }
+  html: |
+    <section id="area">
+      <botao-favoritar banda="Vórtice"></botao-favoritar>
+    </section>
+  statement: |
+    Defina `<botao-favoritar>`, que renderiza um `button` com o texto `Favoritar`, dentro do próprio elemento, sem Shadow DOM. Ao clicar, o elemento dispara o evento `favoritar`:
+
+    - um `CustomEvent` com `detail` igual a `{ banda }`, lido do atributo `banda`
+    - que borbulha, para a página poder ouvir num elemento acima, como `#area`
+  must_use: [CustomEvent, dispatchEvent]
+  solution: |
+    class BotaoFavoritar extends HTMLElement {
+      connectedCallback() {
+        const botao = document.createElement('button');
+        botao.textContent = 'Favoritar';
+        botao.addEventListener('click', () => {
+          this.dispatchEvent(new CustomEvent('favoritar', { detail: { banda: this.getAttribute('banda') }, bubbles: true }));
+        });
+        this.replaceChildren(botao);
+      }
+    }
+
+    customElements.define('botao-favoritar', BotaoFavoritar);
+  tests:
+    - name: dispara com a banda
+      code: |
+        const ouvinte = fn();
+        el('botao-favoritar').addEventListener('favoritar', (e) => ouvinte(e.detail));
+        click('botao-favoritar button');
+        expect(ouvinte).toHaveBeenCalledWith({ banda: 'Vórtice' });
+    - name: borbulha
+      hidden: true
+      code: |
+        const ouvinte = fn();
+        el('#area').addEventListener('favoritar', (e) => ouvinte(e.detail.banda, e.target.tagName));
+        click('botao-favoritar button');
+        expect(ouvinte).toHaveBeenCalledWith('Vórtice', 'BOTAO-FAVORITAR');
+  hints:
+    - "`new CustomEvent(nome, { detail, bubbles: true })` cria o evento com dados."
+    - Dispare no próprio elemento, com `this.dispatchEvent`.
+  explanation: |
+    Componentes se comunicam com a página por eventos, como os elementos nativos. `detail` leva os dados, `bubbles` permite ouvir num ancestral e, com Shadow DOM, `composed: true` deixa o evento atravessar a fronteira do shadow root.
+  traps:
+    - reason: Não borbulha
+      code: |
+        class B extends HTMLElement { connectedCallback() { const b = document.createElement('button'); b.textContent = 'Favoritar'; b.addEventListener('click', () => this.dispatchEvent(new CustomEvent('favoritar', { detail: { banda: this.getAttribute('banda') } }))); this.replaceChildren(b); } }
+        customElements.define('botao-favoritar', B);
+
+- slug: atualizar-depois-da-mutacao
+  title: Favoritou, mas a lista não mudou
+  difficulty: medio
+  kind: quiz
+  in: [graphql/Apollo]
+  study:
+    - { label: "Mutações no Apollo Client", url: "https://www.apollographql.com/docs/react/data/mutations" }
+    - { label: "Cache do Apollo Client", url: "https://www.apollographql.com/docs/react/caching/overview" }
+  statement: |
+    Com Apollo Client, a mutação `favoritar(bandaId)` devolve só `{ ok: true }`. A lista "Minhas favoritas", que veio de outra consulta, não mostra a banda nova até recarregar a página.
+
+    O que resolve?
+  options:
+    - text: Fazer a mutação devolver os objetos alterados com `id` e campos, para o cache normalizado atualizar sozinho, ou atualizar o cache ou refazer a consulta da lista depois da mutação
+      why: Certo. O cache só atualiza o que ele recebe. Com a resposta certa, ou com refetchQueries e update, a lista acompanha.
+    - text: Desligar o cache do Apollo
+      why: Resolve à força, mas tudo passa a ser buscado de novo a cada tela.
+    - text: Esperar o cache expirar sozinho
+      why: O cache do Apollo não expira por tempo sem configuração.
+    - text: Chamar a mutação duas vezes
+      why: Isso duplica a ação e não atualiza a lista.
+  answer: 0
+  explanation: |
+    O Apollo guarda objetos por tipo e `id`, e toda consulta que mostra o mesmo objeto se atualiza quando ele muda no cache. Mutações devem devolver os objetos que alteram. Quando a mudança afeta listas, como adicionar ou remover itens, use `update` para editar o cache ou `refetchQueries` para buscar de novo.
+
+- slug: consultas-n-mais-um
+  title: Cem consultas para uma página
+  difficulty: dificil
+  kind: quiz
+  in: [graphql/Apollo, graphql/Relay Modern]
+  study:
+    - { label: "Boas práticas de performance (GraphQL)", url: "https://graphql.org/learn/performance/" }
+    - { label: "DataLoader", url: "https://github.com/graphql/dataloader" }
+  statement: |
+    A consulta pede 100 shows e, para cada show, a banda. O servidor GraphQL faz 1 consulta ao banco para os shows e mais 100, uma por banda. A página ficou lenta.
+
+    Como resolver no servidor?
+  options:
+    - text: Agrupar as buscas de banda de uma mesma consulta numa só, com um DataLoader, que junta os ids e faz uma consulta para todos
+      why: Certo. O problema N+1 vem dos resolvers independentes, e o agrupamento por lote resolve sem mudar o esquema.
+    - text: Pedir ao cliente para não buscar a banda
+      why: O cliente precisa do dado. A ineficiência está na forma como o servidor busca.
+    - text: Trocar GraphQL por REST
+      why: REST pode ter o mesmo problema, e a solução continua sendo buscar em lote.
+    - text: Aumentar a memória do servidor
+      why: As 100 idas ao banco continuam acontecendo.
+  answer: 0
+  explanation: |
+    Em GraphQL, cada campo tem o seu resolver, e resolver a banda de cada show em separado gera N consultas extras. O DataLoader coleta os ids pedidos no mesmo ciclo e faz uma busca em lote, com cache por requisição. Clientes como Relay e Apollo agrupam do lado deles, mas o N+1 é do servidor.
+
+- slug: anunciar-mudancas
+  title: O carrinho atualizou, mas ninguém ouviu
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [accessibility]
+  study:
+    - { label: "Regiões ARIA live (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Guides/Live_regions" }
+  html: |
+    <button class="add" data-setor="Pista">Adicionar pista</button>
+    <button class="add" data-setor="Camarote">Adicionar camarote</button>
+    <div id="aviso" role="status"></div>
+  statement: |
+    Quando um ingresso é adicionado, quem usa leitor de tela não percebe nada, porque o foco continua no botão. O HTML já tem uma região `#aviso` com `role="status"`, que os leitores de tela anunciam quando o texto muda.
+
+    Ao clicar em cada botão `.add`, escreva em `#aviso` a frase `<setor> adicionado ao carrinho. Total: <n> ingressos`, com o setor do `data-setor` e o total acumulado.
+  solution: |
+    const aviso = document.getElementById('aviso');
+    let total = 0;
+    for (const botao of document.querySelectorAll('.add')) {
+      botao.addEventListener('click', () => {
+        total++;
+        aviso.textContent = `${botao.dataset.setor} adicionado ao carrinho. Total: ${total} ingressos`;
+      });
+    }
+  tests:
+    - name: anuncia
+      code: |
+        click($$('.add')[0]);
+        expect(text('#aviso')).toBe('Pista adicionado ao carrinho. Total: 1 ingressos');
+    - name: acumula
+      hidden: true
+      code: |
+        click($$('.add')[0]);
+        click($$('.add')[1]);
+        expect(text('#aviso')).toBe('Camarote adicionado ao carrinho. Total: 2 ingressos');
+        expect(el('#aviso').getAttribute('role')).toBe('status');
+  hints:
+    - Basta mudar o texto da região. O leitor de tela anuncia sozinho.
+    - "`botao.dataset.setor` lê o atributo `data-setor`."
+  explanation: |
+    Regiões vivas, com `role="status"` ou `aria-live="polite"`, avisam mudanças sem tirar o foco do lugar. A região precisa existir na página antes da mudança, e o anúncio acontece quando o conteúdo dela muda. Para erros urgentes, `role="alert"` interrompe a leitura atual.
+  traps:
+    - reason: Cria a região na hora da mudança
+      code: |
+        let t = 0;
+        for (const b of document.querySelectorAll('.add')) b.addEventListener('click', () => { t++; document.getElementById('aviso').remove(); const d = document.createElement('div'); d.id = 'aviso'; d.textContent = `${b.dataset.setor} adicionado ao carrinho. Total: ${t} ingressos`; document.body.append(d); });
+
+- slug: contraste-de-cor
+  title: Dá para ler esse texto?
+  difficulty: dificil
+  kind: js
+  in: [accessibility, design-systems]
+  study:
+    - { label: "Contraste mínimo, critério 1.4.3 (W3C)", url: "https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" }
+    - { label: "Luminância relativa (W3C)", url: "https://www.w3.org/WAI/GL/wiki/Relative_luminance" }
+  statement: |
+    O design system precisa conferir as combinações de cores. Escreva `contraste(cor1, cor2)`, que recebe cores como `'#d7263d'` e devolve a razão de contraste das WCAG, arredondada para 2 casas.
+
+    1. Para cada canal, divida por 255. Se o valor for no máximo 0.04045, divida por 12.92. Senão, calcule `((v + 0.055) / 1.055) ** 2.4`
+    2. A luminância é `0.2126 * R + 0.7152 * G + 0.0722 * B`
+    3. A razão é `(L1 + 0.05) / (L2 + 0.05)`, com L1 a luminância mais clara
+
+    Aceite também cores curtas, como `'#fff'`.
+  solution: |
+    function contraste(cor1, cor2) {
+      const luminancia = (cor) => {
+        let hex = cor.replace('#', '');
+        if (hex.length === 3) hex = [...hex].map((c) => c + c).join('');
+        const canais = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+        const [r, g, b] = canais.map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const [a, b] = [luminancia(cor1), luminancia(cor2)].sort((x, y) => y - x);
+      return Math.round(((a + 0.05) / (b + 0.05)) * 100) / 100;
+    }
+  tests:
+    - name: preto e branco
+      code: |
+        expect(contraste('#000000', '#ffffff')).toBe(21);
+    - name: ordem não importa
+      hidden: true
+      code: |
+        expect(contraste('#ffffff', '#000000')).toBe(21);
+        expect(contraste('#777777', '#ffffff')).toBe(4.48);
+    - name: cores curtas e iguais
+      hidden: true
+      code: |
+        expect(contraste('#fff', '#ffffff')).toBe(1);
+        expect(contraste('#d7263d', '#fff')).toBe(4.96);
+  hints:
+    - Converta cada par de dígitos hexadecimais com `parseInt(x, 16)`.
+    - Ordene as luminâncias para a maior ficar em cima na divisão.
+  explanation: |
+    As WCAG pedem contraste de pelo menos 4.5:1 para texto normal e 3:1 para texto grande. A luminância relativa corrige o brilho de cada canal como o olho percebe, e o verde pesa mais. O cinza `#777777` em fundo branco fica com 4.48, logo abaixo do mínimo.
+  traps:
+    - reason: Média simples dos canais
+      code: |
+        function contraste(a, b) { const l = (c) => { let h = c.replace('#', ''); if (h.length === 3) h = [...h].map((x) => x + x).join(''); return [0, 2, 4].reduce((s, i) => s + parseInt(h.slice(i, i + 2), 16) / 255, 0) / 3; }; const [x, y] = [l(a), l(b)].sort((p, q) => q - p); return Math.round(((x + 0.05) / (y + 0.05)) * 100) / 100; }
+    - reason: Não aceita cor curta
+      code: |
+        function contraste(a, b) { const l = (c) => { const h = c.replace('#', ''); const [r, g, bb] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * bb; }; const [x, y] = [l(a), l(b)].sort((p, q) => q - p); return Math.round(((x + 0.05) / (y + 0.05)) * 100) / 100; }
+
+- slug: prender-foco-no-modal
+  title: O foco que escapa do modal
+  difficulty: dificil
+  kind: dom
+  editor: js
+  in: [accessibility]
+  study:
+    - { label: "Padrão de diálogo modal (W3C)", url: "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/" }
+  html: |
+    <button id="abrir">Ver regras</button>
+    <div id="modal" role="dialog" aria-modal="true" aria-labelledby="titulo" hidden>
+      <h2 id="titulo">Regras do festival</h2>
+      <a href="#regras">Regulamento completo</a>
+      <button id="aceitar">Aceitar</button>
+      <button id="fechar">Fechar</button>
+    </div>
+  statement: |
+    Este modal é uma `div`, não um `dialog`, e você não pode trocar o HTML. Escreva o JavaScript:
+
+    - `#abrir` mostra o modal e põe o foco no primeiro elemento focável dele
+    - dentro do modal, Tab no último elemento volta para o primeiro, e Shift+Tab no primeiro vai para o último
+    - Escape ou `#fechar` escondem o modal e devolvem o foco a `#abrir`
+  solution: |
+    const abrir = document.getElementById('abrir');
+    const modal = document.getElementById('modal');
+    const focaveis = () => [...modal.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])')];
+
+    function fechar() {
+      modal.hidden = true;
+      abrir.focus();
+    }
+
+    abrir.addEventListener('click', () => {
+      modal.hidden = false;
+      focaveis()[0].focus();
+    });
+
+    document.getElementById('fechar').addEventListener('click', fechar);
+
+    modal.addEventListener('keydown', (evento) => {
+      if (evento.key === 'Escape') {
+        fechar();
+        return;
+      }
+      if (evento.key !== 'Tab') return;
+      const lista = focaveis();
+      const primeiro = lista[0];
+      const ultimo = lista[lista.length - 1];
+      if (evento.shiftKey && document.activeElement === primeiro) {
+        evento.preventDefault();
+        ultimo.focus();
+      } else if (!evento.shiftKey && document.activeElement === ultimo) {
+        evento.preventDefault();
+        primeiro.focus();
+      }
+    });
+  tests:
+    - name: abre com foco dentro
+      code: |
+        click('#abrir');
+        expect(el('#modal').hidden).toBe(false);
+        expect(document.activeElement.textContent).toBe('Regulamento completo');
+    - name: Tab no último volta ao primeiro
+      hidden: true
+      code: |
+        click('#abrir');
+        el('#fechar').focus();
+        const ev = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+        el('#fechar').dispatchEvent(ev);
+        expect(ev.defaultPrevented).toBe(true);
+        expect(document.activeElement.textContent).toBe('Regulamento completo');
+    - name: Shift+Tab no primeiro vai ao último
+      hidden: true
+      code: |
+        click('#abrir');
+        const primeiro = el('#modal a');
+        primeiro.focus();
+        primeiro.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }));
+        expect(document.activeElement.id).toBe('fechar');
+    - name: Escape fecha e devolve o foco
+      hidden: true
+      code: |
+        click('#abrir');
+        press('#aceitar', 'Escape');
+        expect(el('#modal').hidden).toBe(true);
+        expect(document.activeElement.id).toBe('abrir');
+  hints:
+    - Ouça `keydown` no próprio modal e confira `evento.key` e `evento.shiftKey`.
+    - Só intervenha nas pontas. No meio, deixe o Tab seguir normalmente.
+  explanation: |
+    Um modal precisa prender o foco dentro dele, ou a pessoa que usa teclado navega para a página escondida atrás. O elemento `dialog` com `showModal()` já faz isso. Quando ele não for uma opção, o JavaScript cuida das pontas, do Escape e de devolver o foco a quem abriu.
+  traps:
+    - reason: Sem prender o Tab
+      code: |
+        const a = document.getElementById('abrir'); const m = document.getElementById('modal');
+        const f = () => { m.hidden = true; a.focus(); };
+        a.addEventListener('click', () => { m.hidden = false; m.querySelector('a').focus(); });
+        document.getElementById('fechar').addEventListener('click', f);
+        m.addEventListener('keydown', (e) => { if (e.key === 'Escape') f(); });
+    - reason: Escape não devolve o foco
+      code: |
+        const a = document.getElementById('abrir'); const m = document.getElementById('modal');
+        const fs = () => [...m.querySelectorAll('a[href], button')];
+        a.addEventListener('click', () => { m.hidden = false; fs()[0].focus(); });
+        document.getElementById('fechar').addEventListener('click', () => { m.hidden = true; a.focus(); });
+        m.addEventListener('keydown', (e) => { if (e.key === 'Escape') { m.hidden = true; return; } if (e.key !== 'Tab') return; const l = fs(); if (e.shiftKey && document.activeElement === l[0]) { e.preventDefault(); l.at(-1).focus(); } else if (!e.shiftKey && document.activeElement === l.at(-1)) { e.preventDefault(); l[0].focus(); } });
+
+- slug: cor-nao-basta
+  title: O erro em vermelho
+  difficulty: facil
+  kind: quiz
+  in: [accessibility, design-systems]
+  study:
+    - { label: "Uso de cor, critério 1.4.1 (W3C)", url: "https://www.w3.org/WAI/WCAG21/Understanding/use-of-color.html" }
+  statement: |
+    No formulário de compra, campos com erro ficam com a borda vermelha, e mais nada.
+
+    Por que isso não basta?
+  options:
+    - text: Quem não distingue vermelho, e quem usa leitor de tela, não recebe a informação. O erro precisa de texto, de preferência ligado ao campo
+      why: Certo. A cor pode reforçar a mensagem, mas não pode ser o único sinal.
+    - text: Vermelho é uma cor feia
+      why: A questão não é estética, e sim comunicação.
+    - text: A borda deveria ser mais grossa
+      why: Uma borda grossa ainda depende de perceber a cor.
+    - text: Basta trocar para verde
+      why: O problema continua sendo depender só da cor.
+  answer: 0
+  explanation: |
+    Informação transmitida só por cor exclui pessoas com daltonismo, baixa visão ou leitores de tela. Combine a cor com texto, ícone com texto alternativo ou formato diferente. Num formulário, a mensagem escrita ligada ao campo por `aria-describedby` resolve para todos.
+
+- slug: validar-manifesto
+  title: O app que não se instala
+  difficulty: medio
+  kind: js
+  in: [pwas]
+  study:
+    - { label: "Web app manifest (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/Progressive_web_apps/Manifest" }
+    - { label: "Tornando PWAs instaláveis (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable" }
+  statement: |
+    Escreva `problemasDoManifesto(manifesto)`, que confere o objeto do web app manifest e devolve a lista de problemas, vazia se estiver tudo certo:
+
+    - `falta name ou short_name` se nenhum dos dois existir com texto
+    - `falta start_url` se não houver
+    - `display deve ser standalone, fullscreen ou minimal-ui` se `display` não for um desses
+    - `falta ícone de 192x192` e `falta ícone de 512x512`, conferindo o campo `sizes` dos itens de `icons`. Um ícone pode ter vários tamanhos separados por espaço, como `"192x192 512x512"`
+
+    Mantenha essa ordem.
+  solution: |
+    function problemasDoManifesto(manifesto) {
+      const problemas = [];
+      if (!manifesto.name?.trim() && !manifesto.short_name?.trim()) problemas.push('falta name ou short_name');
+      if (!manifesto.start_url) problemas.push('falta start_url');
+      if (!['standalone', 'fullscreen', 'minimal-ui'].includes(manifesto.display)) {
+        problemas.push('display deve ser standalone, fullscreen ou minimal-ui');
+      }
+      const tamanhos = new Set((manifesto.icons ?? []).flatMap((icone) => (icone.sizes ?? '').split(/\s+/)));
+      for (const t of ['192x192', '512x512']) if (!tamanhos.has(t)) problemas.push(`falta ícone de ${t}`);
+      return problemas;
+    }
+  tests:
+    - name: manifesto completo
+      code: |
+        expect(problemasDoManifesto({ name: 'Festival Ruído', start_url: '/', display: 'standalone', icons: [{ src: 'a.png', sizes: '192x192' }, { src: 'b.png', sizes: '512x512' }] })).toEqual([]);
+    - name: vários problemas
+      code: |
+        expect(problemasDoManifesto({ display: 'browser', icons: [] })).toEqual([
+          'falta name ou short_name',
+          'falta start_url',
+          'display deve ser standalone, fullscreen ou minimal-ui',
+          'falta ícone de 192x192',
+          'falta ícone de 512x512',
+        ]);
+    - name: vários tamanhos num ícone
+      hidden: true
+      code: |
+        expect(problemasDoManifesto({ short_name: 'Ruído', start_url: '/', display: 'fullscreen', icons: [{ src: 'i.png', sizes: '192x192 512x512' }] })).toEqual([]);
+    - name: nome vazio
+      hidden: true
+      code: |
+        expect(problemasDoManifesto({ name: '  ', start_url: '/', display: 'minimal-ui', icons: [{ sizes: '192x192' }, { sizes: '512x512' }] })).toEqual(['falta name ou short_name']);
+  hints:
+    - Junte todos os tamanhos de todos os ícones num `Set` antes de conferir.
+  explanation: |
+    Navegadores exigem alguns campos no manifest para oferecer a instalação: nome, endereço de início, modo de exibição e ícones em tamanhos comuns. Conferir isso no build evita descobrir só no celular que o app não aparece como instalável.
+  traps:
+    - reason: Um tamanho por ícone
+      code: |
+        function problemasDoManifesto(m) { const p = []; if (!m.name?.trim() && !m.short_name?.trim()) p.push('falta name ou short_name'); if (!m.start_url) p.push('falta start_url'); if (!['standalone', 'fullscreen', 'minimal-ui'].includes(m.display)) p.push('display deve ser standalone, fullscreen ou minimal-ui'); const s = (m.icons ?? []).map((i) => i.sizes); for (const t of ['192x192', '512x512']) if (!s.includes(t)) p.push(`falta ícone de ${t}`); return p; }
+
+- slug: atualizar-service-worker
+  title: A versão nova que não aparece
+  difficulty: dificil
+  kind: quiz
+  visual: service-worker
+  in: [pwas, performance/Service Workers]
+  study:
+    - { label: "O ciclo de vida do service worker (web.dev)", url: "https://web.dev/articles/service-worker-lifecycle" }
+  statement: |
+    Você publicou um service worker novo. Quem está com o site aberto continua vendo a versão antiga, mesmo recarregando a página.
+
+    O que está acontecendo?
+  options:
+    - text: O worker novo foi instalado, mas fica esperando até todas as abas controladas pelo antigo fecharem. Dá para avisar a pessoa e ativar na hora com `skipWaiting`
+      why: Certo. É o estado de espera do ciclo de vida, que evita duas versões controlando abas ao mesmo tempo.
+    - text: O navegador ignora service workers novos
+      why: Ele baixa e instala, mas não ativa enquanto o antigo controla alguma aba.
+    - text: É preciso desinstalar o site do celular
+      why: Fechar as abas, ou ativar com skipWaiting, já basta.
+    - text: Service workers só atualizam uma vez por ano
+      why: O navegador confere atualizações a cada navegação, e no máximo a cada 24 horas por padrão.
+  answer: 0
+  explanation: |
+    Um service worker passa por instalação, espera e ativação. A espera garante que todas as abas usem a mesma versão. Muitos apps mostram um aviso de "nova versão disponível" e, ao clicar, chamam `skipWaiting` e recarregam. Ativar sem avisar pode quebrar uma página aberta que espera os arquivos antigos.
+
+- slug: ponte-segura-no-electron
+  title: O site com acesso ao disco
+  difficulty: dificil
+  kind: quiz
+  in: [desktop-apps/Electron]
+  study:
+    - { label: "Isolamento de contexto (Electron)", url: "https://www.electronjs.org/docs/latest/tutorial/context-isolation" }
+    - { label: "Segurança (Electron)", url: "https://www.electronjs.org/docs/latest/tutorial/security" }
+  statement: |
+    O app de credenciamento em Electron precisa salvar um relatório em disco. Alguém ligou `nodeIntegration: true` para a página usar o módulo `fs` direto.
+
+    Qual é a forma segura?
+  options:
+    - text: Manter `contextIsolation` ligado e `nodeIntegration` desligado, e expor só uma função específica, como `salvarRelatorio`, num script de preload com `contextBridge`
+      why: Certo. A página só alcança o que você expôs, e um XSS não ganha acesso total ao sistema.
+    - text: Manter `nodeIntegration` ligado, porque o app é interno
+      why: Qualquer conteúdo injetado na página passaria a ter acesso ao Node e ao sistema inteiro.
+    - text: Carregar o site de produção remoto com `nodeIntegration`
+      why: Isso dá a um conteúdo remoto o poder de rodar comandos na máquina.
+    - text: Salvar o relatório no localStorage
+      why: Não atende ao pedido de salvar um arquivo em disco.
+  answer: 0
+  explanation: |
+    No Electron, a página roda num processo de renderização, e o acesso ao sistema fica no processo principal. Com isolamento de contexto e preload, você cria uma ponte pequena e explícita entre os dois. Exponha funções com propósito definido, nunca o `ipcRenderer` ou o `fs` inteiros.
+
+- slug: permissoes-no-tauri
+  title: O que o app pode fazer
+  difficulty: medio
+  kind: quiz
+  in: [desktop-apps/Tauri]
+  study:
+    - { label: "Capacidades (Tauri)", url: "https://v2.tauri.app/security/capabilities/" }
+  statement: |
+    No app em Tauri, o frontend precisa ler arquivos de uma pasta específica. O Tauri bloqueia por padrão.
+
+    Como liberar?
+  options:
+    - text: Declarar nas capacidades do app a permissão do plugin de sistema de arquivos, restrita àquela pasta, para as janelas que precisam
+      why: Certo. O Tauri trabalha com permissões explícitas e escopos, e o frontend só alcança o que foi declarado.
+    - text: Desligar todas as verificações de segurança
+      why: Isso abriria acesso ao sistema para qualquer código que rodar no webview.
+    - text: Ler os arquivos com fetch no caminho do disco
+      why: O webview não tem acesso direto ao disco. O acesso passa pelos comandos e plugins do Tauri.
+    - text: Reescrever o app em Electron
+      why: Não é necessário. O Tauri tem o mecanismo pronto, com escopos.
+  answer: 0
+  explanation: |
+    O Tauri parte do bloqueio: o frontend só chama comandos e plugins que as capacidades permitem, com escopos como pastas e URLs. O princípio é o mesmo do preload no Electron: o código da interface recebe o mínimo necessário.
+
+- slug: lista-longa-no-celular
+  title: Mil bandas na lista
+  difficulty: medio
+  kind: quiz
+  in: [mobile-apps/React Native, mobile-apps/Flutter]
+  study:
+    - { label: "FlatList (React Native)", url: "https://reactnative.dev/docs/flatlist" }
+    - { label: "Listas longas (Flutter)", url: "https://docs.flutter.dev/cookbook/lists/long-lists" }
+  statement: |
+    O app mostra todas as bandas de todos os anos, mais de mil, com foto. Com um `ScrollView` e um `map`, a tela demora a abrir e a rolagem engasga.
+
+    O que resolve?
+  options:
+    - text: Uma lista virtualizada, como `FlatList` no React Native ou `ListView.builder` no Flutter, que só monta os itens perto da área visível
+      why: Certo. Em vez de criar mil itens, a lista mantém só alguns e os reaproveita durante a rolagem.
+    - text: Diminuir o tamanho da fonte
+      why: Não reduz a quantidade de itens montados.
+    - text: Carregar todas as fotos de uma vez no início
+      why: Isso aumenta a memória e o tempo de abertura.
+    - text: Trocar o celular por um mais rápido
+      why: O app precisa funcionar bem nos aparelhos do público.
+  answer: 0
+  explanation: |
+    Listas longas precisam de virtualização: montar só o que está visível e um pouco ao redor, e reciclar componentes ao rolar. Na web, bibliotecas como TanStack Virtual fazem o mesmo, e `content-visibility` ajuda em conteúdo estático.
+
+- slug: ionic-recursos-nativos
+  title: A notificação do show
+  difficulty: facil
+  kind: quiz
+  in: [mobile-apps/Ionic]
+  study:
+    - { label: "Plugins do Capacitor", url: "https://capacitorjs.com/docs/plugins" }
+  statement: |
+    O app em Ionic com Capacitor precisa avisar 15 minutos antes do show favorito, mesmo com o app fechado.
+
+    Como fazer?
+  options:
+    - text: Usar o plugin de notificações locais do Capacitor, que agenda o aviso no sistema operacional
+      why: Certo. O plugin faz a ponte entre o JavaScript e a API nativa de notificações, que funciona com o app fechado.
+    - text: Um setTimeout de 15 minutos no JavaScript
+      why: Com o app fechado, o JavaScript não está rodando.
+    - text: Pedir para a pessoa deixar o app aberto
+      why: Não é uma experiência aceitável, e o sistema pode encerrar o app de qualquer forma.
+    - text: Mandar um e-mail
+      why: Pode ser um complemento, mas não é a notificação no celular que foi pedida.
+  answer: 0
+  explanation: |
+    Apps híbridos alcançam recursos do aparelho por plugins: câmera, geolocalização, notificações e armazenamento seguro. O plugin chama a API nativa de cada plataforma, e o seu código continua em JavaScript.

@@ -4,6 +4,10 @@
   kind: quiz
   visual: empilhamento
   in: [css/Posicionamento]
+  study:
+    - { label: "Contexto de empilhamento (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Stacking_context" }
+    - { label: "z-index (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/z-index" }
+    - { label: "What the heck, z-index? (Josh W. Comeau, em inglês)", url: "https://www.joshwcomeau.com/css/stacking-contexts/" }
   statement: |
     O menu suspenso do cabeçalho abre por baixo do banner, mesmo com `z-index: 9999`. O CSS é este:
 

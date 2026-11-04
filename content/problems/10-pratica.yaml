@@ -3,6 +3,8 @@
   difficulty: medio
   kind: js
   in: [conserte/Lógica]
+  study:
+    - { label: "Laços e iteração (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Loops_and_iteration" }
   statement: |
     Clientes relatam dois problemas no checkout:
 
@@ -63,6 +65,9 @@
   kind: dom
   editor: js
   in: [conserte/Lógica]
+  study:
+    - { label: "let e o escopo de bloco (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Statements/let" }
+    - { label: "Closures (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Closures" }
   html: |
     <button class="dia">Sexta</button>
     <button class="dia">Sábado</button>
@@ -113,8 +118,12 @@
   title: Os cartões espremidos
   difficulty: medio
   kind: dom
+  visual: flexbox
   editor: css
   in: [conserte/Layout]
+  study:
+    - { label: "flex-wrap (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/flex-wrap" }
+    - { label: "flex-shrink (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-shrink" }
   html: |
     <div class="cartoes">
       <article class="cartao">Pista</article>
@@ -187,6 +196,8 @@
   difficulty: medio
   kind: react
   in: [conserte/Componentes]
+  study:
+    - { label: "Atualizando arrays no estado (React)", url: "https://react.dev/learn/updating-arrays-in-state" }
   statement: |
     O formulário deveria acrescentar uma banda à lista de sugestões. O texto é digitado, o botão é clicado, mas a lista não muda. Corrija o componente.
   starter: |
@@ -279,6 +290,9 @@
   difficulty: medio
   kind: react
   in: [implemente/Funcionalidades]
+  study:
+    - { label: "Renderizando listas (React)", url: "https://react.dev/learn/rendering-lists" }
+    - { label: "String.prototype.normalize (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/normalize" }
   setup: |
     window.BANDAS = ['Vórtice', 'Maré Negra', 'Asfalto', 'Órbita Morta'];
   starter: |
@@ -364,6 +378,9 @@
   difficulty: medio
   kind: js
   in: [implemente/Funcionalidades]
+  study:
+    - { label: "Classes (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Classes" }
+    - { label: "Object.hasOwn (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn" }
   starter: |
     class Carrinho {
       itens = [];
@@ -488,6 +505,8 @@
   kind: dom
   editor: css
   in: [implemente/Interface]
+  study:
+    - { label: "Seletores CSS (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/CSS_selectors" }
   html: |
     <ul class="lista">
       <li class="item"><strong>Vórtice</strong><span class="descricao">Thrash de São Paulo</span></li>

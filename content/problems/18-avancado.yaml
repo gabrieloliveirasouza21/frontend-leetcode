@@ -1,0 +1,717 @@
+- slug: login-com-pkce
+  title: Entrar com uma conta externa
+  difficulty: dificil
+  kind: quiz
+  in: [auth-strategies]
+  study:
+    - { label: "OAuth 2.0 para apps no navegador (IETF, em inglês)", url: "https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps" }
+    - { label: "Fluxo Authorization Code com PKCE (Auth0, em inglês)", url: "https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce" }
+  statement: |
+    O site quer permitir "Entrar com o Google" numa SPA. Não há onde guardar um segredo de cliente no navegador.
+
+    Qual fluxo de OAuth é o recomendado?
+  options:
+    - text: Authorization Code com PKCE, em que o app gera um segredo temporário a cada login e prova que é ele quem troca o código pelo token
+      why: Certo. O PKCE protege o código de autorização contra interceptação sem exigir um segredo fixo no cliente.
+    - text: O fluxo implícito, que devolve o token direto na URL
+      why: Esse fluxo foi desaconselhado, porque o token na URL vaza em histórico, logs e cabeçalhos de referência.
+    - text: Pedir a senha do Google da pessoa e guardar no site
+      why: O OAuth existe justamente para o site nunca ver a senha da conta externa.
+    - text: Embutir o segredo do cliente no JavaScript
+      why: Tudo o que vai para o navegador é público. O segredo deixaria de ser segredo.
+  answer: 0
+  explanation: |
+    No OAuth, o site manda a pessoa ao provedor, que devolve um código de autorização, trocado depois por tokens. O PKCE acrescenta um verificador aleatório criado a cada login, e só quem tem o verificador consegue trocar o código. Muitos times ainda preferem fazer essa troca num backend e dar ao navegador só um cookie de sessão.
+
+- slug: csrf-e-samesite
+  title: O formulário que comprou sozinho
+  difficulty: medio
+  kind: quiz
+  in: [auth-strategies, web-security/OWASP Risks]
+  study:
+    - { label: "CSRF no glossário do MDN, em inglês", url: "https://developer.mozilla.org/en-US/docs/Glossary/CSRF" }
+    - { label: "Prevenção de CSRF (OWASP)", url: "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html" }
+  statement: |
+    Um site malicioso tem um formulário escondido que faz `POST https://festivalruido.com.br/comprar`. Quando uma fã logada visita esse site, a compra acontece na conta dela, porque o navegador manda o cookie de sessão junto.
+
+    Qual defesa resolve?
+  options:
+    - text: Cookie de sessão com `SameSite=Lax` ou `Strict`, que não vai em POSTs vindos de outros sites, e um token anti-CSRF no formulário
+      why: Certo. SameSite impede o envio do cookie nessa situação, e o token prova que o pedido saiu de uma página do próprio site.
+    - text: Usar HTTPS
+      why: HTTPS protege o caminho, mas o pedido forjado também vai por HTTPS, com o cookie junto.
+    - text: Esconder o endereço /comprar
+      why: Endereços são fáceis de descobrir, e esconder não é uma defesa.
+    - text: Validar o e-mail no formulário
+      why: A validação não diferencia um pedido legítimo de um forjado.
+  answer: 0
+  explanation: |
+    CSRF, falsificação de requisição entre sites, explora o envio automático de cookies. `SameSite` limita quando o cookie vai em pedidos de outros sites, e `Lax` já é o padrão em navegadores modernos. Tokens anti-CSRF e a checagem do cabeçalho `Origin` completam a defesa.
+
+- slug: renovar-token-uma-vez
+  title: O token venceu no meio da navegação
+  difficulty: dificil
+  kind: js
+  in: [auth-strategies]
+  study:
+    - { label: "Status 401 Unauthorized (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Status/401" }
+    - { label: "Promises (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Using_promises" }
+  statement: |
+    Escreva `criarCliente(requisitar, renovar)`, que devolve `async function pedir(url)`:
+
+    - `requisitar(url, token)` faz o pedido e resolve com `{ status, dados }`
+    - `renovar()` resolve com um token novo
+    - o cliente começa sem token e guarda o último token recebido
+    - se a resposta for 401, renove uma vez e repita o pedido com o token novo. Se vier 401 de novo, lance `Error('Sessão expirada')`
+    - se vários pedidos receberem 401 ao mesmo tempo, `renovar` deve ser chamado uma vez só, e todos esperam o mesmo token
+    - devolva `dados` nas respostas de sucesso
+  solution: |
+    function criarCliente(requisitar, renovar) {
+      let token = null;
+      let renovando = null;
+
+      async function tokenNovo() {
+        renovando ??= renovar().finally(() => {
+          renovando = null;
+        });
+        token = await renovando;
+        return token;
+      }
+
+      return async function pedir(url) {
+        let resposta = await requisitar(url, token);
+        if (resposta.status === 401) {
+          resposta = await requisitar(url, await tokenNovo());
+          if (resposta.status === 401) throw new Error('Sessão expirada');
+        }
+        return resposta.dados;
+      };
+    }
+  setup: |
+    function servidor(validos) {
+      return fn(async (url, token) => (validos.includes(token) ? { status: 200, dados: `${url} com ${token}` } : { status: 401 }));
+    }
+  tests:
+    - name: renova e repete
+      code: |
+        const requisitar = servidor(['t1']);
+        const renovar = fn(async () => 't1');
+        const pedir = criarCliente(requisitar, renovar);
+        expect(await pedir('/carrinho')).toBe('/carrinho com t1');
+        expect(renovar).toHaveBeenCalledTimes(1);
+    - name: guarda o token
+      hidden: true
+      code: |
+        const requisitar = servidor(['t1']);
+        const renovar = fn(async () => 't1');
+        const pedir = criarCliente(requisitar, renovar);
+        await pedir('/a');
+        await pedir('/b');
+        expect(renovar).toHaveBeenCalledTimes(1);
+        expect(requisitar.mock.calls[2]).toEqual(['/b', 't1']);
+    - name: uma renovação para vários pedidos
+      hidden: true
+      code: |
+        const requisitar = servidor(['t1']);
+        const renovar = fn(() => new Promise((r) => setTimeout(() => r('t1'), 30)));
+        const pedir = criarCliente(requisitar, renovar);
+        const r = await Promise.all([pedir('/a'), pedir('/b'), pedir('/c')]);
+        expect(renovar).toHaveBeenCalledTimes(1);
+        expect(r).toEqual(['/a com t1', '/b com t1', '/c com t1']);
+    - name: sessão expirada
+      hidden: true
+      code: |
+        const requisitar = servidor([]);
+        const renovar = fn(async () => 'invalido');
+        const pedir = criarCliente(requisitar, renovar);
+        await expect(pedir('/a')).rejects.toMatch('Sessão expirada');
+        expect(requisitar).toHaveBeenCalledTimes(2);
+  hints:
+    - Guarde a promessa da renovação em andamento. Quem chegar enquanto ela existe espera a mesma promessa.
+    - Limpe a promessa quando ela terminar, para uma expiração futura poder renovar de novo.
+  explanation: |
+    Sem coordenação, cada pedido que recebe 401 dispara a própria renovação, e alguns servidores invalidam o token anterior a cada renovação, o que faz os pedidos se derrubarem. Compartilhar uma única promessa de renovação resolve, e tentar uma vez só evita um laço infinito quando a sessão expirou de vez.
+  traps:
+    - reason: Uma renovação por pedido
+      code: |
+        function criarCliente(req, ren) {
+          let t = null;
+          return async (url) => { let r = await req(url, t); if (r.status === 401) { t = await ren(); r = await req(url, t); if (r.status === 401) throw new Error('Sessão expirada'); } return r.dados; };
+        }
+    - reason: Tenta para sempre
+      code: |
+        function criarCliente(req, ren) {
+          let t = null; let p = null;
+          const novo = async () => { p ??= ren().finally(() => { p = null; }); t = await p; return t; };
+          return async function pedir(url) { const r = await req(url, t); if (r.status === 401) { await novo(); if (req.mock && req.mock.calls.length > 6) throw new Error('Sessão expirada'); return pedir(url); } return r.dados; };
+        }
+
+- slug: testar-o-slug
+  title: Testes para o criador de slug
+  difficulty: facil
+  kind: tests
+  in: [testing/Vitest, testing/Jest]
+  study:
+    - { label: "Guia do Vitest", url: "https://vitest.dev/guide/" }
+    - { label: "Matchers do Jest", url: "https://jestjs.io/docs/using-matchers" }
+  implementation: |
+    function criarSlug(nome) {
+      return nome
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+  mutants:
+    - reason: não remove os acentos
+      code: |
+        function criarSlug(n) { return n.toLowerCase().replace(/[^a-zà-ú0-9]+/g, '-').replace(/^-|-$/g, ''); }
+    - reason: deixa hífen nas pontas
+      code: |
+        function criarSlug(n) { return n.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-'); }
+    - reason: um hífen por caractere especial
+      code: |
+        function criarSlug(n) { return n.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/^-+|-+$/g, ''); }
+    - reason: mantém maiúsculas
+      code: |
+        function criarSlug(n) { return n.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+  statement: |
+    `criarSlug(nome)` transforma o nome de uma banda num endereço: minúsculas, sem acentos, com um único hífen no lugar de cada sequência de símbolos e espaços, e sem hífens nas pontas. `Maré Negra!` vira `mare-negra`.
+
+    Escreva testes que peguem cada um desses comportamentos.
+  min_tests: 3
+  solution: |
+    test('tira acentos e usa minúsculas', () => {
+      expect(criarSlug('Maré Negra')).toBe('mare-negra');
+    });
+
+    test('junta símbolos e espaços num hífen só', () => {
+      expect(criarSlug('Os Insones & Cia')).toBe('os-insones-cia');
+    });
+
+    test('não deixa hífen nas pontas', () => {
+      expect(criarSlug('  Vórtice!  ')).toBe('vortice');
+    });
+  hints:
+    - Para cada regra, pense num nome em que só ela faz diferença.
+    - Um nome com `&` entre espaços pega a regra do hífen único.
+  explanation: |
+    Cada teste mira uma regra, com uma entrada em que errar aquela regra muda o resultado. Testes com nomes simples, como `vortice`, passariam até com várias versões quebradas.
+  traps:
+    - reason: Só um caso simples
+      code: |
+        test('slug', () => { expect(criarSlug('vortice')).toBe('vortice'); });
+        test('outro', () => { expect(criarSlug('asfalto')).toBe('asfalto'); });
+        test('mais um', () => { expect(criarSlug('ferrugem')).toBe('ferrugem'); });
+
+- slug: testar-a-fila
+  title: Testes para a fila de espera
+  difficulty: medio
+  kind: tests
+  in: [testing/Jest, testing/Vitest]
+  study:
+    - { label: "Organizando testes com describe (Jest)", url: "https://jestjs.io/docs/setup-teardown" }
+    - { label: "toThrow (Jest)", url: "https://jestjs.io/docs/expect#tothrowerror" }
+  implementation: |
+    class FilaDeEspera {
+      #pessoas = [];
+      constructor(limite) {
+        this.limite = limite;
+      }
+      entrar(nome) {
+        if (this.#pessoas.includes(nome)) throw new Error('Já está na fila');
+        if (this.#pessoas.length >= this.limite) throw new Error('Fila cheia');
+        this.#pessoas.push(nome);
+        return this.#pessoas.length;
+      }
+      chamar() {
+        return this.#pessoas.shift() ?? null;
+      }
+      get tamanho() {
+        return this.#pessoas.length;
+      }
+    }
+  mutants:
+    - reason: chama o último em vez do primeiro
+      code: |
+        class FilaDeEspera { #p = []; constructor(l) { this.limite = l; } entrar(n) { if (this.#p.includes(n)) throw new Error('Já está na fila'); if (this.#p.length >= this.limite) throw new Error('Fila cheia'); this.#p.push(n); return this.#p.length; } chamar() { return this.#p.pop() ?? null; } get tamanho() { return this.#p.length; } }
+    - reason: aceita uma pessoa a mais que o limite
+      code: |
+        class FilaDeEspera { #p = []; constructor(l) { this.limite = l; } entrar(n) { if (this.#p.includes(n)) throw new Error('Já está na fila'); if (this.#p.length > this.limite) throw new Error('Fila cheia'); this.#p.push(n); return this.#p.length; } chamar() { return this.#p.shift() ?? null; } get tamanho() { return this.#p.length; } }
+    - reason: aceita a mesma pessoa duas vezes
+      code: |
+        class FilaDeEspera { #p = []; constructor(l) { this.limite = l; } entrar(n) { if (this.#p.length >= this.limite) throw new Error('Fila cheia'); this.#p.push(n); return this.#p.length; } chamar() { return this.#p.shift() ?? null; } get tamanho() { return this.#p.length; } }
+    - reason: fila vazia devolve undefined
+      code: |
+        class FilaDeEspera { #p = []; constructor(l) { this.limite = l; } entrar(n) { if (this.#p.includes(n)) throw new Error('Já está na fila'); if (this.#p.length >= this.limite) throw new Error('Fila cheia'); this.#p.push(n); return this.#p.length; } chamar() { return this.#p.shift(); } get tamanho() { return this.#p.length; } }
+  statement: |
+    A classe `FilaDeEspera(limite)` organiza a fila de quem quer ingresso do lote extra:
+
+    - `entrar(nome)` põe a pessoa no fim e devolve a posição. Lança erro se ela já está na fila ou se a fila está cheia
+    - `chamar()` tira e devolve o primeiro da fila, ou `null` se estiver vazia
+    - `tamanho` informa quantas pessoas esperam
+
+    Escreva testes com `describe`, `test` e `expect`.
+  min_tests: 4
+  solution: |
+    describe('FilaDeEspera', () => {
+      test('chama na ordem de chegada', () => {
+        const f = new FilaDeEspera(3);
+        expect(f.entrar('ana')).toBe(1);
+        expect(f.entrar('bia')).toBe(2);
+        expect(f.chamar()).toBe('ana');
+        expect(f.tamanho).toBe(1);
+      });
+
+      test('respeita o limite exato', () => {
+        const f = new FilaDeEspera(2);
+        f.entrar('ana');
+        f.entrar('bia');
+        expect(() => f.entrar('caio')).toThrow('Fila cheia');
+      });
+
+      test('não aceita a mesma pessoa duas vezes', () => {
+        const f = new FilaDeEspera(3);
+        f.entrar('ana');
+        expect(() => f.entrar('ana')).toThrow('Já está na fila');
+      });
+
+      test('fila vazia devolve null', () => {
+        expect(new FilaDeEspera(1).chamar()).toBeNull();
+      });
+    });
+  hints:
+    - Teste o limite com exatamente `limite` pessoas e uma a mais.
+    - "`toBeNull` diferencia `null` de `undefined`."
+  explanation: |
+    Bons testes de uma classe descrevem o comportamento visível: ordem, limites, erros e o caso vazio. `describe` agrupa os testes do mesmo assunto, e cada teste cria a própria fila, para um não depender do outro.
+  traps:
+    - reason: Testes sem os limites
+      code: |
+        describe('fila', () => {
+          test('entra', () => { const f = new FilaDeEspera(5); expect(f.entrar('a')).toBe(1); });
+          test('chama', () => { const f = new FilaDeEspera(5); f.entrar('a'); expect(f.chamar()).toBe('a'); });
+          test('tamanho', () => { const f = new FilaDeEspera(5); f.entrar('a'); expect(f.tamanho).toBe(1); });
+          test('vazia', () => { expect(new FilaDeEspera(1).tamanho).toBe(0); });
+        });
+
+- slug: piramide-de-testes
+  title: Quantos testes de cada tipo
+  difficulty: medio
+  kind: quiz
+  in: [testing/Playwright, testing/Vitest]
+  study:
+    - { label: "A pirâmide de testes (Martin Fowler, em inglês)", url: "https://martinfowler.com/articles/practical-test-pyramid.html" }
+  statement: |
+    O time tem 300 testes de ponta a ponta com Playwright, que levam 40 minutos e falham por motivos aleatórios, e quase nenhum teste unitário.
+
+    Qual distribuição costuma funcionar melhor?
+  options:
+    - text: Muitos testes unitários rápidos para a lógica, alguns de integração entre partes, e poucos de ponta a ponta para os fluxos mais importantes
+      why: Certo. Testes de ponta a ponta são valiosos, mas lentos e frágeis. A lógica detalhada se testa melhor em unidades.
+    - text: Só testes de ponta a ponta, porque testam como o usuário usa
+      why: Cobrem bem os fluxos, mas cada falha é difícil de diagnosticar e a suíte fica lenta demais.
+    - text: Só testes unitários, porque são rápidos
+      why: Não pegam problemas de integração, como a API mudar de formato ou um botão não estar ligado ao código.
+    - text: Nenhum teste, e revisar com cuidado
+      why: Revisão não substitui verificação automática a cada mudança.
+  answer: 0
+  explanation: |
+    A pirâmide de testes sugere muitos testes baratos na base e poucos caros no topo. Fluxos críticos, como comprar um ingresso, merecem um teste de ponta a ponta. Os detalhes de cálculo e validação ficam em testes unitários, que rodam em segundos.
+
+- slug: snapshot-fragil
+  title: O snapshot que todo mundo atualiza
+  difficulty: medio
+  kind: quiz
+  in: [testing/Jest]
+  study:
+    - { label: "Testes de snapshot (Jest)", url: "https://jestjs.io/docs/snapshot-testing" }
+  statement: |
+    O componente da página de banda tem um teste de snapshot com 400 linhas de HTML. Qualquer mudança de classe CSS quebra o teste, e a equipe já roda `jest -u` sem olhar o que mudou.
+
+    O que está errado?
+  options:
+    - text: Um snapshot grande que é atualizado sem revisão não protege nada. Testes que conferem comportamentos específicos, como textos e interações, pegam regressões de verdade
+      why: Certo. Snapshots servem para saídas pequenas e estáveis. Grandes demais, viram ruído.
+    - text: O snapshot deveria ser maior
+      why: Maior ainda quebraria mais e seria ainda menos revisado.
+    - text: O certo é apagar todos os testes de componente
+      why: Testes de componente são úteis. O problema é o tipo de asserção.
+    - text: É preciso atualizar os snapshots com mais frequência
+      why: Atualizar sem ler é exatamente o que tira o valor do teste.
+  answer: 0
+  explanation: |
+    Um snapshot compara a saída com uma cópia gravada. Ele funciona quando a saída é pequena e a mudança é rara, como uma mensagem de erro formatada. Para componentes, prefira asserções sobre o que a pessoa vê e faz, como as da Testing Library.
+
+- slug: dados-de-teste-isolados
+  title: O teste que depende do anterior
+  difficulty: medio
+  kind: quiz
+  in: [testing/Cypress, testing/Playwright]
+  study:
+    - { label: "Boas práticas do Cypress", url: "https://docs.cypress.io/app/core-concepts/best-practices" }
+    - { label: "Isolamento de testes (Playwright)", url: "https://playwright.dev/docs/browser-contexts" }
+  statement: |
+    O teste "cancelar compra" só passa se rodar depois do teste "fazer compra", que cria a compra. Rodando sozinho ou em outra ordem, ele falha.
+
+    Como corrigir?
+  options:
+    - text: Cada teste prepara os próprios dados, por exemplo criando a compra por uma chamada de API antes de começar, e não depende de outros
+      why: Certo. Testes independentes podem rodar em qualquer ordem, em paralelo e sozinhos para depuração.
+    - text: Garantir que os testes rodem sempre na mesma ordem
+      why: Isso esconde a dependência e impede rodar em paralelo ou depurar um teste isolado.
+    - text: Juntar os dois testes num só
+      why: Funciona, mas cria um teste longo que falha por vários motivos.
+    - text: Esperar alguns segundos no começo do teste
+      why: Tempo de espera não cria os dados que faltam.
+  answer: 0
+  explanation: |
+    Testes que dependem de estado deixado por outros são frágeis e confusos. Prepare o estado no começo de cada teste, de preferência por API, que é mais rápida que pela interface. Cypress e Playwright isolam o navegador entre testes, mas o banco de dados é responsabilidade sua.
+
+- slug: tempo-relativo
+  title: Publicado há 3 dias
+  difficulty: medio
+  kind: js
+  in: [web-apis/Cancelamento e tempo]
+  study:
+    - { label: "Intl.RelativeTimeFormat (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat" }
+  statement: |
+    Escreva `haQuanto(data, agora)`, que descreve em português quanto tempo se passou entre duas datas, usando `Intl.RelativeTimeFormat` com `numeric: 'auto'`:
+
+    - menos de 1 minuto: `agora`
+    - menos de 1 hora: em minutos, como `há 5 minutos`
+    - menos de 1 dia: em horas
+    - a partir de 1 dia: em dias, como `ontem` ou `há 3 dias`
+
+    Datas no futuro também funcionam, como `em 2 horas`. Arredonde para baixo o valor absoluto.
+  must_use: [Intl.RelativeTimeFormat]
+  solution: |
+    const relativo = new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' });
+
+    function haQuanto(data, agora) {
+      const segundos = (data - agora) / 1000;
+      const sinal = Math.sign(segundos) || 1;
+      const abs = Math.abs(segundos);
+      if (abs < 60) return 'agora';
+      if (abs < 3600) return relativo.format(sinal * Math.floor(abs / 60), 'minute');
+      if (abs < 86400) return relativo.format(sinal * Math.floor(abs / 3600), 'hour');
+      return relativo.format(sinal * Math.floor(abs / 86400), 'day');
+    }
+  tests:
+    - name: minutos e dias
+      code: |
+        const agora = new Date('2026-03-10T12:00:00Z');
+        expect(haQuanto(new Date('2026-03-10T11:55:00Z'), agora)).toBe('há 5 minutos');
+        expect(haQuanto(new Date('2026-03-07T12:00:00Z'), agora)).toBe('há 3 dias');
+    - name: ontem e agora
+      hidden: true
+      code: |
+        const agora = new Date('2026-03-10T12:00:00Z');
+        expect(haQuanto(new Date('2026-03-09T11:00:00Z'), agora)).toBe('ontem');
+        expect(haQuanto(new Date('2026-03-10T11:59:30Z'), agora)).toBe('agora');
+    - name: futuro e horas
+      hidden: true
+      code: |
+        const agora = new Date('2026-03-10T12:00:00Z');
+        expect(haQuanto(new Date('2026-03-10T14:30:00Z'), agora)).toBe('em 2 horas');
+        expect(haQuanto(new Date('2026-03-10T09:00:00Z'), agora)).toBe('há 3 horas');
+  hints:
+    - "`format(-3, 'day')` dá `há 3 dias`. Valores negativos são passado."
+    - "Com `numeric: 'auto'`, `-1` dia vira `ontem`."
+  explanation: |
+    `Intl.RelativeTimeFormat` cuida da gramática de cada idioma, como plural, preposição e palavras especiais como ontem e amanhã. Seu código só escolhe a unidade e o valor. Montar essas frases à mão costuma errar no plural e no singular.
+  traps:
+    - reason: Arredonda em vez de truncar
+      code: |
+        const r = new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' });
+        function haQuanto(d, a) { const s = (d - a) / 1000; const x = Math.abs(s); if (x < 60) return 'agora'; if (x < 3600) return r.format(Math.round(s / 60), 'minute'); if (x < 86400) return r.format(Math.round(s / 3600), 'hour'); return r.format(Math.round(s / 86400), 'day'); }
+
+- slug: limpar-url
+  title: A URL sem rastreadores
+  difficulty: medio
+  kind: js
+  in: [web-apis/URL e histórico]
+  study:
+    - { label: "URL (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/URL" }
+    - { label: "URLSearchParams (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/URLSearchParams" }
+  statement: |
+    O botão de compartilhar deve copiar a URL sem parâmetros de rastreamento. Escreva `limparURL(texto)`, que remove todos os parâmetros que começam com `utm_` e os parâmetros `fbclid` e `gclid`, mantendo os outros parâmetros na ordem, o caminho e o `#` do fim. Sem parâmetros restantes, a URL fica sem `?`.
+  solution: |
+    function limparURL(texto) {
+      const url = new URL(texto);
+      for (const chave of [...url.searchParams.keys()]) {
+        if (chave.startsWith('utm_') || chave === 'fbclid' || chave === 'gclid') url.searchParams.delete(chave);
+      }
+      return url.toString();
+    }
+  tests:
+    - name: remove rastreadores
+      code: |
+        expect(limparURL('https://ruido.test/lineup?dia=2&utm_source=insta&utm_medium=story')).toBe('https://ruido.test/lineup?dia=2');
+    - name: mantém o hash
+      hidden: true
+      code: |
+        expect(limparURL('https://ruido.test/faq?fbclid=abc#ingressos')).toBe('https://ruido.test/faq#ingressos');
+    - name: ordem dos outros
+      hidden: true
+      code: |
+        expect(limparURL('https://ruido.test/b?x=1&gclid=9&y=2&utm_campaign=z')).toBe('https://ruido.test/b?x=1&y=2');
+        expect(limparURL('https://ruido.test/')).toBe('https://ruido.test/');
+  hints:
+    - Copie as chaves com `[...url.searchParams.keys()]` antes de apagar, para não pular nenhuma durante o laço.
+  explanation: |
+    `URL` e `URLSearchParams` mantêm caminho, hash e codificação corretos ao mexer nos parâmetros. Apagar enquanto percorre a própria lista de parâmetros pode pular itens, por isso as chaves são copiadas antes.
+  traps:
+    - reason: Corta tudo depois do ?
+      code: |
+        function limparURL(t) { return t.split('?')[0]; }
+    - reason: Apaga enquanto percorre e pula itens
+      code: |
+        function limparURL(t) { const u = new URL(t); u.searchParams.forEach((_, k) => { if (k.startsWith('utm_') || k === 'fbclid' || k === 'gclid') u.searchParams.delete(k); }); return u.toString(); }
+
+- slug: copia-profunda
+  title: Copiar o pedido com datas
+  difficulty: medio
+  kind: js
+  in: [web-apis/Armazenamento, javascript/Objetos e classes]
+  study:
+    - { label: "structuredClone (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone" }
+  statement: |
+    Escreva `rascunho(pedido)`, que devolve uma cópia independente do pedido para edição. O pedido tem uma `Date` em `criadoEm`, um `Map` de itens e objetos aninhados. Na cópia, `criadoEm` continua sendo uma `Date` e os itens continuam num `Map`, e mudar a cópia não altera o original.
+  solution: |
+    function rascunho(pedido) {
+      return structuredClone(pedido);
+    }
+  tests:
+    - name: tipos preservados
+      code: |
+        const p = { criadoEm: new Date('2026-03-01T10:00:00Z'), itens: new Map([['pista', 2]]), cliente: { nome: 'Ana' } };
+        const c = rascunho(p);
+        expect(c.criadoEm).toBeInstanceOf(Date);
+        expect(c.criadoEm.getTime()).toBe(p.criadoEm.getTime());
+        expect(c.itens).toBeInstanceOf(Map);
+        expect(c.itens.get('pista')).toBe(2);
+    - name: independente
+      hidden: true
+      code: |
+        const p = { criadoEm: new Date(), itens: new Map([['pista', 2]]), cliente: { nome: 'Ana' } };
+        const c = rascunho(p);
+        c.cliente.nome = 'Bia';
+        c.itens.set('pista', 5);
+        expect(p.cliente.nome).toBe('Ana');
+        expect(p.itens.get('pista')).toBe(2);
+  hints:
+    - "`JSON.parse(JSON.stringify(x))` transforma datas em texto e perde Maps."
+    - Existe uma função global para cópia profunda que entende esses tipos.
+  explanation: |
+    `structuredClone` faz cópia profunda com o algoritmo usado em `postMessage` e no IndexedDB: preserva `Date`, `Map`, `Set` e referências circulares. Ele não copia funções nem elementos do DOM. O truque com JSON perde tudo o que não é texto, número, booleano, array ou objeto simples.
+  traps:
+    - reason: Cópia com JSON
+      code: |
+        function rascunho(p) { return JSON.parse(JSON.stringify(p)); }
+    - reason: Cópia rasa
+      code: |
+        function rascunho(p) { return { ...p }; }
+
+- slug: calculo-no-worker
+  title: O relatório sem travar a página
+  difficulty: medio
+  kind: quiz
+  visual: event-loop
+  in: ["web-apis/Workers e animação"]
+  study:
+    - { label: "Usando Web Workers (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers" }
+  statement: |
+    Gerar o relatório de vendas leva 3 segundos de cálculo puro, sem DOM, e trava a página enquanto roda.
+
+    Como manter a interface respondendo?
+  options:
+    - text: Mover o cálculo para um Web Worker, que roda em outra thread, e receber o resultado com `postMessage`
+      why: Certo. O worker não usa a thread principal, então cliques, rolagem e animações continuam.
+    - text: Colocar o cálculo dentro de uma função async
+      why: async não muda a thread. Um cálculo síncrono pesado continua travando, mesmo dentro de uma função async.
+    - text: Envolver o cálculo num setTimeout de 0
+      why: Isso só adia o travamento para logo depois.
+    - text: Usar um laço while em vez de for
+      why: O tipo de laço não muda o tempo de cálculo nem a thread.
+  answer: 0
+  explanation: |
+    Web Workers rodam JavaScript em paralelo, sem acesso ao DOM, e conversam com a página por mensagens. Servem para cálculos pesados, como processar arquivos, comprimir imagens ou filtrar grandes listas. Os dados enviados são copiados com o algoritmo de clonagem estruturada.
+
+- slug: animar-com-requestanimationframe
+  title: Animação que acompanha a tela
+  difficulty: medio
+  kind: quiz
+  visual: composicao
+  in: ["web-apis/Workers e animação", performance/DevTools Usage]
+  study:
+    - { label: "requestAnimationFrame (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Window/requestAnimationFrame" }
+  statement: |
+    Um contador animado usa `setInterval(atualizar, 16)` para mudar a cada quadro. Em algumas telas ele engasga, e continua rodando com a aba em segundo plano, gastando bateria.
+
+    Qual API resolve os dois problemas?
+  options:
+    - text: "`requestAnimationFrame`, que chama a função antes da próxima pintura, no ritmo da tela, e pausa em abas escondidas"
+      why: Certo. O navegador sincroniza o callback com a atualização da tela e economiza recursos fora de vista.
+    - text: "`setInterval` com 8ms, para atualizar mais vezes"
+      why: Atualizar mais vezes que a tela pinta só desperdiça processamento.
+    - text: "`setTimeout` recursivo"
+      why: Tem os mesmos problemas de ritmo do setInterval.
+    - text: Um laço while infinito
+      why: Isso trava a thread principal e a página inteira.
+  answer: 0
+  explanation: |
+    Timers não sabem quando a tela vai ser pintada, e podem rodar fora de compasso com ela. `requestAnimationFrame` roda logo antes da pintura, no ritmo do monitor, seja 60 ou 120 Hz, e o navegador pausa os callbacks em abas escondidas. Use o tempo recebido no callback para calcular o progresso da animação.
+
+- slug: proteger-de-iframe
+  title: O site dentro de outro site
+  difficulty: medio
+  kind: quiz
+  in: [web-security/CSP, web-security/OWASP Risks]
+  study:
+    - { label: "frame-ancestors (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors" }
+    - { label: "Clickjacking (OWASP)", url: "https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html" }
+  statement: |
+    Um site falso carrega a página de compra do festival num iframe transparente, por cima de um botão "Ganhe um brinde". Quem clica no brinde, na verdade, clica em "Confirmar compra".
+
+    Qual defesa impede isso?
+  options:
+    - text: "O cabeçalho `Content-Security-Policy: frame-ancestors 'self'`, que proíbe outras origens de exibirem a página em iframe"
+      why: Certo. O navegador se recusa a mostrar a página dentro de sites que não estão na lista.
+    - text: Desabilitar o botão direito do mouse
+      why: Isso não tem relação com o ataque, que usa cliques normais.
+    - text: Usar HTTPS
+      why: O iframe malicioso também carrega a página por HTTPS.
+    - text: Esconder o botão de confirmar
+      why: A pessoa legítima também precisa do botão.
+  answer: 0
+  explanation: |
+    Clickjacking engana o clique com camadas invisíveis. `frame-ancestors` na CSP, ou o cabeçalho antigo `X-Frame-Options`, diz quem pode exibir a página num iframe. Para páginas com ações sensíveis, a resposta costuma ser ninguém além do próprio site.
+
+- slug: integridade-do-cdn
+  title: O script do CDN foi trocado
+  difficulty: medio
+  kind: quiz
+  in: [web-security/OWASP Risks, web-security/CSP]
+  study:
+    - { label: "Subresource Integrity (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity" }
+  statement: |
+    O site carrega uma biblioteca de um CDN público. Se alguém invadir o CDN e trocar o arquivo, o código malicioso rodaria em todas as páginas do festival.
+
+    O que impede o navegador de executar um arquivo alterado?
+  options:
+    - text: O atributo `integrity` com o hash do arquivo esperado, que faz o navegador recusar um conteúdo diferente
+      why: Certo. É o Subresource Integrity. Se o hash não bater, o script não roda.
+    - text: Carregar o script com `defer`
+      why: defer muda quando o script roda, não se ele é confiável.
+    - text: Colocar o script no fim da página
+      why: A posição não muda o que o arquivo faz.
+    - text: Usar um CDN com HTTPS
+      why: HTTPS protege o caminho, mas não detecta um arquivo trocado no próprio servidor do CDN.
+  answer: 0
+  explanation: |
+    Com `integrity="sha384-..."` e `crossorigin`, o navegador calcula o hash do arquivo baixado e compara com o esperado. Se forem diferentes, bloqueia. É uma defesa contra comprometimento de terceiros, e os geradores de build e os CDNs costumam informar o hash pronto.
+
+- slug: link-sem-javascript
+  title: O link do perfil do fã
+  difficulty: medio
+  kind: js
+  in: [web-security/OWASP Risks]
+  study:
+    - { label: "Prevenção de XSS (OWASP)", url: "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html" }
+    - { label: "URL (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/URL" }
+  statement: |
+    Fãs podem pôr um link no perfil. Um link como `javascript:roubar()` executaria código quando alguém clicasse. Escreva `linkSeguro(texto)`, que devolve o endereço se ele for seguro, ou `'#'` se não for.
+
+    São seguros só os endereços absolutos com protocolo `http:`, `https:` ou `mailto:`. Use a API `URL` para interpretar o texto, e não compare só o começo da string.
+  must_use: [new URL]
+  solution: |
+    function linkSeguro(texto) {
+      try {
+        const url = new URL(String(texto).trim());
+        return ['http:', 'https:', 'mailto:'].includes(url.protocol) ? url.href : '#';
+      } catch {
+        return '#';
+      }
+    }
+  tests:
+    - name: links normais
+      code: |
+        expect(linkSeguro('https://exemplo.com/banda')).toBe('https://exemplo.com/banda');
+        expect(linkSeguro('mailto:fa@exemplo.com')).toBe('mailto:fa@exemplo.com');
+    - name: bloqueia javascript
+      code: |
+        expect(linkSeguro('javascript:alert(1)')).toBe('#');
+    - name: truques com maiúsculas e espaços
+      hidden: true
+      code: |
+        expect(linkSeguro('  JaVaScRiPt:alert(1)')).toBe('#');
+        expect(linkSeguro('java\tscript:alert(1)')).toBe('#');
+        expect(linkSeguro('data:text/html,<script>alert(1)</script>')).toBe('#');
+    - name: texto que não é URL
+      hidden: true
+      code: |
+        expect(linkSeguro('meu site')).toBe('#');
+        expect(linkSeguro('')).toBe('#');
+  hints:
+    - "`new URL(texto).protocol` normaliza o protocolo, inclusive com maiúsculas, espaços e tabulações."
+    - Use uma lista do que é permitido, e não do que é proibido.
+  explanation: |
+    Bloquear `javascript:` comparando o começo da string falha com maiúsculas, espaços e caracteres de controle, que o navegador ignora. Interpretar com `URL`, como o navegador faria, e permitir só protocolos conhecidos é robusto. Listas de permissão são mais seguras que listas de bloqueio.
+  traps:
+    - reason: Compara o começo da string
+      code: |
+        function linkSeguro(t) { return String(t).startsWith('javascript:') ? '#' : t; }
+    - reason: Lista de bloqueio
+      code: |
+        function linkSeguro(t) { try { const u = new URL(String(t).trim()); return u.protocol === 'javascript:' ? '#' : u.href; } catch { return '#'; } }
+
+- slug: pacote-malicioso
+  title: O pacote com nome parecido
+  difficulty: medio
+  kind: quiz
+  in: [web-security/OWASP Risks, package-managers/npm]
+  study:
+    - { label: "npm audit (npm)", url: "https://docs.npmjs.com/cli/v10/commands/npm-audit" }
+    - { label: "Componentes vulneráveis e desatualizados (OWASP)", url: "https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/" }
+  statement: |
+    Alguém instalou `reactt`, com dois t, por engano. O pacote rodou um script na instalação que leu variáveis de ambiente da máquina.
+
+    Quais práticas reduzem esse risco?
+  options:
+    - text: Conferir nome, autor e popularidade antes de instalar, versionar o lockfile, rodar `npm audit` na CI e desativar scripts de instalação onde não forem necessários
+      why: Certo. Ataques à cadeia de suprimentos exploram nomes parecidos e scripts automáticos. Várias camadas pequenas reduzem muito a exposição.
+    - text: Instalar sempre a versão mais nova de tudo
+      why: Versões novas também podem ser comprometidas. Atualize com critério e com o lockfile.
+    - text: Apagar o node_modules toda semana
+      why: Reinstalar não remove um pacote malicioso que continua no package.json.
+    - text: Nenhuma, porque o registro do npm verifica todos os pacotes
+      why: O registro remove pacotes maliciosos quando são descobertos, mas não garante que todos sejam seguros.
+  answer: 0
+  explanation: |
+    Dependências rodam com as permissões de quem as instala e usa. Typosquatting, pacotes sequestrados e dependências indiretas são riscos reais. Revise o que entra, trave versões, audite e prefira ambientes de build isolados, sem segredos desnecessários.
+
+- slug: hsts
+  title: O primeiro acesso por HTTP
+  difficulty: medio
+  kind: quiz
+  in: [web-security/HTTPS]
+  study:
+    - { label: "Strict-Transport-Security (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Headers/Strict-Transport-Security" }
+  statement: |
+    O servidor redireciona `http://` para `https://`. Mesmo assim, num Wi-Fi público, um atacante intercepta o primeiro pedido, ainda em HTTP, antes do redirecionamento.
+
+    O que faz o navegador ir direto para HTTPS nas próximas visitas?
+  options:
+    - text: O cabeçalho `Strict-Transport-Security`, que diz ao navegador para usar só HTTPS naquele domínio por um período
+      why: Certo. É o HSTS. Com ele, o navegador nem tenta o HTTP, e com a lista de pré-carregamento vale até na primeira visita.
+    - text: Um certificado mais caro
+      why: O tipo de certificado não muda o primeiro pedido em HTTP.
+    - text: Desligar a porta 80 do servidor
+      why: Quem digitou sem https veria um erro, e o atacante no meio ainda poderia responder no lugar do servidor.
+    - text: Um meta refresh na página
+      why: A página em HTTP já é o que o atacante consegue alterar.
+  answer: 0
+  explanation: |
+    O redirecionamento de HTTP para HTTPS deixa uma janela no primeiro pedido. O HSTS fecha essa janela nas visitas seguintes, e a lista de pré-carregamento dos navegadores fecha até na primeira. Aplique com cuidado: com HSTS ativo, o domínio não volta a funcionar por HTTP.

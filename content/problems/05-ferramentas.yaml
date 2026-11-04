@@ -2,7 +2,11 @@
   title: O commit que quebrou a produção
   difficulty: medio
   kind: quiz
+  visual: git
   in: [version-control/Git]
+  study:
+    - { label: "git revert (documentação oficial)", url: "https://git-scm.com/docs/git-revert" }
+    - { label: "Reescrevendo o histórico (Pro Git)", url: "https://git-scm.com/book/pt-br/v2/Ferramentas-do-Git-Reescrevendo-o-Hist%C3%B3rico" }
   statement: |
     Você fez push de um commit na `main` que quebrou a página de ingressos. Outras três pessoas já baixaram a `main` e fizeram commits por cima.
 
@@ -24,7 +28,11 @@
   title: Duas tarefas ao mesmo tempo
   difficulty: facil
   kind: quiz
+  visual: git
   in: [version-control/Git]
+  study:
+    - { label: "O básico de branches e merge (Pro Git)", url: "https://git-scm.com/book/pt-br/v2/Ramifica%c3%a7%c3%a3o-Branching-no-Git-Ramifica%c3%a7%c3%a3o-Branching-e-Mesclagem-Merging-B%c3%a1sicas" }
+    - { label: "git stash (documentação oficial)", url: "https://git-scm.com/docs/git-stash" }
   statement: |
     Você está no meio do novo filtro do line-up quando chega um bug urgente na página de ingressos. O filtro ainda não funciona.
 
@@ -46,7 +54,10 @@
   title: Conflito no line-up
   difficulty: medio
   kind: quiz
+  visual: git
   in: [version-control/Git]
+  study:
+    - { label: "Conflitos de merge (Pro Git)", url: "https://git-scm.com/book/pt-br/v2/Ramifica%c3%a7%c3%a3o-Branching-no-Git-Ramifica%c3%a7%c3%a3o-Branching-e-Mesclagem-Merging-B%c3%a1sicas" }
   statement: |
     Ao fazer merge, o Git para com conflito em `lineup.json`:
 
@@ -77,6 +88,9 @@
   difficulty: facil
   kind: quiz
   in: [vcs-hosting/GitHub, vcs-hosting/GitLab]
+  study:
+    - { label: "Branches protegidos (GitHub)", url: "https://docs.github.com/pt/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches" }
+    - { label: "Branches protegidos (GitLab)", url: "https://docs.gitlab.com/user/project/repository/branches/protected/" }
   statement: |
     O time quer que nenhuma mudança chegue à `main` sem que outra pessoa leia o código e sem que os testes passem.
 
@@ -99,6 +113,9 @@
   difficulty: medio
   kind: quiz
   in: [vcs-hosting/GitLab, vcs-hosting/GitHub]
+  study:
+    - { label: "Começando com GitLab CI", url: "https://docs.gitlab.com/ci/quick_start/" }
+    - { label: "Início rápido do GitHub Actions", url: "https://docs.github.com/pt/actions/get-started/quickstart" }
   statement: |
     O projeto do site tem `npm test`. O time quer que os testes rodem sozinhos a cada push num merge request do GitLab, e que o resultado apareça na própria página do merge request.
 
@@ -121,6 +138,9 @@
   difficulty: medio
   kind: quiz
   in: [package-managers/npm]
+  study:
+    - { label: "Versionamento semântico", url: "https://semver.org/lang/pt-BR/" }
+    - { label: "Faixas de versão no package.json (npm)", url: "https://docs.npmjs.com/cli/v10/configuring-npm/package-json#dependencies" }
   statement: |
     O `package.json` do site tem `"vite": "^5.4.2"`. Uma pessoa nova no time roda `npm install` num projeto sem lockfile.
 
@@ -143,6 +163,9 @@
   difficulty: dificil
   kind: js
   in: [package-managers/npm]
+  study:
+    - { label: "Versionamento semântico", url: "https://semver.org/lang/pt-BR/" }
+    - { label: "Calculadora de versões semânticas (npm)", url: "https://semver.npmjs.com/" }
   statement: |
     Escreva `satisfaz(versao, faixa)`, que diz se uma versão `MAIOR.MENOR.CORREÇÃO` atende a uma faixa. Aceite três formatos de faixa:
 
@@ -223,6 +246,9 @@
   difficulty: facil
   kind: quiz
   in: [package-managers/npm, package-managers/yarn]
+  study:
+    - { label: "package-lock.json (npm)", url: "https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json" }
+    - { label: "npm ci (npm)", url: "https://docs.npmjs.com/cli/v10/commands/npm-ci" }
   statement: |
     O build passa no seu computador e quebra na CI. Vocês descobrem que a CI instalou uma versão mais nova de uma dependência indireta. O `package-lock.json` está no `.gitignore`.
 
@@ -245,6 +271,8 @@
   difficulty: facil
   kind: quiz
   in: [package-managers/npm]
+  study:
+    - { label: "devDependencies (npm)", url: "https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devdependencies" }
   statement: |
     Você vai adicionar o Vitest para os testes do site. Ele só é usado durante o desenvolvimento e na CI, nunca no código que vai para o navegador.
 
@@ -267,6 +295,9 @@
   difficulty: medio
   kind: quiz
   in: [package-managers/pnpm, package-managers/Bun, package-managers/yarn]
+  study:
+    - { label: "Por que pnpm", url: "https://pnpm.io/motivation" }
+    - { label: "Documentação do Bun", url: "https://bun.sh/docs" }
   statement: |
     O time avalia trocar o npm. Uma pessoa defende o pnpm, outra defende o Bun.
 

@@ -1,0 +1,1224 @@
+- slug: ordem-dos-logs
+  title: Em que ordem aparece?
+  difficulty: medio
+  kind: quiz
+  visual: event-loop
+  in: [javascript/Assíncrono]
+  study:
+    - { label: "O laço de eventos (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Execution_model" }
+    - { label: "Microtarefas (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide" }
+  statement: |
+    O que este código escreve no console?
+
+    ```
+    console.log('A');
+    setTimeout(() => console.log('B'), 0);
+    Promise.resolve().then(() => console.log('C'));
+    console.log('D');
+    ```
+  options:
+    - text: A D C B
+      why: Certo. Primeiro o código síncrono, depois todas as microtarefas, como o then, e só então a próxima tarefa, o setTimeout.
+    - text: A B C D
+      why: Nenhum callback roda no meio do código síncrono. Eles esperam a pilha esvaziar.
+    - text: A D B C
+      why: O setTimeout foi agendado antes, mas a fila de microtarefas tem prioridade sobre a de tarefas.
+    - text: A C D B
+      why: O then não roda na hora, mesmo com a promessa já resolvida. Ele vai para a fila de microtarefas.
+  answer: 0
+  explanation: |
+    O JavaScript roda uma coisa de cada vez. Callbacks de promessas entram na fila de microtarefas, e callbacks de timers e eventos entram na fila de tarefas. Quando a pilha esvazia, o laço de eventos roda todas as microtarefas e só depois pega a próxima tarefa.
+
+- slug: await-no-meio
+  title: O que vem depois do await
+  difficulty: dificil
+  kind: quiz
+  visual: event-loop
+  in: [javascript/Assíncrono]
+  study:
+    - { label: "await (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Operators/await" }
+  statement: |
+    O que este código escreve?
+
+    ```
+    async function carregar() {
+      console.log('1');
+      await null;
+      console.log('2');
+    }
+    carregar();
+    console.log('3');
+    ```
+  options:
+    - text: 1 3 2
+      why: Certo. A função roda até o primeiro await. O resto vira uma microtarefa, que só roda depois do código síncrono.
+    - text: 1 2 3
+      why: O await pausa a função mesmo quando o valor não é uma promessa.
+    - text: 3 1 2
+      why: Chamar uma função async executa o corpo na hora, até o primeiro await.
+    - text: 2 1 3
+      why: O código antes do await roda primeiro, de forma síncrona.
+  answer: 0
+  explanation: |
+    Uma função `async` roda de forma síncrona até o primeiro `await`. Ali ela devolve uma promessa e agenda a continuação como microtarefa, mesmo que o valor esperado não seja uma promessa. Por isso o código depois da chamada roda antes do resto da função.
+
+- slug: laco-que-congela
+  title: A página congelou
+  difficulty: medio
+  kind: quiz
+  visual: event-loop
+  in: [javascript/Assíncrono, performance/DevTools Usage]
+  study:
+    - { label: "O laço de eventos (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Execution_model" }
+    - { label: "Otimizando tarefas longas (web.dev)", url: "https://web.dev/articles/optimize-long-tasks" }
+  statement: |
+    Um botão gera um relatório com um laço que demora 4 segundos. Enquanto isso, a página não rola, os cliques não respondem e o spinner de carregando nem aparece, mesmo sendo exibido antes do laço.
+
+    Por quê?
+  options:
+    - text: O laço ocupa a thread principal. O navegador não consegue pintar a tela nem tratar eventos até ele terminar
+      why: Certo. Pintura, eventos e JavaScript dividem a mesma thread. Trabalho pesado vai para um Web Worker ou é quebrado em partes.
+    - text: O spinner precisa de um setTimeout para aparecer
+      why: O problema não é o spinner. Nada é pintado enquanto o laço roda, porque a thread está ocupada.
+    - text: Laços for são assíncronos e travam o navegador
+      why: Laços são síncronos, e é exatamente por isso que bloqueiam a thread.
+    - text: O navegador limita scripts a 4 segundos
+      why: Não há limite fixo assim. O navegador só oferece interromper scripts que demoram muito.
+  answer: 0
+  explanation: |
+    A thread principal roda JavaScript, calcula layout, pinta e trata eventos, uma coisa de cada vez. Uma tarefa longa impede todo o resto. As saídas são mover o cálculo para um Web Worker ou dividir o trabalho em pedaços, devolvendo o controle ao navegador entre eles.
+
+- slug: sem-repetidos
+  title: Gêneros sem repetição
+  difficulty: facil
+  kind: js
+  in: [javascript/Arrays]
+  study:
+    - { label: "Set (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Set" }
+  statement: |
+    Escreva `generosUnicos(bandas)`, que recebe uma lista de `{ nome, genero }` e devolve a lista de gêneros sem repetição, na ordem em que aparecem pela primeira vez. Compare os gêneros sem diferenciar maiúsculas e minúsculas, e devolva em minúsculas.
+  solution: |
+    function generosUnicos(bandas) {
+      return [...new Set(bandas.map((b) => b.genero.toLowerCase()))];
+    }
+  tests:
+    - name: remove repetidos
+      code: |
+        expect(generosUnicos([{ nome: 'A', genero: 'thrash' }, { nome: 'B', genero: 'doom' }, { nome: 'C', genero: 'thrash' }])).toEqual(['thrash', 'doom']);
+    - name: maiúsculas
+      hidden: true
+      code: |
+        expect(generosUnicos([{ nome: 'A', genero: 'Punk' }, { nome: 'B', genero: 'PUNK' }, { nome: 'C', genero: 'doom' }])).toEqual(['punk', 'doom']);
+    - name: lista vazia
+      hidden: true
+      code: |
+        expect(generosUnicos([])).toEqual([]);
+  hints:
+    - Um `Set` guarda cada valor uma vez só e mantém a ordem de inserção.
+  explanation: |
+    `new Set(lista)` remove duplicados mantendo a ordem da primeira aparição, e o spread volta para um array. Normalizar antes de inserir faz `Punk` e `PUNK` contarem como o mesmo valor.
+  traps:
+    - reason: Diferencia maiúsculas
+      code: |
+        function generosUnicos(b) { return [...new Set(b.map((x) => x.genero))].map((g) => g.toLowerCase()); }
+
+- slug: top-tres
+  title: Os três mais vendidos
+  difficulty: medio
+  kind: js
+  in: [javascript/Arrays]
+  study:
+    - { label: "Array.prototype.toSorted (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted" }
+    - { label: "Array.prototype.slice (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/slice" }
+  statement: |
+    Escreva `maisVendidos(vendas, n = 3)`. Cada venda tem `banda` e `ingressos`. A mesma banda pode aparecer em várias vendas: some os ingressos por banda e devolva os nomes das `n` bandas com mais ingressos, da maior para a menor. Em empate, ordem alfabética.
+  solution: |
+    function maisVendidos(vendas, n = 3) {
+      const totais = new Map();
+      for (const v of vendas) totais.set(v.banda, (totais.get(v.banda) ?? 0) + v.ingressos);
+      return [...totais]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'pt-BR'))
+        .slice(0, n)
+        .map(([banda]) => banda);
+    }
+  tests:
+    - name: soma por banda
+      code: |
+        const vendas = [{ banda: 'Vórtice', ingressos: 50 }, { banda: 'Asfalto', ingressos: 80 }, { banda: 'Vórtice', ingressos: 40 }, { banda: 'Ferrugem', ingressos: 10 }];
+        expect(maisVendidos(vendas)).toEqual(['Vórtice', 'Asfalto', 'Ferrugem']);
+    - name: n menor
+      hidden: true
+      code: |
+        expect(maisVendidos([{ banda: 'A', ingressos: 1 }, { banda: 'B', ingressos: 2 }], 1)).toEqual(['B']);
+    - name: empate
+      hidden: true
+      code: |
+        expect(maisVendidos([{ banda: 'Maré', ingressos: 5 }, { banda: 'Asfalto', ingressos: 5 }, { banda: 'Concreto', ingressos: 9 }])).toEqual(['Concreto', 'Asfalto', 'Maré']);
+    - name: menos bandas que n
+      hidden: true
+      code: |
+        expect(maisVendidos([{ banda: 'A', ingressos: 1 }])).toEqual(['A']);
+  hints:
+    - Primeiro acumule os totais por banda, com um `Map` ou um objeto.
+    - "`b[1] - a[1]` ordena do maior para o menor, e `||` desempata."
+  explanation: |
+    Agrupar, ordenar e cortar é um padrão comum de relatório. Somar antes de ordenar evita que uma banda com várias vendas pequenas apareça várias vezes ou fique fora do topo.
+  traps:
+    - reason: Não soma as vendas repetidas
+      code: |
+        function maisVendidos(v, n = 3) { return [...v].sort((a, b) => b.ingressos - a.ingressos || a.banda.localeCompare(b.banda)).slice(0, n).map((x) => x.banda); }
+    - reason: Sem desempate
+      code: |
+        function maisVendidos(v, n = 3) { const t = {}; for (const x of v) t[x.banda] = (t[x.banda] ?? 0) + x.ingressos; return Object.entries(t).sort((a, b) => b[1] - a[1]).slice(0, n).map(([b]) => b); }
+
+- slug: dividir-em-lotes
+  title: Lotes de ingressos
+  difficulty: facil
+  kind: js
+  in: [javascript/Arrays]
+  study:
+    - { label: "Array.prototype.slice (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/slice" }
+  statement: |
+    A API de e-mail aceita no máximo 50 destinatários por envio. Escreva `emLotes(lista, tamanho)`, que divide a lista em listas menores de até `tamanho` itens, na ordem. Com `tamanho` menor que 1, lance um erro.
+  solution: |
+    function emLotes(lista, tamanho) {
+      if (!(tamanho >= 1)) throw new Error('Tamanho inválido');
+      const lotes = [];
+      for (let i = 0; i < lista.length; i += tamanho) lotes.push(lista.slice(i, i + tamanho));
+      return lotes;
+    }
+  tests:
+    - name: divide
+      code: |
+        expect(emLotes([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
+    - name: exato
+      hidden: true
+      code: |
+        expect(emLotes([1, 2, 3, 4], 2)).toEqual([[1, 2], [3, 4]]);
+        expect(emLotes([], 3)).toEqual([]);
+    - name: tamanho inválido
+      hidden: true
+      code: |
+        expect(() => emLotes([1], 0)).toThrow();
+        expect(() => emLotes([1], -1)).toThrow();
+  hints:
+    - Avance o índice de `tamanho` em `tamanho` e corte com `slice`.
+  explanation: |
+    `slice(i, i + tamanho)` não passa do fim, então o último lote sai menor sem tratamento especial. Validar o tamanho evita um laço infinito com 0.
+  traps:
+    - reason: Lote vazio no fim
+      code: |
+        function emLotes(l, t) { if (t < 1) throw new Error('x'); const r = []; for (let i = 0; i <= l.length; i += t) r.push(l.slice(i, i + t)); return r; }
+
+- slug: config-com-padroes
+  title: Configuração com padrões
+  difficulty: medio
+  kind: js
+  in: [javascript/Objetos e classes]
+  study:
+    - { label: "Atribuição via desestruturação (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Operators/Destructuring" }
+    - { label: "Sintaxe de espalhamento (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Operators/Spread_syntax" }
+  statement: |
+    Escreva `montarPlayer(opcoes)`, que devolve a configuração do player de vídeo com estes padrões:
+
+    ```
+    { volume: 0.8, legendas: { ativas: true, idioma: 'pt-BR' }, autoplay: false }
+    ```
+
+    As opções recebidas substituem os padrões, inclusive dentro de `legendas`: `{ legendas: { idioma: 'en' } }` muda só o idioma. `opcoes` pode não ser passado. Valores `0` e `false` são válidos.
+  solution: |
+    function montarPlayer(opcoes = {}) {
+      const padrao = { volume: 0.8, legendas: { ativas: true, idioma: 'pt-BR' }, autoplay: false };
+      return {
+        ...padrao,
+        ...opcoes,
+        legendas: { ...padrao.legendas, ...opcoes.legendas },
+      };
+    }
+  tests:
+    - name: padrões
+      code: |
+        expect(montarPlayer()).toEqual({ volume: 0.8, legendas: { ativas: true, idioma: 'pt-BR' }, autoplay: false });
+    - name: muda só o idioma
+      code: |
+        expect(montarPlayer({ legendas: { idioma: 'en' } }).legendas).toEqual({ ativas: true, idioma: 'en' });
+    - name: zero e false
+      hidden: true
+      code: |
+        const p = montarPlayer({ volume: 0, legendas: { ativas: false } });
+        expect(p.volume).toBe(0);
+        expect(p.legendas).toEqual({ ativas: false, idioma: 'pt-BR' });
+    - name: não compartilha o objeto padrão
+      hidden: true
+      code: |
+        const a = montarPlayer();
+        a.legendas.idioma = 'es';
+        expect(montarPlayer().legendas.idioma).toBe('pt-BR');
+  hints:
+    - O spread copia só um nível. Objetos aninhados precisam de um spread próprio.
+    - Crie os padrões dentro da função, ou copie, para ninguém alterar o original.
+  explanation: |
+    `{ ...padrao, ...opcoes }` substitui `legendas` inteiro quando a opção traz o objeto, perdendo `ativas`. Mesclar o nível aninhado à parte resolve. Spread trata `0` e `false` como valores, diferente de `||`.
+  traps:
+    - reason: Mescla só o primeiro nível
+      code: |
+        function montarPlayer(o = {}) { return { volume: 0.8, legendas: { ativas: true, idioma: 'pt-BR' }, autoplay: false, ...o }; }
+    - reason: Usa || e perde zero e false
+      code: |
+        function montarPlayer(o = {}) {
+          const l = o.legendas || {};
+          return { volume: o.volume || 0.8, legendas: { ativas: l.ativas || true, idioma: l.idioma || 'pt-BR' }, autoplay: o.autoplay || false };
+        }
+
+- slug: caminho-opcional
+  title: O palco pode não existir
+  difficulty: facil
+  kind: js
+  in: [javascript/Tipos e operadores]
+  study:
+    - { label: "Encadeamento opcional, o ?. (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Operators/Optional_chaining" }
+  statement: |
+    Escreva `cidadeDoShow(show)`. O show pode ter `local`, que pode ter `endereco`, que pode ter `cidade`. Devolva a cidade, ou `'A definir'` quando qualquer parte do caminho faltar. Uma cidade vazia, `''`, também vira `'A definir'`.
+  solution: |
+    function cidadeDoShow(show) {
+      return show?.local?.endereco?.cidade || 'A definir';
+    }
+  tests:
+    - name: com cidade
+      code: |
+        expect(cidadeDoShow({ local: { endereco: { cidade: 'Recife' } } })).toBe('Recife');
+    - name: caminho faltando
+      hidden: true
+      code: |
+        expect(cidadeDoShow({})).toBe('A definir');
+        expect(cidadeDoShow({ local: null })).toBe('A definir');
+        expect(cidadeDoShow(undefined)).toBe('A definir');
+    - name: cidade vazia
+      hidden: true
+      code: |
+        expect(cidadeDoShow({ local: { endereco: { cidade: '' } } })).toBe('A definir');
+  hints:
+    - "`a?.b` devolve `undefined` em vez de lançar erro quando `a` é `null` ou `undefined`."
+    - Aqui, `''` também deve cair no padrão, então `||` serve melhor que `??`.
+  explanation: |
+    O encadeamento opcional para no primeiro `null` ou `undefined` e devolve `undefined`, sem lançar `TypeError`. A escolha entre `??` e `||` depende da regra: `??` preservaria a string vazia, `||` a troca pelo padrão.
+  traps:
+    - reason: Quebra com local nulo
+      code: |
+        function cidadeDoShow(s) { return (s && s.local.endereco && s.local.endereco.cidade) || 'A definir'; }
+    - reason: Mantém a cidade vazia
+      code: |
+        function cidadeDoShow(s) { return s?.local?.endereco?.cidade ?? 'A definir'; }
+
+- slug: preco-em-reais
+  title: R$ do jeito certo
+  difficulty: facil
+  kind: js
+  in: [javascript/Strings e regex, web-apis/URL e histórico]
+  study:
+    - { label: "Intl.NumberFormat (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat" }
+  statement: |
+    Escreva `emReais(valor)`, que formata um número como preço em reais no padrão brasileiro, como `R$ 1.250,50`. Use a API de internacionalização do JavaScript.
+
+    O navegador põe um espaço especial entre `R$` e o número. Troque-o por um espaço comum no resultado.
+  must_use: [Intl.NumberFormat]
+  solution: |
+    const formatador = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    function emReais(valor) {
+      return formatador.format(valor).replace(/\s/g, ' ');
+    }
+  tests:
+    - name: milhar e centavos
+      code: |
+        expect(emReais(1250.5)).toBe('R$ 1.250,50');
+    - name: inteiro
+      hidden: true
+      code: |
+        expect(emReais(300)).toBe('R$ 300,00');
+        expect(emReais(0)).toBe('R$ 0,00');
+    - name: arredonda
+      hidden: true
+      code: |
+        expect(emReais(9.999)).toBe('R$ 10,00');
+        expect(emReais(1234567.891)).toBe('R$ 1.234.567,89');
+  hints:
+    - "`new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })` formata moeda."
+    - O espaço depois de `R$` é um caractere especial. `\\s` em regex casa com ele.
+  explanation: |
+    `Intl.NumberFormat` conhece separadores, símbolos e arredondamento de cada localidade, o que a concatenação de texto erra com facilidade. Criar o formatador uma vez e reaproveitar é mais rápido que criar a cada chamada.
+  traps:
+    - reason: Formatação manual
+      code: |
+        function emReais(v) { return 'R$ ' + v.toFixed(2).replace('.', ','); }
+
+- slug: contagem-regressiva
+  title: Faltam quantos dias?
+  difficulty: medio
+  kind: js
+  in: [javascript/Tipos e operadores]
+  study:
+    - { label: "Date (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Date" }
+  statement: |
+    Escreva `contagem(agora, inicio)`, que recebe duas datas `Date` e devolve `{ dias, horas, minutos }` que faltam até o início do festival, sem contar os segundos. Se o festival já começou, devolva tudo zerado.
+  solution: |
+    function contagem(agora, inicio) {
+      const totalMin = Math.max(0, Math.floor((inicio - agora) / 60000));
+      return {
+        dias: Math.floor(totalMin / 1440),
+        horas: Math.floor((totalMin % 1440) / 60),
+        minutos: totalMin % 60,
+      };
+    }
+  tests:
+    - name: dias, horas e minutos
+      code: |
+        const agora = new Date('2026-03-10T10:00:00Z');
+        const inicio = new Date('2026-03-12T13:30:00Z');
+        expect(contagem(agora, inicio)).toEqual({ dias: 2, horas: 3, minutos: 30 });
+    - name: já começou
+      hidden: true
+      code: |
+        expect(contagem(new Date('2026-03-13T00:00:00Z'), new Date('2026-03-12T13:30:00Z'))).toEqual({ dias: 0, horas: 0, minutos: 0 });
+    - name: ignora segundos
+      hidden: true
+      code: |
+        expect(contagem(new Date('2026-03-12T13:28:30Z'), new Date('2026-03-12T13:30:00Z'))).toEqual({ dias: 0, horas: 0, minutos: 1 });
+  hints:
+    - Subtrair duas datas dá a diferença em milissegundos.
+    - Converta tudo para minutos inteiros primeiro, depois quebre em dias e horas com `%`.
+  explanation: |
+    Datas viram milissegundos numa subtração, e converter tudo para uma unidade inteira antes de dividir evita erros de arredondamento. Trabalhar em UTC nas contas e formatar no fuso da pessoa só na exibição evita problemas com horário de verão.
+  traps:
+    - reason: Arredonda em vez de truncar
+      code: |
+        function contagem(a, i) { const m = Math.max(0, Math.round((i - a) / 60000)); return { dias: Math.floor(m / 1440), horas: Math.floor((m % 1440) / 60), minutos: m % 60 }; }
+    - reason: Valores negativos depois do início
+      code: |
+        function contagem(a, i) { const m = Math.floor((i - a) / 60000); return { dias: Math.floor(m / 1440), horas: Math.floor((m % 1440) / 60), minutos: m % 60 }; }
+
+- slug: limitar-chamadas
+  title: Rolagem sem exagero
+  difficulty: dificil
+  kind: js
+  in: [javascript/Funções e escopo, performance/DevTools Usage]
+  study:
+    - { label: "Throttle no glossário do MDN, em inglês", url: "https://developer.mozilla.org/en-US/docs/Glossary/Throttle" }
+  statement: |
+    O evento de rolagem dispara dezenas de vezes por segundo. Escreva `throttle(funcao, intervalo)`, que devolve uma função que chama `funcao` no máximo uma vez a cada `intervalo` milissegundos:
+
+    - a primeira chamada executa na hora
+    - chamadas dentro do intervalo são ignoradas, exceto a última, que executa quando o intervalo acaba, com os argumentos dela
+  solution: |
+    function throttle(funcao, intervalo) {
+      let ultimo = -Infinity;
+      let pendente = null;
+      let timer = null;
+      return function (...args) {
+        const agora = Date.now();
+        const resta = intervalo - (agora - ultimo);
+        if (resta <= 0) {
+          // Uma chamada no limite exato substitui o timer pendente, sem executar duas vezes.
+          if (timer) {
+            clearTimeout(timer);
+            timer = null;
+          }
+          ultimo = agora;
+          funcao.apply(this, args);
+          return;
+        }
+        pendente = args;
+        if (!timer) {
+          timer = setTimeout(() => {
+            timer = null;
+            ultimo = Date.now();
+            funcao.apply(this, pendente);
+          }, resta);
+        }
+      };
+    }
+  tests:
+    - name: primeira chamada na hora
+      code: |
+        const spy = fn();
+        const f = throttle(spy, 50);
+        f(1);
+        expect(spy).toHaveBeenCalledWith(1);
+    - name: ignora no intervalo e roda a última
+      code: |
+        const spy = fn();
+        const f = throttle(spy, 50);
+        f(1); f(2); f(3);
+        expect(spy).toHaveBeenCalledTimes(1);
+        await wait(80);
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy.mock.calls[1]).toEqual([3]);
+    - name: sem chamada extra quando não há pendente
+      hidden: true
+      code: |
+        const spy = fn();
+        const f = throttle(spy, 30);
+        f(1);
+        await wait(60);
+        expect(spy).toHaveBeenCalledTimes(1);
+        f(2);
+        expect(spy).toHaveBeenCalledTimes(2);
+    - name: taxa máxima
+      hidden: true
+      code: |
+        const spy = fn();
+        const f = throttle(spy, 40);
+        const fim = Date.now() + 200;
+        while (Date.now() < fim) { f(Date.now()); await wait(5); }
+        await wait(60);
+        expect(spy.mock.calls.length).toBeGreaterThanOrEqual(4);
+        expect(spy.mock.calls.length).toBeLessThanOrEqual(7);
+  hints:
+    - Guarde o horário da última execução e compare com o atual.
+    - Para a última chamada não se perder, agende um `setTimeout` para o fim do intervalo, guardando os argumentos mais recentes.
+  explanation: |
+    Debounce espera a rajada acabar. Throttle limita a frequência durante a rajada, o que serve para rolagem e redimensionamento, em que você quer atualizações contínuas mas não a cada pixel. Executar a última chamada garante que o estado final, como a posição de rolagem onde a pessoa parou, seja processado.
+  traps:
+    - reason: Perde a última chamada
+      code: |
+        function throttle(f, ms) { let u = -Infinity; return (...a) => { const t = Date.now(); if (t - u >= ms) { u = t; f(...a); } }; }
+    - reason: É um debounce
+      code: |
+        function throttle(f, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), ms); }; }
+
+- slug: lembrar-resultado
+  title: Não calcule duas vezes
+  difficulty: medio
+  kind: js
+  in: [javascript/Funções e escopo, performance/DevTools Usage]
+  study:
+    - { label: "Memoização (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Glossary/Memoization" }
+    - { label: "Map (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Map" }
+  statement: |
+    Escreva `memorizar(funcao)`, que devolve uma versão de `funcao` que guarda o resultado para cada argumento. Chamadas repetidas com o mesmo argumento devolvem o resultado guardado, sem chamar `funcao` de novo. A função recebe um único argumento, que pode ser qualquer valor, inclusive `undefined` ou um objeto.
+  solution: |
+    function memorizar(funcao) {
+      const cache = new Map();
+      return (arg) => {
+        if (!cache.has(arg)) cache.set(arg, funcao(arg));
+        return cache.get(arg);
+      };
+    }
+  tests:
+    - name: guarda o resultado
+      code: |
+        const lenta = fn((n) => n * 2);
+        const rapida = memorizar(lenta);
+        expect(rapida(4)).toBe(8);
+        expect(rapida(4)).toBe(8);
+        expect(lenta).toHaveBeenCalledTimes(1);
+    - name: argumentos diferentes
+      hidden: true
+      code: |
+        const lenta = fn((n) => n + 1);
+        const r = memorizar(lenta);
+        r(1); r(2); r(1);
+        expect(lenta).toHaveBeenCalledTimes(2);
+    - name: resultados falsos também
+      hidden: true
+      code: |
+        const lenta = fn(() => 0);
+        const r = memorizar(lenta);
+        r('x'); r('x');
+        expect(lenta).toHaveBeenCalledTimes(1);
+    - name: objetos como chave
+      hidden: true
+      code: |
+        const lenta = fn((o) => o.n);
+        const r = memorizar(lenta);
+        const a = { n: 1 };
+        const b = { n: 1 };
+        r(a); r(a); r(b);
+        expect(lenta).toHaveBeenCalledTimes(2);
+  hints:
+    - Um `Map` aceita qualquer valor como chave, inclusive objetos.
+    - Confira se a chave existe com `has`, e não pelo valor guardado, que pode ser `0` ou `undefined`.
+  explanation: |
+    Memoizar troca memória por tempo: o primeiro cálculo é guardado, e os seguintes são uma consulta. `Map` compara objetos por referência, sem converter para texto. Conferir com `has` evita recalcular resultados falsos. Em produção, limite o tamanho do cache.
+  traps:
+    - reason: Recalcula resultados falsos
+      code: |
+        function memorizar(f) { const c = new Map(); return (a) => c.get(a) || (c.set(a, f(a)), c.get(a)); }
+    - reason: Objeto comum converte a chave em texto
+      code: |
+        function memorizar(f) { const c = {}; return (a) => (a in c ? c[a] : (c[a] = f(a))); }
+
+- slug: encadear-funcoes
+  title: A linha de montagem
+  difficulty: medio
+  kind: js
+  in: [javascript/Funções e escopo]
+  study:
+    - { label: "Funções (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Functions" }
+    - { label: "Array.prototype.reduce (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce" }
+  statement: |
+    Escreva `encadear(...funcoes)`, que devolve uma função que passa o valor por cada função, da esquerda para a direita: `encadear(f, g, h)(x)` é `h(g(f(x)))`. Sem funções, devolve o próprio valor.
+  solution: |
+    function encadear(...funcoes) {
+      return (valor) => funcoes.reduce((acc, f) => f(acc), valor);
+    }
+  tests:
+    - name: na ordem
+      code: |
+        const r = encadear((s) => s.trim(), (s) => s.toUpperCase(), (s) => s + '!');
+        expect(r('  vórtice ')).toBe('VÓRTICE!');
+    - name: sem funções
+      hidden: true
+      code: |
+        expect(encadear()(42)).toBe(42);
+    - name: ordem importa
+      hidden: true
+      code: |
+        expect(encadear((n) => n + 1, (n) => n * 10)(1)).toBe(20);
+  hints:
+    - "`reduce` passa o resultado de uma etapa como entrada da próxima."
+  explanation: |
+    Compor funções pequenas e puras dá pipelines legíveis e fáceis de testar. Com `reduce` e o valor inicial, a lista vazia devolve o próprio valor.
+  traps:
+    - reason: Ordem invertida
+      code: |
+        function encadear(...f) { return (v) => f.reduceRight((a, g) => g(a), v); }
+
+- slug: emissor-de-eventos
+  title: Avisos do festival
+  difficulty: dificil
+  kind: js
+  in: [javascript/Objetos e classes, javascript/Eventos]
+  study:
+    - { label: "Classes (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Classes" }
+    - { label: "EventTarget (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/EventTarget" }
+  statement: |
+    Escreva a classe `Emissor`:
+
+    - `on(evento, fn)` registra um ouvinte e devolve uma função que o remove
+    - `off(evento, fn)` remove o ouvinte
+    - `emit(evento, ...args)` chama os ouvintes daquele evento, na ordem de registro
+    - `once(evento, fn)` registra um ouvinte que roda uma vez só
+
+    Um ouvinte que remove outro durante o `emit` não deve fazer ninguém ser pulado nessa rodada.
+  solution: |
+    class Emissor {
+      #ouvintes = new Map();
+
+      on(evento, fn) {
+        if (!this.#ouvintes.has(evento)) this.#ouvintes.set(evento, []);
+        this.#ouvintes.get(evento).push(fn);
+        return () => this.off(evento, fn);
+      }
+
+      off(evento, fn) {
+        const lista = this.#ouvintes.get(evento);
+        if (!lista) return;
+        const i = lista.indexOf(fn);
+        if (i !== -1) lista.splice(i, 1);
+      }
+
+      once(evento, fn) {
+        const embrulho = (...args) => {
+          this.off(evento, embrulho);
+          fn(...args);
+        };
+        return this.on(evento, embrulho);
+      }
+
+      emit(evento, ...args) {
+        for (const fn of [...(this.#ouvintes.get(evento) ?? [])]) fn(...args);
+      }
+    }
+  tests:
+    - name: emite para os ouvintes
+      code: |
+        const e = new Emissor();
+        const a = fn();
+        e.on('show', a);
+        e.emit('show', 'Vórtice', 22);
+        expect(a).toHaveBeenCalledWith('Vórtice', 22);
+    - name: off e a função de remover
+      code: |
+        const e = new Emissor();
+        const a = fn();
+        const tirar = e.on('show', a);
+        tirar();
+        e.emit('show');
+        expect(a).not.toHaveBeenCalled();
+    - name: once
+      hidden: true
+      code: |
+        const e = new Emissor();
+        const a = fn();
+        e.once('abre', a);
+        e.emit('abre');
+        e.emit('abre');
+        expect(a).toHaveBeenCalledTimes(1);
+    - name: remover durante o emit
+      hidden: true
+      code: |
+        const e = new Emissor();
+        const b = fn();
+        const a = () => e.off('x', a);
+        e.on('x', a); e.on('x', b);
+        e.emit('x');
+        expect(b).toHaveBeenCalledTimes(1);
+        e.emit('x');
+        expect(b).toHaveBeenCalledTimes(2);
+    - name: eventos independentes
+      hidden: true
+      code: |
+        const e = new Emissor();
+        const a = fn();
+        e.on('a', a);
+        e.emit('b');
+        expect(a).not.toHaveBeenCalled();
+  hints:
+    - Guarde uma lista de funções por nome de evento.
+    - No `emit`, percorra uma cópia da lista, para que remoções durante a rodada não mudem os índices.
+  explanation: |
+    Esse padrão, observador ou pub/sub, desacopla quem avisa de quem reage. O detalhe que mais causa bugs é alterar a lista enquanto ela é percorrida. Iterar sobre uma cópia resolve. Devolver a função de remoção deixa a limpeza simples, como no retorno de um `useEffect`.
+  traps:
+    - reason: Remover durante o emit pula ouvintes
+      code: |
+        class Emissor {
+          l = {};
+          on(e, f) { (this.l[e] ??= []).push(f); return () => this.off(e, f); }
+          off(e, f) { const a = this.l[e]; if (a) { const i = a.indexOf(f); if (i >= 0) a.splice(i, 1); } }
+          once(e, f) { const w = (...x) => { this.off(e, w); f(...x); }; return this.on(e, w); }
+          emit(e, ...x) { const a = this.l[e] ?? []; for (let i = 0; i < a.length; i++) a[i](...x); }
+        }
+    - reason: once que nunca sai
+      code: |
+        class Emissor {
+          l = {};
+          on(e, f) { (this.l[e] ??= []).push(f); return () => this.off(e, f); }
+          off(e, f) { const a = this.l[e]; if (a) { const i = a.indexOf(f); if (i >= 0) a.splice(i, 1); } }
+          once(e, f) { const w = (...x) => { this.off(e, f); f(...x); }; return this.on(e, w); }
+          emit(e, ...x) { for (const f of [...(this.l[e] ?? [])]) f(...x); }
+        }
+
+- slug: comparar-a-fundo
+  title: Os dois carrinhos são iguais?
+  difficulty: dificil
+  kind: js
+  in: [javascript/Objetos e classes]
+  study:
+    - { label: "Igualdade em JavaScript (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness" }
+  statement: |
+    Escreva `iguais(a, b)`, que compara valores a fundo: números, textos, booleanos, `null`, arrays e objetos simples. Dois objetos são iguais quando têm as mesmas chaves com valores iguais, em qualquer ordem. Arrays são iguais quando têm os mesmos itens na mesma ordem. `NaN` é igual a `NaN`.
+  solution: |
+    function iguais(a, b) {
+      if (Object.is(a, b)) return true;
+      if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+      if (Array.isArray(a) !== Array.isArray(b)) return false;
+      const ka = Object.keys(a);
+      const kb = Object.keys(b);
+      if (ka.length !== kb.length) return false;
+      return ka.every((k) => Object.hasOwn(b, k) && iguais(a[k], b[k]));
+    }
+  tests:
+    - name: objetos em outra ordem
+      code: |
+        expect(iguais({ setor: 'pista', q: 2 }, { q: 2, setor: 'pista' })).toBe(true);
+        expect(iguais({ setor: 'pista', q: 2 }, { setor: 'pista', q: 3 })).toBe(false);
+    - name: aninhados
+      code: |
+        expect(iguais({ itens: [{ q: 1 }, { q: 2 }] }, { itens: [{ q: 1 }, { q: 2 }] })).toBe(true);
+    - name: ordem dos arrays importa
+      hidden: true
+      code: |
+        expect(iguais([1, 2], [2, 1])).toBe(false);
+        expect(iguais([], {})).toBe(false);
+    - name: chaves a mais ou a menos
+      hidden: true
+      code: |
+        expect(iguais({ a: 1 }, { a: 1, b: undefined })).toBe(false);
+        expect(iguais({ a: undefined }, { b: undefined })).toBe(false);
+    - name: primitivos e NaN
+      hidden: true
+      code: |
+        expect(iguais(NaN, NaN)).toBe(true);
+        expect(iguais(null, {})).toBe(false);
+        expect(iguais('1', 1)).toBe(false);
+  hints:
+    - "`Object.is` resolve os primitivos e trata `NaN` como igual a ele mesmo."
+    - Compare a quantidade de chaves antes e confira se cada chave existe no outro objeto.
+  explanation: |
+    `===` compara objetos por referência, então dois carrinhos com o mesmo conteúdo são diferentes. A comparação profunda desce recursivamente. `JSON.stringify` parece resolver, mas depende da ordem das chaves e some com `undefined`.
+  traps:
+    - reason: JSON.stringify depende da ordem
+      code: |
+        function iguais(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+    - reason: Ignora chaves extras em b
+      code: |
+        function iguais(a, b) {
+          if (Object.is(a, b)) return true;
+          if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return false;
+          if (Array.isArray(a) !== Array.isArray(b)) return false;
+          return Object.keys(a).every((k) => iguais(a[k], b[k]));
+        }
+
+- slug: cache-lru
+  title: Cache dos mais recentes
+  difficulty: dificil
+  kind: js
+  in: [javascript/Objetos e classes, performance/Service Workers]
+  study:
+    - { label: "Map e a ordem de inserção (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Map" }
+  statement: |
+    O app guarda as últimas páginas de bandas visitadas. Escreva a classe `CacheLRU(limite)`:
+
+    - `get(chave)` devolve o valor, ou `undefined`, e marca a chave como usada agora
+    - `set(chave, valor)` guarda. Se passar do limite, remove a chave usada há mais tempo
+    - `size` informa quantos itens há
+  solution: |
+    class CacheLRU {
+      #mapa = new Map();
+
+      constructor(limite) {
+        this.limite = limite;
+      }
+
+      get size() {
+        return this.#mapa.size;
+      }
+
+      get(chave) {
+        if (!this.#mapa.has(chave)) return undefined;
+        const valor = this.#mapa.get(chave);
+        this.#mapa.delete(chave);
+        this.#mapa.set(chave, valor);
+        return valor;
+      }
+
+      set(chave, valor) {
+        this.#mapa.delete(chave);
+        this.#mapa.set(chave, valor);
+        if (this.#mapa.size > this.limite) this.#mapa.delete(this.#mapa.keys().next().value);
+      }
+    }
+  tests:
+    - name: guarda e devolve
+      code: |
+        const c = new CacheLRU(2);
+        c.set('a', 1);
+        expect(c.get('a')).toBe(1);
+        expect(c.get('x')).toBeUndefined();
+    - name: remove o mais antigo
+      code: |
+        const c = new CacheLRU(2);
+        c.set('a', 1); c.set('b', 2); c.set('c', 3);
+        expect(c.get('a')).toBeUndefined();
+        expect(c.size).toBe(2);
+    - name: get renova a chave
+      hidden: true
+      code: |
+        const c = new CacheLRU(2);
+        c.set('a', 1); c.set('b', 2);
+        c.get('a');
+        c.set('c', 3);
+        expect(c.get('a')).toBe(1);
+        expect(c.get('b')).toBeUndefined();
+    - name: set de chave existente
+      hidden: true
+      code: |
+        const c = new CacheLRU(2);
+        c.set('a', 1); c.set('b', 2); c.set('a', 10); c.set('c', 3);
+        expect(c.get('a')).toBe(10);
+        expect(c.get('b')).toBeUndefined();
+        expect(c.size).toBe(2);
+  hints:
+    - Um `Map` guarda as chaves na ordem de inserção. A primeira é a mais antiga.
+    - Para marcar como recente, apague e insira de novo.
+  explanation: |
+    LRU, menos usado recentemente, descarta o que não é acessado há mais tempo. O `Map` faz o trabalho pesado: apagar e reinserir move a chave para o fim, e `keys().next()` dá a mais antiga em tempo constante.
+  traps:
+    - reason: get não renova
+      code: |
+        class CacheLRU {
+          m = new Map(); constructor(l) { this.l = l; } get size() { return this.m.size; }
+          get(k) { return this.m.get(k); }
+          set(k, v) { this.m.delete(k); this.m.set(k, v); if (this.m.size > this.l) this.m.delete(this.m.keys().next().value); }
+        }
+    - reason: Atualizar não renova a posição
+      code: |
+        class CacheLRU {
+          m = new Map(); constructor(l) { this.l = l; } get size() { return this.m.size; }
+          get(k) { if (!this.m.has(k)) return undefined; const v = this.m.get(k); this.m.delete(k); this.m.set(k, v); return v; }
+          set(k, v) { this.m.set(k, v); if (this.m.size > this.l) this.m.delete(this.m.keys().next().value); }
+        }
+
+- slug: promessa-com-prazo
+  title: Resposta em até 3 segundos
+  difficulty: medio
+  kind: js
+  in: [javascript/Assíncrono, web-apis/Cancelamento e tempo]
+  study:
+    - { label: "Promise.race (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Promise/race" }
+  statement: |
+    Escreva `comPrazo(promessa, ms)`, que devolve uma promessa que resolve com o resultado de `promessa`, ou rejeita com `Error('Tempo esgotado')` se ela não terminar em `ms` milissegundos. Se `promessa` rejeitar antes, rejeite com o erro dela. Não deixe o timer pendente depois que tudo terminar.
+  solution: |
+    function comPrazo(promessa, ms) {
+      let timer;
+      const prazo = new Promise((_, rejeitar) => {
+        timer = setTimeout(() => rejeitar(new Error('Tempo esgotado')), ms);
+      });
+      return Promise.race([promessa, prazo]).finally(() => clearTimeout(timer));
+    }
+  tests:
+    - name: dentro do prazo
+      code: |
+        expect(await comPrazo(new Promise((r) => setTimeout(() => r('ok'), 10)), 100)).toBe('ok');
+    - name: estoura o prazo
+      code: |
+        await expect(comPrazo(new Promise((r) => setTimeout(r, 200)), 20)).rejects.toMatch('Tempo esgotado');
+    - name: erro da promessa
+      hidden: true
+      code: |
+        await expect(comPrazo(Promise.reject(new Error('fora do ar')), 100)).rejects.toMatch('fora do ar');
+    - name: limpa o timer
+      hidden: true
+      code: |
+        const original = globalThis.clearTimeout;
+        const limpos = [];
+        globalThis.clearTimeout = (id) => { limpos.push(id); return original(id); };
+        try {
+          await comPrazo(Promise.resolve(1), 1000);
+          expect(limpos.length).toBeGreaterThan(0);
+        } finally {
+          globalThis.clearTimeout = original;
+        }
+  hints:
+    - "`Promise.race` resolve ou rejeita com a primeira promessa que terminar."
+    - "`finally` roda nos dois casos e é um bom lugar para `clearTimeout`."
+  explanation: |
+    `Promise.race` com uma promessa de timeout é o jeito clássico de dar prazo a uma operação. O `race` não cancela a operação original. Para cancelar um `fetch` de verdade, use `AbortSignal.timeout(ms)`.
+  traps:
+    - reason: Não limpa o timer
+      code: |
+        function comPrazo(p, ms) { return Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('Tempo esgotado')), ms))]); }
+
+- slug: abas-do-dia
+  title: As abas da programação
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [javascript/DOM, accessibility]
+  study:
+    - { label: "Padrão de abas (W3C)", url: "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/" }
+    - { label: "aria-selected (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-selected" }
+  html: |
+    <div role="tablist" aria-label="Dias">
+      <button role="tab" id="aba-sex" aria-controls="painel-sex" aria-selected="true">Sexta</button>
+      <button role="tab" id="aba-sab" aria-controls="painel-sab" aria-selected="false" tabindex="-1">Sábado</button>
+      <button role="tab" id="aba-dom" aria-controls="painel-dom" aria-selected="false" tabindex="-1">Domingo</button>
+    </div>
+    <section role="tabpanel" id="painel-sex" aria-labelledby="aba-sex">Ferrugem, Asfalto</section>
+    <section role="tabpanel" id="painel-sab" aria-labelledby="aba-sab" hidden>Vórtice</section>
+    <section role="tabpanel" id="painel-dom" aria-labelledby="aba-dom" hidden>Maré Negra</section>
+  statement: |
+    O HTML das abas já está pronto, com os papéis ARIA. Escreva o JavaScript:
+
+    - clicar numa aba mostra o painel dela e esconde os outros, com `hidden`
+    - a aba ativa fica com `aria-selected="true"` e `tabindex="0"`, as outras com `"false"` e `"-1"`
+    - setas para a direita e para a esquerda mudam de aba e movem o foco, dando a volta nas pontas
+  solution: |
+    const abas = [...document.querySelectorAll('[role="tab"]')];
+
+    function ativar(aba) {
+      for (const a of abas) {
+        const ativa = a === aba;
+        a.setAttribute('aria-selected', String(ativa));
+        a.tabIndex = ativa ? 0 : -1;
+        document.getElementById(a.getAttribute('aria-controls')).hidden = !ativa;
+      }
+      aba.focus();
+    }
+
+    for (const aba of abas) {
+      aba.addEventListener('click', () => ativar(aba));
+      aba.addEventListener('keydown', (e) => {
+        const i = abas.indexOf(aba);
+        if (e.key === 'ArrowRight') ativar(abas[(i + 1) % abas.length]);
+        if (e.key === 'ArrowLeft') ativar(abas[(i - 1 + abas.length) % abas.length]);
+      });
+    }
+  tests:
+    - name: clicar troca o painel
+      code: |
+        click('#aba-sab');
+        expect(el('#painel-sab').hidden).toBe(false);
+        expect(el('#painel-sex').hidden).toBe(true);
+        expect(el('#aba-sab').getAttribute('aria-selected')).toBe('true');
+        expect(el('#aba-sex').getAttribute('aria-selected')).toBe('false');
+    - name: setas do teclado
+      hidden: true
+      code: |
+        el('#aba-sex').focus();
+        press('#aba-sex', 'ArrowRight');
+        expect(document.activeElement.id).toBe('aba-sab');
+        expect(el('#painel-sab').hidden).toBe(false);
+        press('#aba-sab', 'ArrowLeft');
+        press('#aba-sex', 'ArrowLeft');
+        expect(document.activeElement.id).toBe('aba-dom');
+    - name: tabindex
+      hidden: true
+      code: |
+        click('#aba-dom');
+        expect(el('#aba-dom').tabIndex).toBe(0);
+        expect(el('#aba-sex').tabIndex).toBe(-1);
+        expect(el('#aba-sab').tabIndex).toBe(-1);
+  hints:
+    - Escreva uma função `ativar(aba)` e use nos cliques e nas setas.
+    - "`(i + 1) % total` dá a volta no fim, e `(i - 1 + total) % total` no começo."
+  explanation: |
+    No padrão de abas, só a aba ativa entra no Tab, e as setas trocam de aba. Assim, quem usa teclado não precisa passar por todas as abas para chegar ao conteúdo. `aria-selected` e o `hidden` dos painéis mantêm o que se vê igual ao que o leitor de tela anuncia.
+  traps:
+    - reason: Sem teclado
+      code: |
+        const abas = [...document.querySelectorAll('[role="tab"]')];
+        for (const aba of abas) aba.addEventListener('click', () => {
+          for (const a of abas) { a.setAttribute('aria-selected', String(a === aba)); a.tabIndex = a === aba ? 0 : -1; document.getElementById(a.getAttribute('aria-controls')).hidden = a !== aba; }
+        });
+    - reason: Esquece o aria-selected
+      code: |
+        const abas = [...document.querySelectorAll('[role="tab"]')];
+        const at = (aba) => { for (const a of abas) { a.tabIndex = a === aba ? 0 : -1; document.getElementById(a.getAttribute('aria-controls')).hidden = a !== aba; } aba.focus(); };
+        for (const aba of abas) { aba.addEventListener('click', () => at(aba)); aba.addEventListener('keydown', (e) => { const i = abas.indexOf(aba); if (e.key === 'ArrowRight') at(abas[(i + 1) % 3]); if (e.key === 'ArrowLeft') at(abas[(i + 2) % 3]); }); }
+
+- slug: contador-de-caracteres
+  title: Recado de até 140 caracteres
+  difficulty: facil
+  kind: dom
+  editor: js
+  in: [javascript/Eventos]
+  study:
+    - { label: "O evento input (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Element/input_event" }
+  html: |
+    <label for="recado">Recado para a banda</label>
+    <textarea id="recado" maxlength="140"></textarea>
+    <p id="restantes" aria-live="polite">140 caracteres restantes</p>
+  statement: |
+    Atualize `#restantes` enquanto a pessoa digita, com o texto `<n> caracteres restantes`. Com 20 ou menos restantes, adicione a classe `alerta` ao parágrafo, e tire a classe quando voltar a ter mais de 20.
+
+    O contador deve reagir a qualquer forma de mudar o texto, inclusive colar.
+  solution: |
+    const campo = document.getElementById('recado');
+    const saida = document.getElementById('restantes');
+    campo.addEventListener('input', () => {
+      const restam = 140 - campo.value.length;
+      saida.textContent = `${restam} caracteres restantes`;
+      saida.classList.toggle('alerta', restam <= 20);
+    });
+  tests:
+    - name: conta ao digitar
+      code: |
+        type('#recado', 'Que show!');
+        expect(text('#restantes')).toBe('131 caracteres restantes');
+    - name: alerta perto do limite
+      hidden: true
+      code: |
+        type('#recado', 'x'.repeat(120));
+        expect(el('#restantes').classList.contains('alerta')).toBe(true);
+        type('#recado', 'x'.repeat(119));
+        expect(el('#restantes').classList.contains('alerta')).toBe(false);
+  hints:
+    - O evento `input` dispara a cada mudança do valor, inclusive colar e apagar.
+    - "`classList.toggle(nome, condicao)` adiciona ou remove conforme a condição."
+  explanation: |
+    `input` cobre digitação, colar, apagar e preenchimento automático. `keyup` perde o colar com o mouse. O `aria-live` faz o leitor de tela anunciar o contador sem a pessoa sair do campo.
+  traps:
+    - reason: Só no keyup
+      code: |
+        const c = document.getElementById('recado'); const s = document.getElementById('restantes');
+        c.addEventListener('keyup', () => { const r = 140 - c.value.length; s.textContent = `${r} caracteres restantes`; s.classList.toggle('alerta', r <= 20); });
+    - reason: Alerta nunca sai
+      code: |
+        const c = document.getElementById('recado'); const s = document.getElementById('restantes');
+        c.addEventListener('input', () => { const r = 140 - c.value.length; s.textContent = `${r} caracteres restantes`; if (r <= 20) s.classList.add('alerta'); });
+
+- slug: mensagens-de-erro
+  title: O erro ao lado do campo
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [javascript/Eventos, accessibility]
+  study:
+    - { label: "aria-describedby (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-describedby" }
+    - { label: "Validação de formulários no cliente (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Learn_web_development/Extensions/Forms/Form_validation" }
+  html: |
+    <form id="cadastro" novalidate>
+      <label for="email">E-mail</label>
+      <input id="email" type="email" required>
+      <p id="erro-email" class="erro"></p>
+      <button>Cadastrar</button>
+    </form>
+    <p id="ok"></p>
+  statement: |
+    O formulário desligou as mensagens do navegador com `novalidate`. Ao enviar:
+
+    - se o e-mail for inválido ou vazio, não envie. Escreva em `#erro-email` a mensagem `Informe um e-mail válido`, marque o campo com `aria-invalid="true"`, ligue a mensagem ao campo com `aria-describedby="erro-email"` e ponha o foco no campo
+    - se for válido, limpe o erro, tire o `aria-invalid` e mostre `Cadastro feito` em `#ok`
+  solution: |
+    const form = document.getElementById('cadastro');
+    const email = document.getElementById('email');
+    const erro = document.getElementById('erro-email');
+
+    form.addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      if (!email.checkValidity()) {
+        erro.textContent = 'Informe um e-mail válido';
+        email.setAttribute('aria-invalid', 'true');
+        email.setAttribute('aria-describedby', 'erro-email');
+        email.focus();
+        return;
+      }
+      erro.textContent = '';
+      email.removeAttribute('aria-invalid');
+      document.getElementById('ok').textContent = 'Cadastro feito';
+    });
+  tests:
+    - name: erro no campo vazio
+      code: |
+        submit('#cadastro');
+        await tick();
+        expect(text('#erro-email')).toBe('Informe um e-mail válido');
+        expect(el('#email').getAttribute('aria-invalid')).toBe('true');
+    - name: ligado ao campo e com foco
+      hidden: true
+      code: |
+        let focou = false;
+        el('#email').addEventListener('focus', () => { focou = true; });
+        type('#email', 'sem-arroba');
+        submit('#cadastro');
+        await tick();
+        expect(el('#email').getAttribute('aria-describedby')).toBe('erro-email');
+        expect(focou).toBe(true);
+        expect(text('#ok')).toBe('');
+    - name: corrige e envia
+      hidden: true
+      code: |
+        submit('#cadastro');
+        await tick();
+        type('#email', 'fa@exemplo.com');
+        submit('#cadastro');
+        await wait(50);
+        expect(text('#erro-email')).toBe('');
+        expect(el('#email').hasAttribute('aria-invalid')).toBe(false);
+        expect(text('#ok')).toBe('Cadastro feito');
+  hints:
+    - "`campo.checkValidity()` usa as regras do HTML, como `type` e `required`, mesmo com `novalidate`."
+    - "`aria-describedby` faz o leitor de tela ler a mensagem junto com o campo."
+  explanation: |
+    Mensagens próprias precisam de ligação explícita com o campo. `aria-invalid` anuncia que há erro, `aria-describedby` faz o leitor de tela ler o motivo, e o foco leva a pessoa direto ao campo. Só pintar a borda de vermelho não comunica nada a quem não vê a cor.
+  traps:
+    - reason: Só mostra o texto
+      code: |
+        const f = document.getElementById('cadastro'); const e = document.getElementById('email');
+        f.addEventListener('submit', (ev) => { ev.preventDefault(); if (!e.checkValidity()) { document.getElementById('erro-email').textContent = 'Informe um e-mail válido'; return; } document.getElementById('erro-email').textContent = ''; document.getElementById('ok').textContent = 'Cadastro feito'; });
+    - reason: aria-invalid fica depois de corrigir
+      code: |
+        const f = document.getElementById('cadastro'); const e = document.getElementById('email'); const er = document.getElementById('erro-email');
+        f.addEventListener('submit', (ev) => { ev.preventDefault(); if (!e.checkValidity()) { er.textContent = 'Informe um e-mail válido'; e.setAttribute('aria-invalid', 'true'); e.setAttribute('aria-describedby', 'erro-email'); e.focus(); return; } er.textContent = ''; document.getElementById('ok').textContent = 'Cadastro feito'; });
+
+- slug: carregar-mais
+  title: Carregar mais bandas
+  difficulty: dificil
+  kind: dom
+  editor: js
+  in: [javascript/Fetch e JSON, javascript/DOM]
+  study:
+    - { label: "Usando a Fetch API (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Fetch_API/Using_Fetch" }
+    - { label: "DocumentFragment (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/DocumentFragment" }
+  html: |
+    <ul id="bandas"></ul>
+    <button id="mais">Carregar mais</button>
+  setup: |
+    const TODAS = ['Vórtice', 'Asfalto', 'Ferrugem', 'Maré Negra', 'Concreto', 'Os Insones', 'Órbita'];
+    window.pedidos = [];
+    window.fetch = (url) => {
+      window.pedidos.push(url);
+      const pagina = Number(new URL(url, 'https://ruido.test').searchParams.get('pagina'));
+      const itens = TODAS.slice((pagina - 1) * 3, pagina * 3);
+      return new Promise((r) => setTimeout(() => r({ ok: true, json: async () => ({ itens, temMais: pagina * 3 < TODAS.length }) }), 30));
+    };
+  statement: |
+    A API `GET /api/bandas?pagina=<n>` responde `{ itens, temMais }`, com 3 bandas por página. Escreva o JavaScript:
+
+    - ao carregar a página, busque a página 1 e mostre as bandas como `li` em `#bandas`
+    - cada clique em `#mais` busca a próxima página e acrescenta as bandas no fim
+    - enquanto um pedido está em andamento, o botão fica desabilitado, para não duplicar
+    - quando `temMais` for falso, esconda o botão com `hidden`
+  forbid: [innerHTML]
+  solution: |
+    const lista = document.getElementById('bandas');
+    const botao = document.getElementById('mais');
+    let pagina = 0;
+
+    async function carregar() {
+      botao.disabled = true;
+      pagina++;
+      const resposta = await fetch(`/api/bandas?pagina=${pagina}`);
+      const { itens, temMais } = await resposta.json();
+      const fragmento = document.createDocumentFragment();
+      for (const nome of itens) {
+        const li = document.createElement('li');
+        li.textContent = nome;
+        fragmento.append(li);
+      }
+      lista.append(fragmento);
+      botao.hidden = !temMais;
+      botao.disabled = false;
+    }
+
+    botao.addEventListener('click', carregar);
+    carregar();
+  tests:
+    - name: primeira página
+      code: |
+        await wait(80);
+        expect($$('#bandas li').map((li) => li.textContent)).toEqual(['Vórtice', 'Asfalto', 'Ferrugem']);
+    - name: acrescenta a próxima
+      code: |
+        await wait(80);
+        click('#mais');
+        await wait(80);
+        expect($$('#bandas li')).toHaveLength(6);
+        expect(window.pedidos[1]).toBe('/api/bandas?pagina=2');
+    - name: sem cliques duplicados
+      hidden: true
+      code: |
+        await wait(80);
+        click('#mais');
+        click('#mais');
+        click('#mais');
+        await wait(100);
+        expect(window.pedidos).toHaveLength(2);
+    - name: esconde no fim
+      hidden: true
+      code: |
+        await wait(80);
+        click('#mais');
+        await wait(80);
+        click('#mais');
+        await wait(80);
+        expect($$('#bandas li')).toHaveLength(7);
+        expect(el('#mais').hidden).toBe(true);
+  hints:
+    - Guarde o número da página numa variável e aumente a cada busca.
+    - Desabilite o botão antes do `await` e habilite de novo depois.
+  explanation: |
+    Paginação incremental parece simples, mas cliques repetidos durante o pedido duplicam páginas. Desabilitar o botão enquanto o pedido roda resolve. Montar os itens num `DocumentFragment` e inserir de uma vez causa um único recálculo de layout.
+  traps:
+    - reason: Cliques repetidos duplicam páginas
+      code: |
+        const l = document.getElementById('bandas'); const b = document.getElementById('mais'); let p = 0;
+        async function c() { p++; const r = await fetch(`/api/bandas?pagina=${p}`); const d = await r.json(); for (const n of d.itens) { const li = document.createElement('li'); li.textContent = n; l.append(li); } b.hidden = !d.temMais; }
+        b.addEventListener('click', c); c();
+    - reason: Substitui em vez de acrescentar
+      code: |
+        const l = document.getElementById('bandas'); const b = document.getElementById('mais'); let p = 0;
+        async function c() { b.disabled = true; p++; const r = await fetch(`/api/bandas?pagina=${p}`); const d = await r.json(); l.replaceChildren(...d.itens.map((n) => { const li = document.createElement('li'); li.textContent = n; return li; })); b.hidden = !d.temMais; b.disabled = false; }
+        b.addEventListener('click', c); c();

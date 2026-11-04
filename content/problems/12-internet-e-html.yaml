@@ -1,0 +1,665 @@
+- slug: tcp-ou-udp
+  title: A transmissão ao vivo
+  difficulty: medio
+  kind: quiz
+  visual: pacotes
+  in: [internet/How does the internet work?]
+  study:
+    - { label: "TCP no glossário do MDN", url: "https://developer.mozilla.org/pt-BR/docs/Glossary/TCP" }
+    - { label: "UDP no glossário do MDN, em inglês", url: "https://developer.mozilla.org/en-US/docs/Glossary/UDP" }
+  statement: |
+    O festival vai transmitir os shows ao vivo pelo site. Na chamada de vídeo, um pacote atrasado não serve para nada: quando chega, aquele trecho já passou.
+
+    Por que protocolos de tempo real costumam usar UDP, e não TCP?
+  options:
+    - text: O UDP não espera reenvios nem reordena. Perder um pedaço vale mais que travar o vídeo esperando por ele
+      why: Certo. O TCP segura os dados seguintes até o pacote perdido chegar, o que congela a imagem.
+    - text: O UDP é criptografado e o TCP não
+      why: Nenhum dos dois cifra por conta própria. A criptografia vem de camadas por cima, como TLS e DTLS.
+    - text: O UDP garante a entrega na ordem certa
+      why: É o contrário. O UDP não garante entrega nem ordem.
+    - text: O TCP não funciona com vídeo
+      why: Funciona, e muitos serviços de vídeo sob demanda usam TCP, porque podem guardar alguns segundos de reserva.
+  answer: 0
+  explanation: |
+    TCP garante entrega completa e em ordem, ao custo de esperar por reenvios. UDP só manda os pacotes. Para arquivos e páginas, TCP é o certo. Para áudio e vídeo ao vivo, perder um quadro é melhor que atrasar todos.
+
+- slug: http2-multiplexado
+  title: Vinte arquivos na mesma conexão
+  difficulty: medio
+  kind: quiz
+  in: [internet/What is HTTP?]
+  study:
+    - { label: "Evolução do HTTP (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Evolution_of_HTTP" }
+  statement: |
+    A página do line-up carrega 20 imagens pequenas. Com HTTP/1.1, o navegador abre poucas conexões por servidor e cada uma atende um pedido por vez. Com HTTP/2, o tempo de carregamento cai bastante.
+
+    O que o HTTP/2 muda?
+  options:
+    - text: Vários pedidos e respostas trafegam ao mesmo tempo numa única conexão, intercalados
+      why: Certo. A multiplexação acaba com a fila de pedidos por conexão e o custo de abrir várias conexões.
+    - text: Ele comprime as imagens automaticamente
+      why: O HTTP/2 comprime os cabeçalhos, não o conteúdo das imagens.
+    - text: Ele dispensa o DNS
+      why: O navegador continua precisando do IP do servidor.
+    - text: Ele troca o TCP por e-mail
+      why: HTTP/2 roda sobre TCP. O HTTP/3 é que troca o TCP pelo QUIC, sobre UDP.
+  answer: 0
+  explanation: |
+    No HTTP/1.1, cada conexão atende um pedido por vez, e o navegador abre só algumas por servidor. O HTTP/2 divide pedidos e respostas em quadros e intercala todos numa conexão. Técnicas antigas, como juntar imagens num sprite, ficaram menos necessárias.
+
+- slug: resposta-304
+  title: Nada mudou
+  difficulty: medio
+  kind: quiz
+  visual: cache-http
+  in: [internet/What is HTTP?]
+  study:
+    - { label: "Cache HTTP (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Guides/Caching" }
+    - { label: "304 Not Modified (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Status/304" }
+  statement: |
+    Na segunda visita, o navegador manda `GET /programacao.json` com o cabeçalho `If-None-Match: "a1b2"`. O servidor responde `304 Not Modified`, sem corpo.
+
+    O que acontece?
+  options:
+    - text: O arquivo não mudou desde a ETag `a1b2`, e o navegador usa a cópia que já tinha
+      why: Certo. A revalidação gasta uma ida ao servidor, mas evita baixar o conteúdo de novo.
+    - text: O arquivo foi apagado do servidor
+      why: Arquivo inexistente seria 404 ou 410. O 304 diz que a cópia do navegador continua válida.
+    - text: O navegador precisa pedir de novo sem o cabeçalho
+      why: Não precisa. O 304 já é a resposta completa para um pedido condicional.
+    - text: É um redirecionamento para outra URL
+      why: Apesar de estar na faixa 3xx, o 304 não redireciona. Ele confirma o cache.
+  answer: 0
+  explanation: |
+    A ETag é uma impressão digital do conteúdo. O navegador a manda em `If-None-Match`, e o servidor compara: se for igual, responde 304 sem corpo. É assim que recursos com `no-cache` ficam sempre atualizados sem desperdiçar banda.
+
+- slug: cookie-e-dominio
+  title: O cookie que não chegou
+  difficulty: medio
+  kind: quiz
+  in: [internet/What is Domain Name?]
+  study:
+    - { label: "Cookies HTTP (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Guides/Cookies" }
+    - { label: "Set-Cookie (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Headers/Set-Cookie" }
+  statement: |
+    O login em `conta.festivalruido.com.br` cria um cookie de sessão com `Set-Cookie: sessao=abc; Secure; HttpOnly`, sem o atributo `Domain`. Em `ingressos.festivalruido.com.br`, o servidor não recebe o cookie.
+
+    Por quê?
+  options:
+    - text: Sem `Domain`, o cookie vale só para o host exato que o criou. Com `Domain=festivalruido.com.br`, ele iria para os subdomínios também
+      why: Certo. A omissão é a opção mais restrita, e às vezes é exatamente o que se quer.
+    - text: Cookies nunca funcionam em subdomínios
+      why: Funcionam, desde que o atributo Domain inclua o domínio pai.
+    - text: O HttpOnly impede o envio para outros servidores
+      why: HttpOnly só impede o JavaScript de ler o cookie. Não muda para onde ele vai.
+    - text: O Secure bloqueia o envio por HTTPS
+      why: É o contrário. Secure faz o cookie ir só por HTTPS.
+  answer: 0
+  explanation: |
+    O navegador decide para onde mandar um cookie pelo domínio, pelo caminho e pelos atributos. Um cookie sem `Domain` fica preso ao host que o criou. Abrir para subdomínios aumenta a superfície de ataque: um subdomínio comprometido passaria a receber a sessão.
+
+- slug: reflow-em-laco
+  title: O laço que trava a rolagem
+  difficulty: dificil
+  kind: quiz
+  visual: renderizacao
+  in: [internet/Browsers and how they work?]
+  study:
+    - { label: "Como os navegadores funcionam (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/How_browsers_work" }
+    - { label: "Evite layouts grandes e complexos (web.dev)", url: "https://web.dev/articles/avoid-large-complex-layouts-and-layout-thrashing" }
+  statement: |
+    Este código ajusta a altura de 300 cartões:
+
+    ```
+    for (const card of cards) {
+      const altura = card.offsetHeight;
+      card.style.height = altura + 20 + 'px';
+    }
+    ```
+
+    O DevTools mostra centenas de recálculos de layout. Qual é a causa?
+  options:
+    - text: Cada leitura de `offsetHeight` depois de uma escrita força o navegador a refazer o layout na hora. Ler tudo primeiro e escrever depois evita isso
+      why: Certo. É o layout forçado em laço, ou layout thrashing. Separar leituras e escritas deixa o navegador calcular uma vez só.
+    - text: O laço `for...of` é lento
+      why: O laço em si é rápido. O custo está no que acontece em cada volta.
+    - text: Strings com `px` são lentas de converter
+      why: A conversão é irrelevante perto de 300 recálculos de layout.
+    - text: O navegador recalcula o layout a cada milissegundo de qualquer jeito
+      why: O navegador agrupa mudanças e recalcula quando precisa. O código está forçando esse cálculo a cada volta.
+  answer: 0
+  explanation: |
+    Escritas de estilo marcam o layout como sujo. Uma leitura de geometria, como `offsetHeight` ou `getBoundingClientRect`, obriga o navegador a calcular o layout antes de responder. Alternando as duas num laço, você paga um layout por item. Ler todas as alturas antes e aplicar as mudanças depois reduz isso a um layout.
+
+- slug: hospedagem-e-cdn
+  title: O público de Portugal
+  difficulty: facil
+  kind: quiz
+  in: [internet/What is hosting?]
+  study:
+    - { label: "CDN no glossário do MDN", url: "https://developer.mozilla.org/pt-BR/docs/Glossary/CDN" }
+  statement: |
+    O site está num servidor em São Paulo. Fãs em Portugal reclamam que as imagens demoram. O conteúdo é o mesmo para todo mundo.
+
+    O que ajuda mais?
+  options:
+    - text: Servir os arquivos estáticos por uma CDN, que guarda cópias em servidores perto de cada região
+      why: Certo. A distância física aumenta a latência, e a CDN encurta o caminho até o arquivo.
+    - text: Comprar um domínio .pt
+      why: O domínio não muda onde os arquivos estão.
+    - text: Aumentar a memória do servidor de São Paulo
+      why: O gargalo é a distância e a latência, não a capacidade do servidor.
+    - text: Pedir aos fãs que usem outro navegador
+      why: Qualquer navegador sofre com a mesma distância.
+  answer: 0
+  explanation: |
+    Uma CDN é uma rede de servidores espalhados pelo mundo que guardam cópias de arquivos. O pedido é atendido pelo ponto mais próximo, o que reduz a latência e alivia o servidor de origem. Funciona melhor com conteúdo igual para todos e com cabeçalhos de cache bem definidos.
+
+- slug: detalhes-faq
+  title: Perguntas frequentes
+  difficulty: facil
+  kind: dom
+  editor: html
+  in: [html/Estrutura e semântica]
+  study:
+    - { label: "O elemento details (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/details" }
+  statement: |
+    Monte a seção de perguntas frequentes com três perguntas que abrem e fecham sem JavaScript:
+
+    - `Posso levar comida?`, com a resposta `Só lanches lacrados.`
+    - `Tem guarda-volumes?`, com a resposta `Sim, na entrada A.`
+    - `Menores podem entrar?`, com a resposta `A partir de 16 anos, acompanhados.`
+
+    Cada pergunta começa fechada. Use os elementos nativos do HTML para isso.
+  solution: |
+    <h2>Perguntas frequentes</h2>
+    <details>
+      <summary>Posso levar comida?</summary>
+      <p>Só lanches lacrados.</p>
+    </details>
+    <details>
+      <summary>Tem guarda-volumes?</summary>
+      <p>Sim, na entrada A.</p>
+    </details>
+    <details>
+      <summary>Menores podem entrar?</summary>
+      <p>A partir de 16 anos, acompanhados.</p>
+    </details>
+  tests:
+    - name: três perguntas
+      code: |
+        expect($$('details > summary').map((s) => s.textContent.trim())).toEqual(['Posso levar comida?', 'Tem guarda-volumes?', 'Menores podem entrar?']);
+    - name: começam fechadas
+      code: |
+        expect($$('details').every((d) => !d.open)).toBe(true);
+    - name: abre ao clicar
+      hidden: true
+      code: |
+        click($$('summary')[1]);
+        await tick();
+        expect($$('details')[1].open).toBe(true);
+        expect(text($$('details')[1])).toContain('Sim, na entrada A.');
+  hints:
+    - "`details` guarda o conteúdo, e o `summary` dentro dele é o título clicável."
+  explanation: |
+    `details` e `summary` dão um bloco expansível nativo, que funciona com teclado e leitor de tela e anuncia se está aberto ou fechado. Sem atributo `open`, começa fechado. Antes desses elementos, isso exigia JavaScript e ARIA feitos à mão.
+  traps:
+    - reason: Começa aberto
+      code: |
+        <details open><summary>Posso levar comida?</summary><p>Só lanches lacrados.</p></details>
+        <details><summary>Tem guarda-volumes?</summary><p>Sim, na entrada A.</p></details>
+        <details><summary>Menores podem entrar?</summary><p>A partir de 16 anos, acompanhados.</p></details>
+    - reason: Títulos sem summary
+      code: |
+        <h3>Posso levar comida?</h3><p>Só lanches lacrados.</p>
+        <h3>Tem guarda-volumes?</h3><p>Sim, na entrada A.</p>
+        <h3>Menores podem entrar?</h3><p>A partir de 16 anos, acompanhados.</p>
+
+- slug: trilha-de-navegacao
+  title: Onde estou no site
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [html/Estrutura e semântica, accessibility]
+  study:
+    - { label: "Padrão breadcrumb (W3C)", url: "https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/" }
+    - { label: "aria-current (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-current" }
+  statement: |
+    A página da banda Vórtice fica em Início › Line-up › Vórtice. Monte essa trilha de navegação:
+
+    - um `nav` com o nome acessível `Trilha de navegação`
+    - uma lista ordenada com os três itens
+    - `Início` leva a `/` e `Line-up` leva a `/lineup`
+    - `Vórtice` é a página atual: marque-a com `aria-current="page"`
+  solution: |
+    <nav aria-label="Trilha de navegação">
+      <ol>
+        <li><a href="/">Início</a></li>
+        <li><a href="/lineup">Line-up</a></li>
+        <li><a href="/lineup/vortice" aria-current="page">Vórtice</a></li>
+      </ol>
+    </nav>
+  tests:
+    - name: navegação com nome
+      code: |
+        expect(el('nav').getAttribute('aria-label')).toBe('Trilha de navegação');
+        expect($$('nav ol > li')).toHaveLength(3);
+    - name: links
+      code: |
+        const links = $$('nav a');
+        expect(links[0].getAttribute('href')).toBe('/');
+        expect(links[1].getAttribute('href')).toBe('/lineup');
+    - name: página atual marcada
+      hidden: true
+      code: |
+        const atual = $('[aria-current="page"]');
+        expect(atual).not.toBeNull();
+        expect(atual.textContent.trim()).toBe('Vórtice');
+        expect($$('[aria-current]')).toHaveLength(1);
+  hints:
+    - Uma página pode ter vários `nav`. O `aria-label` diferencia cada um para o leitor de tela.
+    - "`aria-current=\"page\"` anuncia qual item é a página onde a pessoa está."
+  explanation: |
+    A lista ordenada comunica a hierarquia, e o `aria-label` distingue esta navegação do menu principal. `aria-current="page"` faz o leitor de tela anunciar "página atual", que a cor ou o negrito sozinhos não comunicam.
+  traps:
+    - reason: Sem marcar a página atual
+      code: |
+        <nav aria-label="Trilha de navegação"><ol><li><a href="/">Início</a></li><li><a href="/lineup">Line-up</a></li><li><strong>Vórtice</strong></li></ol></nav>
+    - reason: Sem nome no nav
+      code: |
+        <nav><ol><li><a href="/">Início</a></li><li><a href="/lineup">Line-up</a></li><li><a href="/lineup/vortice" aria-current="page">Vórtice</a></li></ol></nav>
+
+- slug: lista-de-descricao
+  title: Ficha técnica da banda
+  difficulty: facil
+  kind: dom
+  editor: html
+  in: ["html/Textos, listas e links"]
+  study:
+    - { label: "O elemento dl (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/dl" }
+  statement: |
+    Mostre a ficha técnica da banda como pares de termo e descrição:
+
+    - Origem: São Paulo
+    - Formação: 2009
+    - Gênero: Thrash metal
+
+    Use a lista de descrição do HTML, não parágrafos nem uma tabela.
+  solution: |
+    <dl>
+      <dt>Origem</dt>
+      <dd>São Paulo</dd>
+      <dt>Formação</dt>
+      <dd>2009</dd>
+      <dt>Gênero</dt>
+      <dd>Thrash metal</dd>
+    </dl>
+  tests:
+    - name: termos
+      code: |
+        expect($$('dl dt').map((d) => d.textContent.trim())).toEqual(['Origem', 'Formação', 'Gênero']);
+    - name: descrições na ordem
+      hidden: true
+      code: |
+        expect($$('dl dd').map((d) => d.textContent.trim())).toEqual(['São Paulo', '2009', 'Thrash metal']);
+        const children = Array.from(el('dl').children).map((c) => c.tagName);
+        expect(children).toEqual(['DT', 'DD', 'DT', 'DD', 'DT', 'DD']);
+  hints:
+    - "`dl` agrupa, `dt` é o termo e `dd` é a descrição."
+  explanation: |
+    A lista de descrição representa pares nome e valor, como glossários, metadados e fichas. Leitores de tela anunciam a quantidade de itens e a relação entre termo e descrição. Parágrafos com negrito parecem iguais, mas perdem essa estrutura.
+  traps:
+    - reason: Parágrafos com negrito
+      code: |
+        <p><b>Origem</b> São Paulo</p><p><b>Formação</b> 2009</p><p><b>Gênero</b> Thrash metal</p>
+    - reason: Descrições trocadas
+      code: |
+        <dl><dt>Origem</dt><dd>2009</dd><dt>Formação</dt><dd>São Paulo</dd><dt>Gênero</dt><dd>Thrash metal</dd></dl>
+
+- slug: imagem-responsiva
+  title: Uma foto para cada tela
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [html/Imagens e mídia, performance/Lighthouse]
+  study:
+    - { label: "Imagens responsivas (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Guides/Responsive_images" }
+  statement: |
+    A foto do palco existe em três larguras: `palco-480.jpg`, `palco-960.jpg` e `palco-1920.jpg`. Ela ocupa a largura toda da tela em celulares e metade da tela a partir de 800px.
+
+    Escreva um `img` que deixe o navegador escolher o arquivo certo:
+
+    - `src` com a versão de 960 como padrão
+    - `srcset` com as três versões e as larguras, como `palco-480.jpg 480w`
+    - `sizes` dizendo a largura de exibição: `(min-width: 800px) 50vw, 100vw`
+    - `alt` com `Palco principal lotado durante o show`
+  solution: |
+    <img
+      src="palco-960.jpg"
+      srcset="palco-480.jpg 480w, palco-960.jpg 960w, palco-1920.jpg 1920w"
+      sizes="(min-width: 800px) 50vw, 100vw"
+      alt="Palco principal lotado durante o show">
+  tests:
+    - name: imagem padrão e alt
+      code: |
+        const img = el('img');
+        expect(img.getAttribute('src')).toBe('palco-960.jpg');
+        expect(img.getAttribute('alt')).toBe('Palco principal lotado durante o show');
+    - name: três versões no srcset
+      hidden: true
+      code: |
+        const fontes = el('img').getAttribute('srcset').split(',').map((s) => s.trim().split(/\s+/));
+        expect(fontes).toEqual([['palco-480.jpg', '480w'], ['palco-960.jpg', '960w'], ['palco-1920.jpg', '1920w']]);
+    - name: tamanhos de exibição
+      hidden: true
+      code: |
+        expect(el('img').getAttribute('sizes').replace(/\s+/g, ' ').trim()).toBe('(min-width: 800px) 50vw, 100vw');
+  hints:
+    - Em `srcset`, o descritor `w` informa a largura real de cada arquivo.
+    - "`sizes` informa quanto da tela a imagem vai ocupar. Com isso, o navegador calcula qual arquivo baixar."
+  explanation: |
+    Com `srcset` e `sizes`, o navegador combina a largura de exibição com a densidade de pixels da tela e baixa o menor arquivo que fica nítido. Um celular baixa a versão de 480 em vez de 1920, o que economiza dados e melhora o LCP.
+  traps:
+    - reason: Sem sizes
+      code: |
+        <img src="palco-960.jpg" srcset="palco-480.jpg 480w, palco-960.jpg 960w, palco-1920.jpg 1920w" alt="Palco principal lotado durante o show">
+    - reason: Densidade no lugar de largura
+      code: |
+        <img src="palco-960.jpg" srcset="palco-480.jpg 1x, palco-960.jpg 2x, palco-1920.jpg 3x" sizes="(min-width: 800px) 50vw, 100vw" alt="Palco principal lotado durante o show">
+
+- slug: video-com-legendas
+  title: O vídeo com legendas
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [html/Imagens e mídia, accessibility]
+  study:
+    - { label: "O elemento video (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/video" }
+    - { label: "O elemento track (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/track" }
+  statement: |
+    Publique o vídeo de bastidores `bastidores.mp4`:
+
+    - com os controles do navegador
+    - sem tocar sozinho
+    - com legendas em português do arquivo `bastidores-pt.vtt`, ativadas por padrão, com o rótulo `Português`
+  solution: |
+    <video src="bastidores.mp4" controls>
+      <track kind="subtitles" src="bastidores-pt.vtt" srclang="pt-BR" label="Português" default>
+    </video>
+  tests:
+    - name: vídeo com controles
+      code: |
+        const v = el('video');
+        expect(v.getAttribute('src') ?? v.querySelector('source')?.getAttribute('src')).toBe('bastidores.mp4');
+        expect(v.controls).toBe(true);
+        expect(v.autoplay).toBe(false);
+    - name: legendas
+      hidden: true
+      code: |
+        const t = el('video track');
+        expect(t.getAttribute('src')).toBe('bastidores-pt.vtt');
+        expect(['subtitles', 'captions']).toContain(t.kind);
+        expect(t.srclang.toLowerCase().startsWith('pt')).toBe(true);
+        expect(t.label).toBe('Português');
+        expect(t.default).toBe(true);
+  hints:
+    - Legendas entram como um `track` dentro do `video`.
+    - "`srclang` diz o idioma, e `default` ativa a faixa sem a pessoa escolher."
+  explanation: |
+    O `track` liga um arquivo WebVTT ao vídeo. Legendas atendem quem não ouve e quem assiste sem som. `controls` dá ao público pausa, volume e escolha de legenda, e não usar `autoplay` evita som inesperado.
+  traps:
+    - reason: Sem legendas
+      code: |
+        <video src="bastidores.mp4" controls></video>
+    - reason: Toca sozinho
+      code: |
+        <video src="bastidores.mp4" controls autoplay><track kind="subtitles" src="bastidores-pt.vtt" srclang="pt-BR" label="Português" default></video>
+
+- slug: tabela-com-agrupamento
+  title: A grade de horários
+  difficulty: dificil
+  kind: dom
+  editor: html
+  in: [html/Tabelas]
+  study:
+    - { label: "Tabelas acessíveis (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content/Table_accessibility" }
+    - { label: "Atributos colspan e rowspan (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/td" }
+  statement: |
+    Monte a grade com o título `Grade de sábado`. As colunas são `Horário`, `Palco Norte` e `Palco Sul`.
+
+    - 20h: Ferrugem no Norte e Asfalto no Sul
+    - 22h: Vórtice, num show especial que ocupa os dois palcos, numa célula que cobre as duas colunas
+
+    Os horários são cabeçalhos de linha.
+  solution: |
+    <table>
+      <caption>Grade de sábado</caption>
+      <thead>
+        <tr><th scope="col">Horário</th><th scope="col">Palco Norte</th><th scope="col">Palco Sul</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">20h</th><td>Ferrugem</td><td>Asfalto</td></tr>
+        <tr><th scope="row">22h</th><td colspan="2">Vórtice</td></tr>
+      </tbody>
+    </table>
+  tests:
+    - name: cabeçalho
+      code: |
+        expect(text('caption')).toBe('Grade de sábado');
+        expect($$('thead th').map((t) => t.textContent.trim())).toEqual(['Horário', 'Palco Norte', 'Palco Sul']);
+    - name: show nos dois palcos
+      code: |
+        const vortice = $$('tbody td').find((td) => td.textContent.trim() === 'Vórtice');
+        expect(vortice.colSpan).toBe(2);
+    - name: horários como cabeçalho de linha
+      hidden: true
+      code: |
+        const rows = $$('tbody tr');
+        expect(rows).toHaveLength(2);
+        for (const r of rows) {
+          expect(r.cells[0].tagName).toBe('TH');
+          expect(r.cells[0].getAttribute('scope')).toBe('row');
+        }
+        expect(rows[1].cells).toHaveLength(2);
+  hints:
+    - "`colspan=\"2\"` faz uma célula ocupar duas colunas."
+  explanation: |
+    `colspan` e `rowspan` mesclam células sem quebrar a relação com os cabeçalhos, e o leitor de tela anuncia a célula ligada às duas colunas. Duplicar o nome nas duas células daria a impressão de dois shows.
+  traps:
+    - reason: Nome repetido nas duas colunas
+      code: |
+        <table><caption>Grade de sábado</caption><thead><tr><th scope="col">Horário</th><th scope="col">Palco Norte</th><th scope="col">Palco Sul</th></tr></thead>
+        <tbody><tr><th scope="row">20h</th><td>Ferrugem</td><td>Asfalto</td></tr><tr><th scope="row">22h</th><td>Vórtice</td><td>Vórtice</td></tr></tbody></table>
+
+- slug: campo-com-padrao
+  title: O CPF do comprador
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [html/Formulários]
+  study:
+    - { label: "O atributo pattern (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/pattern" }
+    - { label: "O atributo autocomplete (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/autocomplete" }
+  statement: |
+    O formulário de compra pede o nome e o CPF do comprador:
+
+    - campo `nome`, com rótulo `Nome completo`, obrigatório, com o preenchimento automático de nome completo do navegador
+    - campo `cpf`, com rótulo `CPF`, obrigatório, que aceita só o formato `000.000.000-00`
+    - o teclado do celular deve mostrar números no campo do CPF
+  solution: |
+    <form>
+      <label for="nome">Nome completo</label>
+      <input id="nome" name="nome" autocomplete="name" required>
+      <label for="cpf">CPF</label>
+      <input id="cpf" name="cpf" inputmode="numeric" pattern="\d{3}\.\d{3}\.\d{3}-\d{2}" placeholder="000.000.000-00" required>
+      <button>Continuar</button>
+    </form>
+  tests:
+    - name: rótulos
+      code: |
+        expect(el('[name="nome"]').labels[0].textContent.trim()).toBe('Nome completo');
+        expect(el('[name="cpf"]').labels[0].textContent.trim()).toBe('CPF');
+    - name: formato do CPF
+      code: |
+        const cpf = el('[name="cpf"]');
+        type(cpf, '123.456.789-09');
+        expect(cpf.checkValidity()).toBe(true);
+        type(cpf, '12345678909');
+        expect(cpf.checkValidity()).toBe(false);
+    - name: CPF com texto extra
+      hidden: true
+      code: |
+        const cpf = el('[name="cpf"]');
+        type(cpf, 'x123.456.789-09');
+        expect(cpf.checkValidity()).toBe(false);
+        type(cpf, '');
+        expect(cpf.checkValidity()).toBe(false);
+    - name: ajuda do navegador
+      hidden: true
+      code: |
+        expect(el('[name="nome"]').getAttribute('autocomplete')).toBe('name');
+        expect(el('[name="nome"]').required).toBe(true);
+        expect(el('[name="cpf"]').getAttribute('inputmode')).toBe('numeric');
+  hints:
+    - "`pattern` usa a sintaxe de regex do JavaScript e precisa casar com o valor inteiro."
+    - "`inputmode=\"numeric\"` pede o teclado numérico. Não use `type=\"number\"` para CPF, que tem pontos e hífen."
+  explanation: |
+    `pattern` valida o formato no navegador, e a regex é aplicada ao valor inteiro, sem precisar de `^` e `$`. `autocomplete="name"` deixa o navegador preencher o nome salvo, e `inputmode` ajusta o teclado sem mudar o tipo do campo. A validação do servidor continua obrigatória.
+  traps:
+    - reason: Campo numérico
+      code: |
+        <form><label for="nome">Nome completo</label><input id="nome" name="nome" autocomplete="name" required>
+        <label for="cpf">CPF</label><input id="cpf" name="cpf" type="number" required></form>
+    - reason: Sem autocomplete nem teclado numérico
+      code: |
+        <form><label for="nome">Nome completo</label><input id="nome" name="nome" required>
+        <label for="cpf">CPF</label><input id="cpf" name="cpf" pattern="\d{3}\.\d{3}\.\d{3}-\d{2}" required></form>
+
+- slug: dialogo-nativo
+  title: A confirmação de compra
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [html/Formulários, accessibility]
+  study:
+    - { label: "O elemento dialog (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/dialog" }
+  html: |
+    <button id="comprar">Comprar</button>
+    <dialog id="confirmar">
+      <form method="dialog">
+        <p>Confirmar a compra de 2 ingressos?</p>
+        <button value="cancelar">Cancelar</button>
+        <button value="ok">Confirmar</button>
+      </form>
+    </dialog>
+    <p id="status"></p>
+  statement: |
+    O HTML já tem um `dialog` com um formulário `method="dialog"`. Escreva o JavaScript:
+
+    - `#comprar` abre o diálogo como modal, que bloqueia o resto da página
+    - quando o diálogo fechar, `#status` mostra `Compra confirmada` se o botão escolhido foi o de valor `ok`, ou `Compra cancelada` em qualquer outro caso, inclusive com a tecla Escape
+  solution: |
+    const dialogo = document.getElementById('confirmar');
+    const status = document.getElementById('status');
+    document.getElementById('comprar').addEventListener('click', () => {
+      dialogo.returnValue = '';
+      dialogo.showModal();
+    });
+    dialogo.addEventListener('close', () => {
+      status.textContent = dialogo.returnValue === 'ok' ? 'Compra confirmada' : 'Compra cancelada';
+    });
+  tests:
+    - name: abre como modal
+      code: |
+        click('#comprar');
+        expect(el('#confirmar').open).toBe(true);
+        expect(el('#confirmar').matches(':modal')).toBe(true);
+    - name: confirmar
+      code: |
+        click('#comprar');
+        click('button[value="ok"]');
+        await wait(50);
+        expect(text('#status')).toBe('Compra confirmada');
+    - name: cancelar
+      hidden: true
+      code: |
+        click('#comprar');
+        click('button[value="cancelar"]');
+        await wait(50);
+        expect(text('#status')).toBe('Compra cancelada');
+    - name: fechar sem botão
+      hidden: true
+      code: |
+        click('#comprar');
+        click('button[value="ok"]');
+        await wait(50);
+        click('#comprar');
+        el('#confirmar').close();
+        await wait(50);
+        expect(text('#status')).toBe('Compra cancelada');
+  hints:
+    - "`showModal()` abre como modal. `show()` abre sem bloquear a página."
+    - Num formulário `method="dialog"`, o `value` do botão clicado vira o `returnValue` do diálogo.
+    - Zere o `returnValue` ao abrir, senão ele guarda a escolha da vez anterior.
+  explanation: |
+    `dialog` com `showModal()` já cuida do foco, deixa o resto da página inerte e fecha com Escape. O formulário `method="dialog"` fecha o diálogo e passa o valor do botão em `returnValue`. O evento `close` cobre todas as formas de fechar.
+  traps:
+    - reason: Abre sem ser modal
+      code: |
+        const d = document.getElementById('confirmar');
+        document.getElementById('comprar').addEventListener('click', () => { d.returnValue = ''; d.show(); });
+        d.addEventListener('close', () => { document.getElementById('status').textContent = d.returnValue === 'ok' ? 'Compra confirmada' : 'Compra cancelada'; });
+    - reason: Guarda a escolha anterior
+      code: |
+        const d = document.getElementById('confirmar');
+        document.getElementById('comprar').addEventListener('click', () => d.showModal());
+        d.addEventListener('close', () => { document.getElementById('status').textContent = d.returnValue === 'ok' ? 'Compra confirmada' : 'Compra cancelada'; });
+
+- slug: link-de-pular
+  title: Pular para o conteúdo
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [accessibility, html/Estrutura e semântica]
+  study:
+    - { label: "Skip links (WebAIM, em inglês)", url: "https://webaim.org/techniques/skipnav/" }
+  statement: |
+    Quem navega pelo teclado precisa passar por 30 links do menu antes de chegar ao conteúdo. Escreva a página com:
+
+    - um link `Pular para o conteúdo` como primeiro elemento focável, apontando para `#conteudo`
+    - um `nav` com dois links quaisquer
+    - um `main` com `id="conteudo"` e `tabindex="-1"`, para receber o foco, e um `h1` com `Line-up`
+  solution: |
+    <a href="#conteudo" class="pular">Pular para o conteúdo</a>
+    <nav>
+      <a href="#lineup">Line-up</a>
+      <a href="#ingressos">Ingressos</a>
+    </nav>
+    <main id="conteudo" tabindex="-1">
+      <h1>Line-up</h1>
+    </main>
+  tests:
+    - name: primeiro elemento focável
+      code: |
+        const focaveis = $$('a[href], button, input, [tabindex]:not([tabindex="-1"])');
+        expect(focaveis[0].textContent.trim()).toBe('Pular para o conteúdo');
+        expect(focaveis[0].getAttribute('href')).toBe('#conteudo');
+    - name: destino do link
+      hidden: true
+      code: |
+        const main = el('main#conteudo');
+        expect(main.getAttribute('tabindex')).toBe('-1');
+        expect(text('main h1')).toBe('Line-up');
+        expect($('nav a[href="#conteudo"]')).toBeNull();
+  hints:
+    - O link vem antes de tudo no HTML, para ser o primeiro no Tab.
+    - "`tabindex=\"-1\"` permite que um elemento receba foco por script ou por link, sem entrar na ordem do Tab."
+  explanation: |
+    O skip link é o primeiro item do Tab e leva direto ao conteúdo, poupando quem usa teclado ou leitor de tela de passar pelo menu inteiro em cada página. Costuma ficar escondido até receber foco, com CSS, mas nunca com `display: none`, que o tiraria do Tab.
+  traps:
+    - reason: Link depois do menu
+      code: |
+        <nav><a href="#lineup">Line-up</a><a href="#ingressos">Ingressos</a></nav>
+        <a href="#conteudo">Pular para o conteúdo</a>
+        <main id="conteudo" tabindex="-1"><h1>Line-up</h1></main>

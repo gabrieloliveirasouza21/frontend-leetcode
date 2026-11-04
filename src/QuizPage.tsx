@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { problems, subtopicNames, topicOf, type Problem } from './content';
-import { inline, Paragraphs } from './text';
+import { inline, Paragraphs, StudyLinks } from './text';
 import { VisualPanel } from './visuals';
 import { DIFFICULTY_LABEL } from './RoadmapPage';
 
@@ -30,6 +30,11 @@ export function QuizPage({ problem, solved, onSolved }: { problem: Problem; solv
       <Paragraphs text={problem.statement} />
       {problem.visual && <VisualPanel id={problem.visual} />}
 
+      <details className="panel study-panel" open={!solved}>
+        <summary>Para estudar antes de responder</summary>
+        <StudyLinks problem={problem} />
+      </details>
+
       <div className="options" role="group" aria-label="Opções de resposta">
         {problem.options!.map((option, index) => {
           const state = picked === index ? (correct ? 'right' : 'wrong') : '';
@@ -48,13 +53,6 @@ export function QuizPage({ problem, solved, onSolved }: { problem: Problem; solv
         <section className="quiz-after">
           <h3>Para fixar</h3>
           <Paragraphs text={problem.explanation} />
-          {topic && (
-            <ul className="study">
-              {topic.study.map((link) => (
-                <li key={link.url}><a href={link.url} target="_blank" rel="noreferrer">{link.label}</a></li>
-              ))}
-            </ul>
-          )}
           {next && <a className="next" href={`#/problema/${next.slug}`}>Próximo: {next.title} →</a>}
         </section>
       )}

@@ -31,6 +31,16 @@ describe('conteúdo', () => {
     expect(problem.title?.trim()).toBeTruthy();
     expect(problem.statement?.trim()).toBeTruthy();
     expect(problem.explanation?.trim()).toBeTruthy();
+    // Um texto com ": " sem aspas vira objeto no YAML. Todos os textos precisam continuar texto.
+    for (const value of [problem.statement, problem.explanation, ...problem.hints, ...(problem.options ?? []).flatMap((o) => [o.text, o.why])]) {
+      expect(typeof value).toBe('string');
+    }
+    // Toda questão precisa de pelo menos uma fonte própria para estudar antes de resolver.
+    expect(problem.study.length).toBeGreaterThan(0);
+    for (const link of problem.study) {
+      expect(link.label?.trim()).toBeTruthy();
+      expect(link.url).toMatch(/^https:\/\//);
+    }
     if (problem.kind === 'quiz') {
       expect(problem.solution).toBeUndefined();
       expect(problem.options!.length).toBeGreaterThanOrEqual(3);

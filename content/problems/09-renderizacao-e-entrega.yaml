@@ -2,7 +2,10 @@
   title: O que roda no servidor
   difficulty: dificil
   kind: quiz
+  visual: renderizacao-servidor
   in: [ssr/Next.js]
+  study:
+    - { label: "Componentes de servidor e de cliente (Next.js)", url: "https://nextjs.org/docs/app/getting-started/server-and-client-components" }
   statement: |
     No App Router do Next.js, a página `app/lineup/page.tsx` busca as bandas no banco e mostra a lista. Dentro dela há um botão de favoritar com `useState`.
 
@@ -24,7 +27,11 @@
   title: Os dados chegam antes da página
   difficulty: medio
   kind: quiz
+  visual: renderizacao-servidor
   in: [ssr/Tanstack Start, ssr/react-router, ssr/Svelte]
+  study:
+    - { label: "Carregamento de dados (React Router)", url: "https://reactrouter.com/start/framework/data-loading" }
+    - { label: "Carregando dados (SvelteKit)", url: "https://svelte.dev/docs/kit/load" }
   statement: |
     Na página de uma banda, o componente busca os dados num `useEffect`. Quem abre o link vê primeiro um esqueleto vazio, e buscadores indexam a página sem conteúdo.
 
@@ -46,7 +53,10 @@
   title: Uma página quase toda estática
   difficulty: medio
   kind: quiz
+  visual: renderizacao-servidor
   in: [ssr/Astro, ssg/Astro]
+  study:
+    - { label: "Arquitetura de ilhas (Astro)", url: "https://docs.astro.build/en/concepts/islands/" }
   statement: |
     A página de notícias do festival é texto e imagem, com um único widget interativo: o contador regressivo para o primeiro show.
 
@@ -68,7 +78,11 @@
   title: A hora que não bate
   difficulty: dificil
   kind: quiz
+  visual: renderizacao-servidor
   in: [ssr/Angular, ssr/Nuxt.js, ssr/Svelte]
+  study:
+    - { label: "Hidratação (Nuxt)", url: "https://nuxt.com/docs/guide/best-practices/hydration" }
+    - { label: "hydrateRoot e diferenças de hidratação (React)", url: "https://react.dev/reference/react-dom/client/hydrateRoot" }
   statement: |
     A página do festival, renderizada no servidor, mostra `Agora são {{ horaAtual }}` com a hora calculada no componente. O console avisa sobre diferença de hidratação, e o texto pisca ao carregar. Isso aparece igual em Angular, Nuxt e SvelteKit.
 
@@ -91,6 +105,9 @@
   difficulty: medio
   kind: quiz
   in: [deployment/GitHub Pages]
+  study:
+    - { label: "Publicando no GitHub Pages (Vite)", url: "https://vite.dev/guide/static-deploy.html#github-pages" }
+    - { label: "Página 404 personalizada (GitHub Pages)", url: "https://docs.github.com/pt/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site" }
   statement: |
     A SPA do festival foi publicada no GitHub Pages em `usuario.github.io/festival/`. A página inicial abre, mas recarregar em `usuario.github.io/festival/lineup` dá 404, e os arquivos JS também falharam no primeiro deploy.
 
@@ -113,6 +130,9 @@
   difficulty: medio
   kind: quiz
   in: [deployment/Vercel, deployment/Netlify, deployment/Cloudflare]
+  study:
+    - { label: "Variáveis de ambiente no Vite", url: "https://vite.dev/guide/env-and-mode" }
+    - { label: "Variáveis de ambiente (Vercel)", url: "https://vercel.com/docs/environment-variables" }
   statement: |
     No painel da Vercel, da Netlify ou da Cloudflare, você cadastrou `VITE_STRIPE_SECRET` e usou no frontend com `import.meta.env.VITE_STRIPE_SECRET`. O pagamento funcionou.
 
@@ -135,6 +155,9 @@
   difficulty: facil
   kind: quiz
   in: [deployment/Railway, deployment/Render]
+  study:
+    - { label: "Sobre o Railway", url: "https://docs.railway.com/overview/about-railway" }
+    - { label: "Web services (Render)", url: "https://render.com/docs/web-services" }
   statement: |
     Além do frontend, o festival tem uma API em Node.js com Express, que fica rodando o tempo todo e se conecta a um banco PostgreSQL.
 
@@ -157,6 +180,9 @@
   difficulty: facil
   kind: ts
   in: [type-checkers/TypeScript]
+  study:
+    - { label: "Tipos de objeto (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/objects.html" }
+    - { label: "Tipos literais (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types" }
   statement: |
     Declare o tipo `Ingresso`, com:
 
@@ -216,6 +242,9 @@
   difficulty: medio
   kind: ts
   in: [type-checkers/TypeScript]
+  study:
+    - { label: "Uniões discriminadas (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions" }
+    - { label: "Checagem de exaustividade (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/narrowing.html#exhaustiveness-checking" }
   statement: |
     Um pedido pode estar em três estados, cada um com dados diferentes:
 
@@ -289,6 +318,8 @@
   difficulty: medio
   kind: ts
   in: [type-checkers/TypeScript]
+  study:
+    - { label: "Genéricos (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/2/generics.html" }
   statement: |
     Escreva `function primeiro(lista, condicao)`, que devolve o primeiro item da lista para o qual `condicao(item)` é verdadeira, ou `undefined` se nenhum for.
 
@@ -344,6 +375,8 @@
   difficulty: medio
   kind: ts
   in: [type-checkers/TypeScript]
+  study:
+    - { label: "Tipos utilitários (TypeScript)", url: "https://www.typescriptlang.org/docs/handbook/utility-types.html" }
   statement: |
     O tipo `Banda` já existe:
 
@@ -403,7 +436,11 @@
   title: Gerar no build ou a cada visita
   difficulty: medio
   kind: quiz
+  visual: renderizacao-servidor
   in: [ssg/Next.js, ssg/Nuxt.js, ssg/Vuepress, ssg/Eleventy]
+  study:
+    - { label: "Exportação estática (Next.js)", url: "https://nextjs.org/docs/app/guides/static-exports" }
+    - { label: "Documentação do Eleventy", url: "https://www.11ty.dev/docs/" }
   statement: |
     O site tem dois tipos de página: as notícias, que mudam algumas vezes por semana, e a disponibilidade de ingressos, que muda a cada segundo.
 
@@ -427,6 +464,9 @@
   kind: dom
   editor: css
   in: [design-systems]
+  study:
+    - { label: "Design tokens (W3C)", url: "https://www.designtokens.org/" }
+    - { label: "Variáveis CSS (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/Using_CSS_custom_properties" }
   html: |
     <style>
       :root {
@@ -490,6 +530,8 @@
   difficulty: facil
   kind: quiz
   in: [design-systems]
+  study:
+    - { label: "Documentação do Storybook", url: "https://storybook.js.org/docs" }
   statement: |
     O site tem três versões do botão primário, com tons de vermelho e cantos levemente diferentes. Cada time criou a sua.
 
@@ -512,6 +554,9 @@
   difficulty: medio
   kind: quiz
   in: [performance/Lighthouse]
+  study:
+    - { label: "Largest Contentful Paint (web.dev)", url: "https://web.dev/articles/lcp" }
+    - { label: "Otimizando o LCP (web.dev)", url: "https://web.dev/articles/optimize-lcp" }
   statement: |
     O Lighthouse aponta um Largest Contentful Paint de 5 segundos na página inicial. O maior elemento é o pôster do festival no topo, um JPEG de 4 MB com `loading="lazy"`.
 
@@ -534,6 +579,9 @@
   difficulty: medio
   kind: quiz
   in: [performance/DevTools Usage]
+  study:
+    - { label: "Painel Performance (Chrome DevTools)", url: "https://developer.chrome.com/docs/devtools/performance" }
+    - { label: "Otimizando tarefas longas (web.dev)", url: "https://web.dev/articles/optimize-long-tasks" }
   statement: |
     Clicar num filtro da agenda congela a página por quase um segundo. Você quer descobrir o que está gastando esse tempo.
 
@@ -555,7 +603,11 @@
   title: A programação sem sinal
   difficulty: medio
   kind: quiz
+  visual: service-worker
   in: [performance/Service Workers, pwas]
+  study:
+    - { label: "Usando service workers (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers" }
+    - { label: "Service workers (web.dev)", url: "https://web.dev/learn/pwa/service-workers" }
   statement: |
     No festival, o sinal de celular cai o tempo todo. O público precisa abrir a programação mesmo sem internet.
 
@@ -577,7 +629,11 @@
   title: O CSS antigo que não sai
   difficulty: medio
   kind: quiz
+  visual: cache-http
   in: [performance/Cache-Control]
+  study:
+    - { label: "Cache HTTP (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Guides/Caching" }
+    - { label: "Cache-Control (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Headers/Cache-Control" }
   statement: |
     Depois de um deploy, parte do público ainda vê o CSS antigo. O arquivo se chama sempre `estilo.css` e é servido com `Cache-Control: max-age=31536000`.
 
@@ -600,6 +656,9 @@
   difficulty: dificil
   kind: js
   in: [performance/Streamed Responses]
+  study:
+    - { label: "Usando streams de leitura (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Streams_API/Using_readable_streams" }
+    - { label: "TextDecoder (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder" }
   statement: |
     A API de busca devolve resultados aos poucos, num corpo em stream. Escreva `async function lerAosPoucos(resposta, aoReceber)`:
 
@@ -689,6 +748,8 @@
   kind: dom
   editor: js
   in: [web-components/HTML Templates]
+  study:
+    - { label: "O elemento template (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/template" }
   html: |
     <template id="modelo-banda">
       <article class="banda">
@@ -752,6 +813,8 @@
   kind: dom
   editor: js
   in: [web-components/Custom Elements]
+  study:
+    - { label: "Usando custom elements (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/API/Web_components/Using_custom_elements" }
   html: |
     <selo-setor nome="Pista" restantes="12"></selo-setor>
     <selo-setor nome="Camarote" restantes="0"></selo-setor>
@@ -834,6 +897,8 @@
   kind: dom
   editor: js
   in: [web-components/Shadow DOM]
+  study:
+    - { label: "Usando Shadow DOM (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM" }
   html: |
     <style>p { color: rgb(255, 0, 0); font-size: 30px; }</style>
     <p id="fora">Texto da página</p>
@@ -891,6 +956,9 @@
   difficulty: facil
   kind: quiz
   in: [graphql/Apollo]
+  study:
+    - { label: "Consultas em GraphQL", url: "https://graphql.org/learn/queries/" }
+    - { label: "Consultas no Apollo Client", url: "https://www.apollographql.com/docs/react/data/queries" }
   statement: |
     A tela do line-up mostra só nome e horário de cada banda. Com a API REST, ela faz um pedido para `/bandas`, que devolve 40 campos por banda, e depois um pedido para `/horarios` de cada banda.
 
@@ -913,6 +981,8 @@
   difficulty: dificil
   kind: quiz
   in: [graphql/Relay Modern]
+  study:
+    - { label: "Fragmentos no Relay", url: "https://relay.dev/docs/tutorial/fragments-1/" }
   statement: |
     Na página de uma banda, o componente `CabecalhoBanda` usa nome e foto, e `ListaShows` usa data e palco dos shows. A consulta da página é escrita à mão e às vezes esquece campos que um componente passou a usar.
 
@@ -935,6 +1005,8 @@
   difficulty: medio
   kind: js
   in: [graphql/Apollo]
+  study:
+    - { label: "GraphQL sobre HTTP", url: "https://graphql.org/learn/serving-over-http/" }
   statement: |
     Sem biblioteca, escreva `async function consultar(endpoint, query, variables)`, que envia uma consulta GraphQL e devolve os dados.
 
@@ -994,6 +1066,9 @@
   kind: dom
   editor: html
   in: [accessibility]
+  study:
+    - { label: "O elemento button (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Reference/Elements/button" }
+    - { label: "aria-label (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-label" }
   starter: |
     <div class="comprar" onclick="comprar()">Comprar ingresso</div>
     <span class="fechar" onclick="fechar()">✕</span>
@@ -1055,6 +1130,8 @@
   kind: dom
   editor: html
   in: [accessibility]
+  study:
+    - { label: "Árvore de decisão do texto alternativo (W3C)", url: "https://www.w3.org/WAI/tutorials/images/decision-tree/" }
   starter: |
     <img src="logo.svg">
     <h1>Festival Ruído</h1>
@@ -1117,6 +1194,9 @@
   kind: dom
   editor: js
   in: [accessibility]
+  study:
+    - { label: "Padrão disclosure (W3C)", url: "https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/" }
+    - { label: "aria-expanded (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-expanded" }
   html: |
     <nav>
       <button id="abrir-menu" aria-expanded="false" aria-controls="menu">Menu</button>
@@ -1191,7 +1271,11 @@
   title: O botão de instalar não aparece
   difficulty: medio
   kind: quiz
+  visual: service-worker
   in: [pwas]
+  study:
+    - { label: "Tornando PWAs instaláveis (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable" }
+    - { label: "Web app manifest (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/Progressive_web_apps/Manifest" }
   statement: |
     O time quer que o site do festival possa ser instalado no celular, com ícone na tela inicial, abrindo em tela cheia, sem a barra do navegador.
 
@@ -1214,6 +1298,9 @@
   difficulty: medio
   kind: quiz
   in: [desktop-apps/Electron, desktop-apps/Tauri]
+  study:
+    - { label: "Modelo de processos do Electron", url: "https://www.electronjs.org/docs/latest/tutorial/process-model" }
+    - { label: "Arquitetura do Tauri", url: "https://v2.tauri.app/concept/architecture/" }
   statement: |
     A equipe de credenciamento precisa de um app de computador que leia um leitor de código de barras USB e funcione sem internet. O time só conhece frontend.
 
@@ -1236,6 +1323,8 @@
   difficulty: medio
   kind: quiz
   in: [desktop-apps/Flutter, mobile-apps/Flutter]
+  study:
+    - { label: "Visão geral da arquitetura do Flutter", url: "https://docs.flutter.dev/resources/architectural-overview" }
   statement: |
     O festival quer um app para Android, iOS e computador com a mesma interface. Uma pessoa propõe Flutter.
 
@@ -1258,6 +1347,8 @@
   difficulty: medio
   kind: quiz
   in: [mobile-apps/React Native]
+  study:
+    - { label: "Componentes nativos e núcleo (React Native)", url: "https://reactnative.dev/docs/intro-react-native-components" }
   statement: |
     Você leva um componente React do site para o React Native e o app quebra: `div`, `span` e `className` não funcionam.
 
@@ -1280,6 +1371,9 @@
   difficulty: facil
   kind: quiz
   in: [mobile-apps/Ionic]
+  study:
+    - { label: "Documentação do Capacitor", url: "https://capacitorjs.com/docs" }
+    - { label: "Documentação do Ionic", url: "https://ionicframework.com/docs" }
   statement: |
     O time quer publicar nas lojas um app com o mesmo código web do site, com acesso à câmera para ler ingressos.
 

@@ -1,0 +1,527 @@
+- slug: conserte-mesmo-dia
+  title: O show de hoje não aparece
+  difficulty: medio
+  kind: js
+  in: [conserte/Lógica]
+  study:
+    - { label: "Date (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Date" }
+    - { label: "Igualdade em JavaScript (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness" }
+  statement: |
+    A seção "Hoje no festival" usa `mesmoDia(a, b)` para filtrar os shows, mas nunca mostra nada. As duas datas são objetos `Date`, e "mesmo dia" é o mesmo ano, mês e dia no horário local, qualquer que seja a hora.
+
+    Encontre o defeito e corrija.
+  starter: |
+    function mesmoDia(a, b) {
+      const diaA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+      const diaB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+      return diaA === diaB;
+    }
+  solution: |
+    function mesmoDia(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+  tests:
+    - name: mesmo dia, horas diferentes
+      code: |
+        expect(mesmoDia(new Date(2026, 2, 14, 9, 0), new Date(2026, 2, 14, 23, 30))).toBe(true);
+    - name: dias diferentes
+      code: |
+        expect(mesmoDia(new Date(2026, 2, 14), new Date(2026, 2, 15))).toBe(false);
+    - name: mesmo dia em outro mês ou ano
+      hidden: true
+      code: |
+        expect(mesmoDia(new Date(2026, 2, 14), new Date(2026, 3, 14))).toBe(false);
+        expect(mesmoDia(new Date(2025, 2, 14), new Date(2026, 2, 14))).toBe(false);
+  hints:
+    - "`===` entre dois objetos compara se são o mesmo objeto, não se têm o mesmo valor."
+  explanation: |
+    Dois objetos `Date` com o mesmo instante são objetos diferentes, então `===` dá sempre `false`. Compare os valores, seja com `getTime()`, seja com os componentes da data. Para comparar só o dia, os componentes evitam surpresas com fuso e horário de verão.
+  traps:
+    - reason: Compara o instante, com a hora
+      code: |
+        function mesmoDia(a, b) { return a.getTime() === b.getTime(); }
+    - reason: Esquece o ano
+      code: |
+        function mesmoDia(a, b) { return a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+
+- slug: conserte-async-no-foreach
+  title: O total sai antes de terminar
+  difficulty: dificil
+  kind: js
+  in: [conserte/Lógica, javascript/Assíncrono]
+  study:
+    - { label: "for await e laços com async (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Statements/for-await...of" }
+    - { label: "Array.prototype.forEach (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach" }
+  setup: |
+    const api = {
+      precoDe: (setor) => new Promise((r) => setTimeout(() => r({ pista: 300, premium: 520, camarote: 900 }[setor]), 20)),
+    };
+  statement: |
+    `totalDoCarrinho(setores)` busca o preço de cada setor em `api.precoDe(setor)`, que devolve uma promessa, e soma. A função sempre devolve 0.
+
+    Corrija para devolver a soma correta. Os pedidos de preço podem correr em paralelo.
+  starter: |
+    async function totalDoCarrinho(setores) {
+      let total = 0;
+      setores.forEach(async (setor) => {
+        total += await api.precoDe(setor);
+      });
+      return total;
+    }
+  solution: |
+    async function totalDoCarrinho(setores) {
+      const precos = await Promise.all(setores.map((setor) => api.precoDe(setor)));
+      return precos.reduce((soma, p) => soma + p, 0);
+    }
+  tests:
+    - name: soma
+      code: |
+        expect(await totalDoCarrinho(['pista', 'camarote'])).toBe(1200);
+    - name: vazio
+      hidden: true
+      code: |
+        expect(await totalDoCarrinho([])).toBe(0);
+    - name: em paralelo
+      hidden: true
+      code: |
+        const inicio = Date.now();
+        expect(await totalDoCarrinho(['pista', 'premium', 'camarote', 'pista'])).toBe(2020);
+        expect(Date.now() - inicio).toBeLessThan(60);
+  hints:
+    - "`forEach` não espera as funções async: ele dispara todas e segue em frente."
+    - "`Promise.all` com `map` espera todas as promessas, em paralelo."
+  explanation: |
+    `forEach` ignora as promessas devolvidas pelo callback, então o `return` acontece antes de qualquer `await` terminar. Use `for...of` com `await`, para fazer um de cada vez, ou `Promise.all` com `map`, para fazer em paralelo.
+  traps:
+    - reason: Um pedido de cada vez
+      code: |
+        async function totalDoCarrinho(s) { let t = 0; for (const x of s) t += await api.precoDe(x); return t; }
+
+- slug: conserte-rolagem-lateral
+  title: A página rola para o lado
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [conserte/Layout]
+  study:
+    - { label: "box-sizing (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/box-sizing" }
+    - { label: "Unidades de viewport (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/length" }
+  html: |
+    <style>body { margin: 0; }</style>
+    <header class="faixa">Ingressos do lote 2 à venda</header>
+    <main>Conteúdo</main>
+  statement: |
+    No celular, a página inteira rola para o lado alguns pixels. A culpa é da `.faixa`, que deveria ocupar exatamente a largura do elemento onde está, que hoje é a página, com 16px de padding nas laterais.
+
+    Corrija o CSS da faixa.
+  starter: |
+    .faixa {
+      width: 100vw;
+      padding: 12px 16px;
+      background: #d7263d;
+      color: white;
+    }
+  solution: |
+    .faixa {
+      padding: 12px 16px;
+      background: #d7263d;
+      color: white;
+    }
+  tests:
+    - name: sem rolagem lateral
+      width: 400
+      code: |
+        expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
+    - name: ocupa a largura toda
+      width: 400
+      code: |
+        expect(Math.round(rect('.faixa').width)).toBe(400);
+        expect(css('.faixa', 'padding-left')).toBe('16px');
+    - name: dentro de um contêiner mais estreito
+      hidden: true
+      width: 500
+      code: |
+        const caixa = document.createElement('div');
+        caixa.style.width = '300px';
+        document.body.prepend(caixa);
+        caixa.append(el('.faixa'));
+        await frame();
+        expect(Math.round(rect('.faixa').width)).toBe(300);
+  hints:
+    - Um bloco já ocupa a largura disponível sem `width`.
+    - "`100vw` inclui a largura da barra de rolagem, e o padding soma por fora."
+  explanation: |
+    `width: 100vw` com padding soma 32px além da tela, e `100vw` ainda conta a barra de rolagem vertical em computadores. Blocos já ocupam a largura do pai por padrão. Quando precisar de largura explícita, prefira `width: 100%` com `box-sizing: border-box`.
+  traps:
+    - reason: border-box, mas ainda 100vw
+      code: |
+        .faixa { box-sizing: border-box; width: 100vw; padding: 12px 16px; background: #d7263d; color: white; }
+    - reason: Esconde a rolagem em vez de corrigir
+      code: |
+        .faixa { width: 100vw; padding: 12px 16px; background: #d7263d; color: white; }
+        html { overflow-x: hidden; }
+
+- slug: conserte-imagem-estourada
+  title: A foto que estoura o cartão
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [conserte/Layout, css/Responsividade]
+  study:
+    - { label: "Imagens responsivas (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/HTML/Guides/Responsive_images" }
+  html: |
+    <article class="cartao">
+      <img class="foto" width="1200" height="800" alt="Vórtice no palco" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'%3E%3Crect width='1200' height='800' fill='%235cc8e6'/%3E%3C/svg%3E">
+      <h3>Vórtice</h3>
+    </article>
+  statement: |
+    O `.cartao` tem 320px de largura, mas a foto aparece com 1200px e estoura para fora. Faça a imagem nunca passar da largura do cartão, mantendo a proporção.
+  starter: |
+    .cartao {
+      width: 320px;
+      border: 1px solid #ccc;
+    }
+  solution: |
+    .cartao {
+      width: 320px;
+      border: 1px solid #ccc;
+    }
+    .foto {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+  tests:
+    - name: cabe no cartão
+      code: |
+        expect(rect('.foto').width).toBeLessThanOrEqual(rect('.cartao').width);
+    - name: mantém a proporção
+      hidden: true
+      code: |
+        const r = rect('.foto');
+        expect(Math.abs(r.width / r.height - 1.5)).toBeLessThan(0.02);
+    - name: o cartão continua com 320px
+      hidden: true
+      code: |
+        expect(el('.cartao').clientWidth).toBe(320);
+  hints:
+    - "`max-width: 100%` limita a imagem à largura do pai."
+    - "Com `width` e `height` no HTML, a altura precisa de `height: auto` para acompanhar a largura."
+  explanation: |
+    `img { max-width: 100%; height: auto; }` é uma das regras mais comuns em CSS. A imagem encolhe quando o espaço é menor e mantém a proporção, e os atributos `width` e `height` do HTML continuam servindo para reservar o espaço antes do carregamento.
+  traps:
+    - reason: Distorce a imagem
+      code: |
+        .cartao { width: 320px; border: 1px solid #ccc; }
+        .foto { max-width: 100%; }
+    - reason: Esconde o excesso
+      code: |
+        .cartao { width: 320px; border: 1px solid #ccc; overflow: hidden; }
+
+- slug: conserte-relogio-parado
+  title: O contador parou no 1
+  difficulty: dificil
+  kind: react
+  in: [conserte/Componentes, learn-a-framework/React]
+  study:
+    - { label: "Atualizações de estado com função (React)", url: "https://react.dev/reference/react/useState#updating-state-based-on-the-previous-state" }
+    - { label: "Removendo dependências de efeitos (React)", url: "https://react.dev/learn/removing-effect-dependencies" }
+  starter: |
+    import { useEffect, useState } from 'react';
+
+    export default function App() {
+      const [segundos, setSegundos] = useState(0);
+
+      useEffect(() => {
+        const id = setInterval(() => {
+          setSegundos(segundos + 1);
+        }, 50);
+      }, []);
+
+      return <p>No ar há {segundos} s</p>;
+    }
+  statement: |
+    O contador de "no ar há" deveria subir a cada intervalo, mas para em 1. Além disso, o intervalo nunca é cancelado. Corrija os dois problemas mantendo o efeito com dependências vazias.
+  solution: |
+    import { useEffect, useState } from 'react';
+
+    export default function App() {
+      const [segundos, setSegundos] = useState(0);
+
+      useEffect(() => {
+        const id = setInterval(() => {
+          setSegundos((s) => s + 1);
+        }, 50);
+        return () => clearInterval(id);
+      }, []);
+
+      return <p>No ar há {segundos} s</p>;
+    }
+  tests:
+    - name: continua subindo
+      code: |
+        await wait(330);
+        const n = Number(text('p').match(/\d+/)[0]);
+        expect(n).toBeGreaterThanOrEqual(4);
+    - name: cancela o intervalo
+      hidden: true
+      code: |
+        const original = window.clearInterval;
+        const cancelados = [];
+        window.clearInterval = (id) => { cancelados.push(id); return original(id); };
+        window.__root.unmount();
+        window.clearInterval = original;
+        expect(cancelados.length).toBe(1);
+  hints:
+    - O callback do intervalo foi criado na primeira renderização e sempre enxerga `segundos` igual a 0.
+    - "`setSegundos((s) => s + 1)` usa o valor mais recente, sem depender da variável capturada."
+    - O efeito pode devolver uma função de limpeza.
+  explanation: |
+    É o problema da closure velha: o callback guarda o `segundos` da renderização em que foi criado. A forma funcional do setState recebe o valor atual e dispensa a dependência. A limpeza com `clearInterval` evita intervalos acumulados quando o componente sai da tela.
+  traps:
+    - reason: Corrige a contagem, mas não limpa
+      code: |
+        import { useEffect, useState } from 'react';
+        export default function App() { const [s, setS] = useState(0); useEffect(() => { setInterval(() => setS((x) => x + 1), 50); }, []); return <p>No ar há {s} s</p>; }
+
+- slug: implemente-ordenar-tabela
+  title: Ordenar a tabela pelo cabeçalho
+  difficulty: dificil
+  kind: dom
+  editor: js
+  in: [implemente/Funcionalidades, accessibility]
+  study:
+    - { label: "Padrão de tabela ordenável (W3C)", url: "https://www.w3.org/WAI/ARIA/apg/patterns/table/examples/sortable-table/" }
+    - { label: "aria-sort (MDN, em inglês)", url: "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-sort" }
+  html: |
+    <table>
+      <thead>
+        <tr>
+          <th data-col="0"><button>Banda</button></th>
+          <th data-col="1"><button>Público</button></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Vórtice</td><td>9000</td></tr>
+        <tr><td>Asfalto</td><td>12000</td></tr>
+        <tr><td>Órbita</td><td>800</td></tr>
+      </tbody>
+    </table>
+  statement: |
+    Os botões dos cabeçalhos devem ordenar a tabela:
+
+    - o primeiro clique ordena de forma crescente, o segundo inverte, e assim por diante
+    - `Banda` ordena por nome em ordem alfabética do português, e `Público` como número
+    - o `th` da coluna ordenada recebe `aria-sort="ascending"` ou `"descending"`, e o da outra coluna perde o atributo
+  forbid: [innerHTML]
+  solution: |
+    const corpo = document.querySelector('tbody');
+    const cabecalhos = [...document.querySelectorAll('th')];
+
+    for (const th of cabecalhos) {
+      th.querySelector('button').addEventListener('click', () => {
+        const col = Number(th.dataset.col);
+        const direcao = th.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+        const linhas = [...corpo.rows];
+        const valor = (linha) => linha.cells[col].textContent.trim();
+        linhas.sort((a, b) => {
+          const comparacao = col === 1 ? Number(valor(a)) - Number(valor(b)) : valor(a).localeCompare(valor(b), 'pt-BR');
+          return direcao === 'ascending' ? comparacao : -comparacao;
+        });
+        corpo.append(...linhas);
+        for (const outro of cabecalhos) outro.removeAttribute('aria-sort');
+        th.setAttribute('aria-sort', direcao);
+      });
+    }
+  tests:
+    - name: ordena por nome
+      code: |
+        click('th[data-col="0"] button');
+        expect($$('tbody tr').map((r) => r.cells[0].textContent)).toEqual(['Asfalto', 'Órbita', 'Vórtice']);
+        expect(el('th[data-col="0"]').getAttribute('aria-sort')).toBe('ascending');
+    - name: inverte no segundo clique
+      hidden: true
+      code: |
+        click('th[data-col="0"] button');
+        click('th[data-col="0"] button');
+        expect($$('tbody tr').map((r) => r.cells[0].textContent)).toEqual(['Vórtice', 'Órbita', 'Asfalto']);
+        expect(el('th[data-col="0"]').getAttribute('aria-sort')).toBe('descending');
+    - name: números como números
+      hidden: true
+      code: |
+        click('th[data-col="1"] button');
+        expect($$('tbody tr').map((r) => r.cells[1].textContent)).toEqual(['800', '9000', '12000']);
+        expect(el('th[data-col="0"]').hasAttribute('aria-sort')).toBe(false);
+  hints:
+    - "`corpo.append(...linhas)` move as linhas já existentes para a nova ordem, sem recriar nada."
+    - Ordenar `'800'`, `'9000'` e `'12000'` como texto dá a ordem errada.
+  explanation: |
+    Reordenar movendo os elementos existentes preserva eventos e estado das linhas. A comparação depende do tipo: `localeCompare` para nomes com acento e subtração para números. `aria-sort` informa ao leitor de tela qual coluna está ordenada e em que direção.
+  traps:
+    - reason: Público ordenado como texto
+      code: |
+        const c = document.querySelector('tbody'); const hs = [...document.querySelectorAll('th')];
+        for (const th of hs) th.querySelector('button').addEventListener('click', () => { const i = Number(th.dataset.col); const d = th.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending'; const l = [...c.rows].sort((a, b) => { const x = a.cells[i].textContent.localeCompare(b.cells[i].textContent, 'pt-BR'); return d === 'ascending' ? x : -x; }); c.append(...l); for (const o of hs) o.removeAttribute('aria-sort'); th.setAttribute('aria-sort', d); });
+    - reason: Sem aria-sort
+      code: |
+        const c = document.querySelector('tbody');
+        for (const th of document.querySelectorAll('th')) th.querySelector('button').addEventListener('click', () => { const i = Number(th.dataset.col); th.dataset.d = th.dataset.d === 'a' ? 'd' : 'a'; const l = [...c.rows].sort((a, b) => { const va = a.cells[i].textContent; const vb = b.cells[i].textContent; const x = i === 1 ? va - vb : va.localeCompare(vb, 'pt-BR'); return th.dataset.d === 'a' ? x : -x; }); c.append(...l); });
+
+- slug: implemente-desfazer
+  title: Desfazer no carrinho
+  difficulty: dificil
+  kind: js
+  in: [implemente/Funcionalidades, javascript/Objetos e classes]
+  study:
+    - { label: "Classes (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Classes" }
+  starter: |
+    class Carrinho {
+      itens = {};
+
+      adicionar(setor, quantidade = 1) {
+        this.itens[setor] = (this.itens[setor] ?? 0) + quantidade;
+      }
+
+      remover(setor) {
+        delete this.itens[setor];
+      }
+
+      quantidade(setor) {
+        return this.itens[setor] ?? 0;
+      }
+    }
+  statement: |
+    O carrinho já funciona. Acrescente `desfazer()`, que desfaz a última operação de `adicionar` ou `remover`, uma por chamada, quantas vezes houver no histórico. Com o histórico vazio, `desfazer()` não faz nada e devolve `false`. Quando desfaz algo, devolve `true`.
+
+    Remover um setor e desfazer deve trazer de volta a quantidade que ele tinha.
+  solution: |
+    class Carrinho {
+      itens = {};
+      #historico = [];
+
+      adicionar(setor, quantidade = 1) {
+        this.#historico.push({ setor, antes: this.itens[setor] });
+        this.itens[setor] = (this.itens[setor] ?? 0) + quantidade;
+      }
+
+      remover(setor) {
+        this.#historico.push({ setor, antes: this.itens[setor] });
+        delete this.itens[setor];
+      }
+
+      desfazer() {
+        const ultimo = this.#historico.pop();
+        if (!ultimo) return false;
+        if (ultimo.antes === undefined) delete this.itens[ultimo.setor];
+        else this.itens[ultimo.setor] = ultimo.antes;
+        return true;
+      }
+
+      quantidade(setor) {
+        return this.itens[setor] ?? 0;
+      }
+    }
+  tests:
+    - name: desfaz uma adição
+      code: |
+        const c = new Carrinho();
+        c.adicionar('pista', 2);
+        c.adicionar('pista', 1);
+        expect(c.desfazer()).toBe(true);
+        expect(c.quantidade('pista')).toBe(2);
+    - name: desfaz uma remoção
+      hidden: true
+      code: |
+        const c = new Carrinho();
+        c.adicionar('camarote', 3);
+        c.remover('camarote');
+        c.desfazer();
+        expect(c.quantidade('camarote')).toBe(3);
+    - name: várias vezes até o começo
+      hidden: true
+      code: |
+        const c = new Carrinho();
+        c.adicionar('pista');
+        c.adicionar('premium', 2);
+        c.desfazer();
+        c.desfazer();
+        expect(c.itens).toEqual({});
+        expect(c.desfazer()).toBe(false);
+  hints:
+    - Guarde, a cada operação, o setor e a quantidade que ele tinha antes.
+    - Desfazer é restaurar esse valor anterior, ou apagar o setor se ele não existia.
+  explanation: |
+    Guardar o estado anterior de cada operação é uma forma simples de desfazer, parente do padrão Command. Restaurar o valor anterior funciona para adicionar e para remover, sem código especial para cada uma.
+  traps:
+    - reason: Desfazer só subtrai
+      code: |
+        class Carrinho {
+          itens = {}; h = [];
+          adicionar(s, q = 1) { this.h.push([s, q]); this.itens[s] = (this.itens[s] ?? 0) + q; }
+          remover(s) { delete this.itens[s]; }
+          desfazer() { const u = this.h.pop(); if (!u) return false; this.itens[u[0]] -= u[1]; if (!this.itens[u[0]]) delete this.itens[u[0]]; return true; }
+          quantidade(s) { return this.itens[s] ?? 0; }
+        }
+
+- slug: implemente-estado-desabilitado
+  title: O botão que não pode ser clicado
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [implemente/Interface]
+  study:
+    - { label: ":disabled (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/:disabled" }
+    - { label: "cursor (MDN)", url: "https://developer.mozilla.org/pt-BR/docs/Web/CSS/cursor" }
+  html: |
+    <button class="comprar">Comprar</button>
+    <button class="comprar" disabled>Esgotado</button>
+  starter: |
+    .comprar {
+      background: #d7263d;
+      color: white;
+      padding: 8px 16px;
+      border: 0;
+      cursor: pointer;
+    }
+  statement: |
+    O CSS do botão `.comprar` já existe. Acrescente o estado desabilitado: com o atributo `disabled`, o botão fica com opacidade `0.5` e cursor `not-allowed`. Sem o atributo, nada muda.
+  solution: |
+    .comprar {
+      background: #d7263d;
+      color: white;
+      padding: 8px 16px;
+      border: 0;
+      cursor: pointer;
+    }
+    .comprar:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  tests:
+    - name: desabilitado
+      code: |
+        const b = $$('.comprar')[1];
+        expect(css(b, 'opacity')).toBe('0.5');
+        expect(css(b, 'cursor')).toBe('not-allowed');
+    - name: normal intacto
+      hidden: true
+      code: |
+        const b = $$('.comprar')[0];
+        expect(css(b, 'opacity')).toBe('1');
+        expect(css(b, 'cursor')).toBe('pointer');
+        expect(css(b, 'background-color')).toBe('rgb(215, 38, 61)');
+    - name: acompanha o atributo
+      hidden: true
+      code: |
+        const b = $$('.comprar')[0];
+        b.disabled = true;
+        expect(css(b, 'opacity')).toBe('0.5');
+  hints:
+    - A pseudo-classe `:disabled` casa com elementos de formulário desabilitados.
+  explanation: |
+    Estilizar pelo estado, com `:disabled`, mantém aparência e comportamento sempre juntos: quem desabilita o botão no JavaScript não precisa lembrar de trocar uma classe. Só a opacidade não basta para todo mundo, por isso o texto `Esgotado` também comunica o estado.
+  traps:
+    - reason: Classe em vez do estado
+      code: |
+        .comprar { background: #d7263d; color: white; padding: 8px 16px; border: 0; cursor: pointer; }
+        .comprar.desabilitado { opacity: 0.5; cursor: not-allowed; }

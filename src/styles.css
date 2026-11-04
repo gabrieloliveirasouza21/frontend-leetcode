@@ -264,3 +264,5 @@ kbd { margin-left: 4px; color: var(--muted); font: 11px var(--mono); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .statement-list { margin: 0 0 1em; padding-left: 22px; }
 .statement-list li { margin: 2px 0; }
+.study-panel { margin: 16px 0; }
+.study-panel .study { margin-top: 8px; }
