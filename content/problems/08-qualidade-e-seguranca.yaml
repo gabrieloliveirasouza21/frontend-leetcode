@@ -1,0 +1,1006 @@
+- slug: onde-guardar-a-sessao
+  title: Onde guardar a sessão
+  difficulty: medio
+  kind: quiz
+  in: [auth-strategies]
+  statement: |
+    Depois do login, o servidor precisa reconhecer o fã nas próximas requisições. O site tem muitos scripts de terceiros, como analytics e chat, e um XSS em qualquer um deles poderia rodar código na página.
+
+    Qual opção reduz mais o estrago de um XSS?
+  options:
+    - text: Um cookie de sessão com `HttpOnly`, `Secure` e `SameSite`, que o JavaScript da página não consegue ler
+      why: Certo. Com HttpOnly, um script injetado não lê o identificador da sessão, e SameSite reduz o risco de CSRF.
+    - text: O token no localStorage, lido pelo JavaScript e enviado num cabeçalho
+      why: Qualquer script na página lê o localStorage, inclusive um injetado, que pode copiar o token.
+    - text: A senha do usuário no sessionStorage, para refazer o login sozinho
+      why: Senhas nunca devem ser guardadas no navegador. Um XSS levaria a senha, e não só uma sessão.
+    - text: O token numa variável global, para não ficar em nenhum armazenamento
+      why: Um script injetado também lê variáveis globais, e a sessão some ao recarregar a página.
+  answer: 0
+  explanation: |
+    Cookies `HttpOnly` não são acessíveis por `document.cookie`, então um XSS não consegue roubar a sessão, embora ainda possa agir na página enquanto ela está aberta. `Secure` manda o cookie só por HTTPS, e `SameSite=Lax` ou `Strict` impede o envio em boa parte das requisições vindas de outros sites. Tokens em JavaScript são práticos, mas ficam expostos a qualquer script.
+
+- slug: token-expirado
+  title: O token venceu?
+  difficulty: medio
+  kind: js
+  in: [auth-strategies]
+  statement: |
+    Um JWT tem três partes separadas por ponto: cabeçalho, carga e assinatura. A carga é um JSON codificado em base64url. O campo `exp` guarda o vencimento em segundos desde 1970.
+
+    Escreva `expirado(token, agora = Date.now())`, que devolve `true` quando o token venceu ou quando não dá para ler o `exp`. `agora` está em milissegundos.
+
+    Isso serve só para a interface decidir quando renovar a sessão. Quem valida a assinatura é o servidor.
+  solution: |
+    function expirado(token, agora = Date.now()) {
+      try {
+        const parte = token.split('.')[1];
+        const base64 = parte.replace(/-/g, '+').replace(/_/g, '/');
+        const carga = JSON.parse(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')));
+        if (typeof carga.exp !== 'number') return true;
+        return carga.exp * 1000 <= agora;
+      } catch {
+        return true;
+      }
+    }
+  setup: |
+    const montarToken = (carga) => {
+      const b64 = (obj) => btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64(carga)}.assinatura`;
+    };
+  tests:
+    - name: token válido
+      code: |
+        const token = montarToken({ sub: 'fa-1', exp: 2000000000 });
+        expect(expirado(token, 1900000000000)).toBe(false);
+    - name: token vencido
+      code: |
+        const token = montarToken({ sub: 'fa-1', exp: 1700000000 });
+        expect(expirado(token, 1800000000000)).toBe(true);
+    - name: exp em segundos
+      hidden: true
+      code: |
+        const token = montarToken({ exp: 1800000000 });
+        expect(expirado(token, 1800000000000 - 1)).toBe(false);
+        expect(expirado(token, 1800000000000)).toBe(true);
+    - name: base64url com - e _
+      hidden: true
+      code: |
+        const token = montarToken({ nome: '???>>>~~~', exp: 2000000000 });
+        expect(token.split('.')[1]).toMatch(/[-_]/);
+        expect(expirado(token, 1900000000000)).toBe(false);
+    - name: token ilegível
+      hidden: true
+      code: |
+        expect(expirado('lixo', 0)).toBe(true);
+        expect(expirado(montarToken({ sub: 'sem-exp' }), 0)).toBe(true);
+  hints:
+    - base64url troca `+` por `-` e `/` por `_`, e costuma omitir o `=` do fim. Desfaça isso antes do `atob`.
+    - "`exp` está em segundos e `Date.now()` em milissegundos."
+  explanation: |
+    Decodificar a carga não valida o token. Qualquer pessoa pode montar um JWT com qualquer `exp`, e só a verificação da assinatura no servidor prova que ele é legítimo. No cliente, ler o `exp` serve para renovar antes de uma requisição falhar. Na dúvida, trate como vencido.
+  traps:
+    - reason: Compara segundos com milissegundos
+      code: |
+        function expirado(token, agora = Date.now()) {
+          try { const p = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); const c = JSON.parse(atob(p.padEnd(Math.ceil(p.length / 4) * 4, '='))); return !(c.exp > agora); } catch { return true; }
+        }
+    - reason: Esquece o base64url
+      code: |
+        function expirado(token, agora = Date.now()) {
+          try { const c = JSON.parse(atob(token.split('.')[1])); return typeof c.exp !== 'number' || c.exp * 1000 <= agora; } catch { return true; }
+        }
+
+- slug: vite-no-desenvolvimento
+  title: Por que o Vite abre rápido
+  difficulty: medio
+  kind: quiz
+  in: [module-bundlers/Vite]
+  statement: |
+    Num projeto grande, o servidor de desenvolvimento antigo levava um minuto para abrir. Com o Vite, abre em segundos.
+
+    Qual é o motivo principal?
+  options:
+    - text: Em desenvolvimento, o Vite serve o código como módulos ES nativos e transforma cada arquivo quando o navegador pede, sem empacotar o app inteiro antes
+      why: Certo. As dependências são pré-empacotadas uma vez com esbuild, e o código do app é servido sob demanda.
+    - text: O Vite não processa TypeScript nem JSX
+      why: Ele processa, só que arquivo por arquivo, sem checar tipos, o que é rápido.
+    - text: O Vite guarda o site pronto em um servidor na nuvem
+      why: O servidor de desenvolvimento roda na sua máquina.
+    - text: O Vite remove os testes do projeto
+      why: Testes não fazem parte do que o servidor de desenvolvimento carrega.
+  answer: 0
+  explanation: |
+    Navegadores modernos entendem `import` nativamente. O Vite aproveita isso em desenvolvimento e só transforma o que a página realmente pede. Para produção, ele empacota com Rollup, ou com Rolldown nas versões mais novas, gerando arquivos otimizados.
+
+- slug: transpilar-sem-checar
+  title: O build passou com erro de tipo
+  difficulty: medio
+  kind: quiz
+  in: [module-bundlers/esbuild, module-bundlers/SWC]
+  statement: |
+    O build com esbuild terminou sem reclamar, mas o editor mostra um erro de tipo no TypeScript. Em produção, a função recebeu `undefined` e quebrou.
+
+    Por quê?
+  options:
+    - text: esbuild e SWC só removem os tipos para gerar JavaScript, sem checá-los. A checagem precisa de `tsc --noEmit` num passo separado
+      why: Certo. Remover tipos é rápido justamente por não analisar o programa inteiro. Por isso projetos rodam `tsc --noEmit` na CI.
+    - text: O esbuild tem um bug que ignora erros
+      why: Não é bug. Ele foi projetado para transpilar sem checar tipos.
+    - text: TypeScript não tem checagem de tipos
+      why: Tem, e é feita pelo compilador `tsc` ou pelo editor, que usa o mesmo serviço.
+    - text: O erro só aparece com o SWC, não com o esbuild
+      why: 'Os dois funcionam do mesmo jeito: transpilam rápido e deixam a checagem para o `tsc`.'
+  answer: 0
+  explanation: |
+    Ferramentas como esbuild, escrito em Go, e SWC, escrito em Rust, convertem TypeScript e JSX para JavaScript muito rápido, arquivo por arquivo. Checar tipos exige entender o programa todo, que é o trabalho do `tsc`. Um pipeline típico usa os dois: transpilação rápida no build e `tsc --noEmit` como verificação.
+
+- slug: tree-shaking
+  title: A biblioteca inteira no bundle
+  difficulty: medio
+  kind: quiz
+  in: [module-bundlers/Rollup, module-bundlers/Rolldown]
+  statement: |
+    O site usa só a função `formatarData` de uma biblioteca de utilitários enorme. Mesmo assim, o bundle de produção inclui a biblioteca toda.
+
+    Qual causa e correção fazem sentido?
+  options:
+    - text: A biblioteca é importada de um jeito que impede o tree shaking, como CommonJS ou importando o objeto inteiro. Use `import { formatarData } from` de uma versão em módulos ES
+      why: Certo. Bundlers como Rollup e Rolldown removem exportações não usadas quando conseguem analisar os imports estáticos de módulos ES.
+    - text: Tree shaking só funciona em desenvolvimento
+      why: 'É o contrário: a eliminação de código morto acontece no build de produção.'
+    - text: É preciso apagar à mão as funções que não usa de dentro de node_modules
+      why: Mexer em node_modules se perde na próxima instalação. O caminho é importar de forma que o bundler consiga analisar.
+    - text: Basta minificar o código
+      why: Minificar encurta nomes e remove espaços, mas não tira código que parece usado.
+  answer: 0
+  explanation: |
+    Tree shaking é a remoção de exportações que ninguém importa. Funciona com `import` e `export` estáticos, porque o bundler consegue ver o que é usado sem executar o código. `require` dinâmico, importação do namespace inteiro e efeitos colaterais no topo dos módulos atrapalham.
+
+- slug: bundler-sem-configuracao
+  title: Começar sem configurar nada
+  difficulty: facil
+  kind: quiz
+  in: [module-bundlers/Parcel]
+  statement: |
+    Você quer um protótipo com HTML, CSS e TypeScript funcionando em minutos, sem escrever arquivo de configuração. Alguém sugere `parcel index.html`.
+
+    O que o Parcel faz nesse caso?
+  options:
+    - text: Lê o HTML como ponto de entrada, descobre os arquivos referenciados e aplica as transformações necessárias, como TypeScript e CSS, sem configuração
+      why: Certo. A proposta do Parcel é funcionar com zero configuração, detectando o que cada arquivo precisa.
+    - text: Só copia o HTML para a pasta dist
+      why: Ele segue scripts, estilos e imagens a partir do HTML e processa cada um.
+    - text: Exige um parcel.config.js antes de rodar
+      why: A configuração é opcional e só serve para personalizar o comportamento padrão.
+    - text: Funciona só com React
+      why: Parcel é independente de framework.
+  answer: 0
+  explanation: |
+    Bundlers diferem no quanto pedem de configuração. Parcel aposta em convenções e detecção automática. Vite tem bons padrões e uma configuração enxuta. Webpack e Rollup dão controle fino, ao custo de mais configuração.
+
+- slug: lint-ou-formatador
+  title: Lint ou formatação
+  difficulty: facil
+  kind: quiz
+  in: [linters-formatters/ESLint, linters-formatters/Prettier]
+  statement: |
+    Nas revisões, o time discute aspas simples ou duplas e também deixa passar bugs como variáveis nunca usadas e `await` esquecido em promessas.
+
+    Qual combinação resolve as duas coisas?
+  options:
+    - text: Prettier formata o código automaticamente, e o ESLint aponta padrões que costumam ser bugs, rodando no editor e na CI
+      why: Certo. O formatador elimina discussões de estilo, e o linter analisa o código para avisar de erros prováveis.
+    - text: Só o Prettier, que também encontra bugs
+      why: O Prettier só reescreve o layout do código. Ele não entende se uma variável é usada.
+    - text: Só o ESLint com regras de estilo, sem formatador
+      why: Dá para usar regras de estilo no ESLint, mas um formatador resolve isso com menos configuração e sem conflitos.
+    - text: Nenhum dos dois. Code review resolve tudo
+      why: Revisores humanos cansam e perdem o padrão. Ferramentas automáticas fazem isso sempre igual.
+  answer: 0
+  explanation: |
+    Um formatador decide como o código fica: indentação, quebras e aspas. Um linter analisa o significado em busca de problemas, como variável não usada, comparação suspeita ou regra de hooks quebrada. Rodar os dois no editor e na CI libera a revisão para discutir lógica.
+
+- slug: biome-ferramenta-unica
+  title: Uma ferramenta no lugar de duas
+  difficulty: facil
+  kind: quiz
+  in: [linters-formatters/Biome]
+  statement: |
+    O projeto usa ESLint e Prettier, com plugins e configurações que às vezes brigam entre si. O time avalia o Biome.
+
+    O que o Biome oferece?
+  options:
+    - text: Linter e formatador numa ferramenta só, escrita em Rust, rápida e com uma configuração única
+      why: Certo. Ele cobre boa parte das regras comuns de lint e formata em estilo compatível com o Prettier.
+    - text: Um compilador de TypeScript que substitui o tsc
+      why: O Biome não checa tipos como o tsc. Ele analisa sintaxe e padrões.
+    - text: Um bundler como o Vite
+      why: O Biome não empacota o app.
+    - text: Um plugin que só funciona dentro do Prettier
+      why: Ele é uma ferramenta independente, com CLI e integração com editores.
+  answer: 0
+  explanation: |
+    A tendência recente é juntar ferramentas e reescrevê-las em linguagens compiladas para ganhar velocidade. O Biome junta lint e formatação. A troca vale quando as regras de que o time precisa existem nele, e plugins muito específicos do ESLint podem não ter equivalente.
+
+- slug: testar-desconto
+  title: Testes que pegam o bug
+  difficulty: medio
+  kind: tests
+  in: [testing/Vitest, testing/Jest]
+  implementation: |
+    function precoComCupom(preco, cupom) {
+      if (cupom === 'RUIDO10') return Math.round(preco * 0.9 * 100) / 100;
+      if (cupom === 'VIP' && preco >= 500) return preco - 100;
+      return preco;
+    }
+  mutants:
+    - reason: o cupom VIP exige preço acima de 500, e não a partir de 500
+      code: |
+        function precoComCupom(preco, cupom) {
+          if (cupom === 'RUIDO10') return Math.round(preco * 0.9 * 100) / 100;
+          if (cupom === 'VIP' && preco > 500) return preco - 100;
+          return preco;
+        }
+    - reason: o RUIDO10 não arredonda os centavos
+      code: |
+        function precoComCupom(preco, cupom) {
+          if (cupom === 'RUIDO10') return preco * 0.9;
+          if (cupom === 'VIP' && preco >= 500) return preco - 100;
+          return preco;
+        }
+    - reason: cupons desconhecidos zeram o preço
+      code: |
+        function precoComCupom(preco, cupom) {
+          if (cupom === 'RUIDO10') return Math.round(preco * 0.9 * 100) / 100;
+          if (cupom === 'VIP' && preco >= 500) return preco - 100;
+          return cupom ? 0 : preco;
+        }
+    - reason: o VIP vale para qualquer preço
+      code: |
+        function precoComCupom(preco, cupom) {
+          if (cupom === 'RUIDO10') return Math.round(preco * 0.9 * 100) / 100;
+          if (cupom === 'VIP') return preco - 100;
+          return preco;
+        }
+  statement: |
+    A função `precoComCupom(preco, cupom)` está pronta. Escreva os testes dela, no estilo do Vitest e do Jest, com `test` e `expect`.
+
+    Regras:
+
+    - `RUIDO10` dá 10% de desconto, arredondado para 2 casas
+    - `VIP` tira R$ 100 de ingressos a partir de R$ 500
+    - outros cupons, ou nenhum cupom, mantêm o preço
+
+    O corretor roda seus testes na versão certa, onde todos devem passar, e em versões com defeito, onde algum teste deve falhar.
+  min_tests: 3
+  solution: |
+    test('RUIDO10 dá 10% de desconto', () => {
+      expect(precoComCupom(300, 'RUIDO10')).toBe(270);
+    });
+
+    test('RUIDO10 arredonda os centavos', () => {
+      expect(precoComCupom(99.99, 'RUIDO10')).toBe(89.99);
+    });
+
+    test('VIP vale a partir de 500', () => {
+      expect(precoComCupom(500, 'VIP')).toBe(400);
+      expect(precoComCupom(900, 'VIP')).toBe(800);
+    });
+
+    test('VIP não vale abaixo de 500', () => {
+      expect(precoComCupom(499, 'VIP')).toBe(499);
+    });
+
+    test('cupom desconhecido ou ausente mantém o preço', () => {
+      expect(precoComCupom(300, 'NADA')).toBe(300);
+      expect(precoComCupom(300)).toBe(300);
+    });
+  hints:
+    - Teste os limites. Um teste com 900 no VIP não diferencia `>=` de `>`.
+    - Escolha valores em que o arredondamento faz diferença, como 99.99.
+  explanation: |
+    Bons testes miram onde o código costuma errar: limites como 500, arredondamento e o caminho que não faz nada. Essa técnica de criar versões com defeito para ver se os testes reclamam se chama teste de mutação. Ela mede se os testes protegem o código ou só passam por ele.
+  traps:
+    - reason: Testes só do caminho feliz
+      code: |
+        test('RUIDO10', () => { expect(precoComCupom(300, 'RUIDO10')).toBe(270); });
+        test('VIP', () => { expect(precoComCupom(900, 'VIP')).toBe(800); });
+        test('sem cupom', () => { expect(precoComCupom(300)).toBe(300); });
+    - reason: Testes sem expect
+      code: |
+        test('RUIDO10', () => { precoComCupom(300, 'RUIDO10'); });
+        test('VIP', () => { precoComCupom(500, 'VIP'); });
+        test('outro', () => { precoComCupom(300, 'X'); });
+
+- slug: testar-com-espia
+  title: O aviso foi enviado?
+  difficulty: medio
+  kind: tests
+  in: [testing/Jest, testing/Vitest]
+  implementation: |
+    function avisarMudanca(show, novoHorario, enviar) {
+      if (show.horario === novoHorario) return 0;
+      for (const fa of show.inscritos) {
+        enviar(fa, `${show.banda} agora toca às ${novoHorario}`);
+      }
+      return show.inscritos.length;
+    }
+  mutants:
+    - reason: envia mesmo quando o horário não mudou
+      code: |
+        function avisarMudanca(show, novoHorario, enviar) {
+          for (const fa of show.inscritos) enviar(fa, `${show.banda} agora toca às ${novoHorario}`);
+          return show.horario === novoHorario ? 0 : show.inscritos.length;
+        }
+    - reason: avisa só o primeiro inscrito
+      code: |
+        function avisarMudanca(show, novoHorario, enviar) {
+          if (show.horario === novoHorario) return 0;
+          if (show.inscritos.length) enviar(show.inscritos[0], `${show.banda} agora toca às ${novoHorario}`);
+          return show.inscritos.length;
+        }
+    - reason: a mensagem usa o horário antigo
+      code: |
+        function avisarMudanca(show, novoHorario, enviar) {
+          if (show.horario === novoHorario) return 0;
+          for (const fa of show.inscritos) enviar(fa, `${show.banda} agora toca às ${show.horario}`);
+          return show.inscritos.length;
+        }
+  statement: |
+    `avisarMudanca(show, novoHorario, enviar)` manda uma mensagem a cada fã inscrito quando o horário de um show muda. `enviar(fa, texto)` é a função que dispara a notificação.
+
+    Escreva testes que usem uma função espiã no lugar de `enviar`. Aqui ela se chama `fn()`, como `vi.fn()` no Vitest e `jest.fn()` no Jest. Confira quem recebeu, quantas vezes e com que texto, e o que acontece quando o horário não muda.
+  min_tests: 2
+  solution: |
+    const show = { banda: 'Vórtice', horario: '22h', inscritos: ['ana', 'bia'] };
+
+    test('avisa cada inscrito com o novo horário', () => {
+      const enviar = fn();
+      expect(avisarMudanca(show, '23h', enviar)).toBe(2);
+      expect(enviar).toHaveBeenCalledTimes(2);
+      expect(enviar).toHaveBeenCalledWith('ana', 'Vórtice agora toca às 23h');
+      expect(enviar).toHaveBeenCalledWith('bia', 'Vórtice agora toca às 23h');
+    });
+
+    test('não envia nada se o horário é o mesmo', () => {
+      const enviar = fn();
+      expect(avisarMudanca(show, '22h', enviar)).toBe(0);
+      expect(enviar).not.toHaveBeenCalled();
+    });
+  hints:
+    - "`fn()` grava cada chamada. `toHaveBeenCalledWith` confere os argumentos, e `toHaveBeenCalledTimes` a quantidade."
+    - Teste também o caso em que nada deve acontecer.
+  explanation: |
+    Funções espiãs substituem dependências com efeito colateral, como enviar e-mail ou cobrar cartão, e gravam como foram chamadas. Injetar `enviar` como parâmetro é o que torna a função testável. Testar o caminho que não deve fazer nada pega defeitos que testes do caminho feliz deixam passar.
+  traps:
+    - reason: Confere só o retorno
+      code: |
+        test('conta os inscritos', () => {
+          expect(avisarMudanca({ banda: 'V', horario: '22h', inscritos: ['a', 'b'] }, '23h', () => {})).toBe(2);
+        });
+        test('mesmo horário', () => {
+          expect(avisarMudanca({ banda: 'V', horario: '22h', inscritos: ['a'] }, '22h', () => {})).toBe(0);
+        });
+
+- slug: testar-assincrono
+  title: Testar uma promessa
+  difficulty: dificil
+  kind: tests
+  in: [testing/Vitest]
+  implementation: |
+    async function reservar(api, setor, quantidade) {
+      if (quantidade < 1 || quantidade > 6) throw new Error('Quantidade inválida');
+      const { disponiveis } = await api.estoque(setor);
+      if (disponiveis < quantidade) throw new Error('Esgotado');
+      return api.reservar(setor, quantidade);
+    }
+  mutants:
+    - reason: permite reservar mais do que o estoque
+      code: |
+        async function reservar(api, setor, quantidade) {
+          if (quantidade < 1 || quantidade > 6) throw new Error('Quantidade inválida');
+          await api.estoque(setor);
+          return api.reservar(setor, quantidade);
+        }
+    - reason: reserva antes de conferir o estoque
+      code: |
+        async function reservar(api, setor, quantidade) {
+          if (quantidade < 1 || quantidade > 6) throw new Error('Quantidade inválida');
+          const r = api.reservar(setor, quantidade);
+          const { disponiveis } = await api.estoque(setor);
+          if (disponiveis < quantidade) throw new Error('Esgotado');
+          return r;
+        }
+    - reason: aceita quantidade zero
+      code: |
+        async function reservar(api, setor, quantidade) {
+          if (quantidade > 6) throw new Error('Quantidade inválida');
+          const { disponiveis } = await api.estoque(setor);
+          if (disponiveis < quantidade) throw new Error('Esgotado');
+          return api.reservar(setor, quantidade);
+        }
+    - reason: o estoque exato é tratado como esgotado
+      code: |
+        async function reservar(api, setor, quantidade) {
+          if (quantidade < 1 || quantidade > 6) throw new Error('Quantidade inválida');
+          const { disponiveis } = await api.estoque(setor);
+          if (disponiveis <= quantidade) throw new Error('Esgotado');
+          return api.reservar(setor, quantidade);
+        }
+  statement: |
+    `reservar(api, setor, quantidade)` é assíncrona. Ela valida a quantidade, de 1 a 6, consulta `api.estoque(setor)`, que resolve com `{ disponiveis }`, e só então chama `api.reservar(setor, quantidade)`.
+
+    Escreva testes com uma `api` falsa, feita com `fn()`. Cubra a reserva com sucesso, o estoque insuficiente, o estoque exato e a quantidade inválida. Use `await` e `expect(...).rejects`.
+  min_tests: 3
+  solution: |
+    function apiCom(disponiveis) {
+      return {
+        estoque: fn().mockResolvedValue({ disponiveis }),
+        reservar: fn().mockResolvedValue({ codigo: 'R1' }),
+      };
+    }
+
+    test('reserva quando há estoque', async () => {
+      const api = apiCom(10);
+      await expect(reservar(api, 'pista', 2)).resolves.toEqual({ codigo: 'R1' });
+      expect(api.reservar).toHaveBeenCalledWith('pista', 2);
+    });
+
+    test('reserva o estoque exato', async () => {
+      const api = apiCom(2);
+      await expect(reservar(api, 'pista', 2)).resolves.toEqual({ codigo: 'R1' });
+    });
+
+    test('recusa sem estoque e não reserva', async () => {
+      const api = apiCom(1);
+      await expect(reservar(api, 'pista', 2)).rejects.toMatch('Esgotado');
+      expect(api.reservar).not.toHaveBeenCalled();
+    });
+
+    test('recusa quantidade fora de 1 a 6', async () => {
+      const api = apiCom(10);
+      await expect(reservar(api, 'pista', 0)).rejects.toMatch('Quantidade inválida');
+      await expect(reservar(api, 'pista', 7)).rejects.toMatch('Quantidade inválida');
+    });
+  hints:
+    - "`fn().mockResolvedValue(valor)` cria uma espiã que devolve uma promessa resolvida."
+    - Sem `await` antes de `expect(...).rejects`, o teste termina antes de a promessa falhar e passa sempre.
+    - Para pegar uma reserva feita cedo demais, confira que `api.reservar` não foi chamada quando falta estoque.
+  explanation: |
+    Em testes assíncronos, o erro mais comum é esquecer o `await`: o teste termina antes da asserção e passa mesmo com o código errado. Uma API falsa com respostas controladas deixa testar estoque exato e estoque insuficiente sem depender de rede. Conferir que `reservar` não foi chamada pega a ordem errada das operações.
+  traps:
+    - reason: Sem await, os testes passam sempre
+      code: |
+        const api = (d) => ({ estoque: fn().mockResolvedValue({ disponiveis: d }), reservar: fn().mockResolvedValue('ok') });
+        test('sucesso', () => { expect(reservar(api(10), 'pista', 2)).resolves.toBe('ok'); });
+        test('esgotado', () => { expect(reservar(api(1), 'pista', 2)).rejects.toMatch('Esgotado'); });
+        test('inválida', () => { expect(reservar(api(10), 'pista', 0)).rejects.toMatch('Quantidade'); });
+    - reason: Esquece o estoque exato e a ordem
+      code: |
+        const api = (d) => ({ estoque: fn().mockResolvedValue({ disponiveis: d }), reservar: fn().mockResolvedValue('ok') });
+        test('sucesso', async () => { await expect(reservar(api(10), 'pista', 2)).resolves.toBe('ok'); });
+        test('esgotado', async () => { await expect(reservar(api(1), 'pista', 2)).rejects.toMatch('Esgotado'); });
+        test('inválida', async () => { await expect(reservar(api(10), 'pista', 0)).rejects.toMatch('Quantidade'); });
+
+- slug: seletor-por-papel
+  title: O teste que quebra a cada mudança de CSS
+  difficulty: medio
+  kind: quiz
+  in: [testing/Playwright]
+  statement: |
+    O teste de ponta a ponta do checkout usa `page.locator('div.btn-wrapper > span.btn-primary:nth-child(2)')`. Toda vez que o design muda, o teste quebra, mesmo com o checkout funcionando.
+
+    Como escrever um seletor mais robusto no Playwright?
+  options:
+    - text: "`page.getByRole('button', { name: 'Finalizar compra' })`, que encontra o elemento como um usuário ou um leitor de tela encontraria"
+      why: Certo. Papel e nome acessível mudam pouco com o design, e o teste ainda acusa se o botão deixar de ser acessível.
+    - text: Um XPath absoluto, do html até o botão
+      why: Um caminho absoluto quebra com qualquer mudança na estrutura, o que é ainda pior.
+    - text: Esperar 5 segundos e clicar numa coordenada fixa da tela
+      why: Coordenadas mudam com tamanho de janela e layout, e esperas fixas deixam o teste lento e instável.
+    - text: Apagar o teste, porque testes de ponta a ponta são frágeis por natureza
+      why: A fragilidade vinha do seletor. Com seletores por papel e texto, esses testes ficam estáveis.
+  answer: 0
+  explanation: |
+    Testes de ponta a ponta devem descrever o que a pessoa faz: clicar no botão "Finalizar compra", e não no segundo span dentro de uma div. Os localizadores `getByRole`, `getByLabel` e `getByText` do Playwright seguem essa ideia. Para casos sem bom texto, um `data-testid` é melhor que classes de estilo.
+
+- slug: espera-automatica
+  title: O teste que falha de vez em quando
+  difficulty: medio
+  kind: quiz
+  in: [testing/Cypress, testing/Playwright]
+  statement: |
+    Um teste clica em `Comprar` e confere a mensagem de sucesso. Na sua máquina passa, na CI falha uma vez a cada dez, porque a API às vezes demora. Alguém sugere acrescentar `cy.wait(3000)`.
+
+    Qual é a melhor correção?
+  options:
+    - text: Confiar na espera automática das asserções, como `cy.contains('Compra confirmada')` ou `expect(locator).toBeVisible()`, que tentam de novo até um limite, e controlar a API com um mock de rede
+      why: Certo. A asserção espera exatamente o tempo necessário, e interceptar a API deixa o teste determinístico.
+    - text: Esperar 3 segundos fixos antes de conferir
+      why: Fica lento quando a API é rápida e ainda falha quando ela passa de 3 segundos.
+    - text: Rodar o teste três vezes e considerar aprovado se passar uma
+      why: Retentativas escondem a instabilidade em vez de resolvê-la.
+    - text: Desativar o teste na CI
+      why: O teste passaria a proteger só a máquina de quem o roda.
+  answer: 0
+  explanation: |
+    Cypress e Playwright repetem asserções sobre a página até passarem ou estourarem o tempo limite. Esperas fixas são o principal motivo de testes instáveis. Interceptar a rede, com `cy.intercept` ou `page.route`, controla quando e o que a API responde.
+
+- slug: preferencias-salvas
+  title: Lembrar as preferências
+  difficulty: medio
+  kind: js
+  in: [web-apis/Armazenamento]
+  statement: |
+    O app guarda as preferências do visitante no armazenamento do navegador, que recebe como parâmetro algo com a interface do `localStorage`: `getItem`, `setItem` e `removeItem`.
+
+    Escreva duas funções:
+
+    - `salvarPreferencias(storage, prefs)`: grava `prefs` como JSON na chave `ruido:prefs`
+    - `carregarPreferencias(storage)`: devolve as preferências gravadas, juntas com os padrões `{ tema: 'claro', avisos: true }`. Se não houver nada, se o JSON estiver corrompido ou se o storage lançar erro, devolve só os padrões
+
+    O navegador pode bloquear o armazenamento numa janela privada. Nesse caso, `salvarPreferencias` não deve lançar erro.
+  solution: |
+    const CHAVE = 'ruido:prefs';
+    const PADRAO = { tema: 'claro', avisos: true };
+
+    function salvarPreferencias(storage, prefs) {
+      try {
+        storage.setItem(CHAVE, JSON.stringify(prefs));
+      } catch {
+        // Sem armazenamento, as preferências valem só nesta visita.
+      }
+    }
+
+    function carregarPreferencias(storage) {
+      try {
+        const salvo = storage.getItem(CHAVE);
+        return { ...PADRAO, ...(salvo ? JSON.parse(salvo) : {}) };
+      } catch {
+        return { ...PADRAO };
+      }
+    }
+  setup: |
+    function criarStorage() {
+      const dados = new Map();
+      return {
+        getItem: (k) => (dados.has(k) ? dados.get(k) : null),
+        setItem: (k, v) => dados.set(k, String(v)),
+        removeItem: (k) => dados.delete(k),
+        dados,
+      };
+    }
+  tests:
+    - name: salva e carrega
+      code: |
+        const s = criarStorage();
+        salvarPreferencias(s, { tema: 'escuro' });
+        expect(carregarPreferencias(s)).toEqual({ tema: 'escuro', avisos: true });
+        expect(s.dados.get('ruido:prefs')).toBe('{"tema":"escuro"}');
+    - name: padrões quando vazio
+      code: |
+        expect(carregarPreferencias(criarStorage())).toEqual({ tema: 'claro', avisos: true });
+    - name: JSON corrompido
+      hidden: true
+      code: |
+        const s = criarStorage();
+        s.setItem('ruido:prefs', '{"tema":');
+        expect(carregarPreferencias(s)).toEqual({ tema: 'claro', avisos: true });
+    - name: storage bloqueado
+      hidden: true
+      code: |
+        const bloqueado = { getItem() { throw new Error('SecurityError'); }, setItem() { throw new Error('QuotaExceededError'); } };
+        expect(() => salvarPreferencias(bloqueado, { tema: 'escuro' })).not.toThrow();
+        expect(carregarPreferencias(bloqueado)).toEqual({ tema: 'claro', avisos: true });
+    - name: padrões não são alterados
+      hidden: true
+      code: |
+        const s = criarStorage();
+        const a = carregarPreferencias(s);
+        a.tema = 'roxo';
+        expect(carregarPreferencias(s).tema).toBe('claro');
+  hints:
+    - O storage só guarda texto. Use `JSON.stringify` e `JSON.parse`.
+    - O spread `{ ...PADRAO, ...salvo }` completa o que faltar com os padrões.
+    - Envolva o acesso ao storage em `try/catch`.
+  explanation: |
+    `localStorage` guarda só texto e pode falhar: em janela privada, com cota cheia ou com dados de site bloqueados. Por isso a leitura tem um plano B, os padrões, e a escrita nunca derruba o app. Juntar com os padrões também cobre preferências novas que versões antigas do site não gravaram.
+  traps:
+    - reason: Quebra com storage bloqueado
+      code: |
+        function salvarPreferencias(s, p) { s.setItem('ruido:prefs', JSON.stringify(p)); }
+        function carregarPreferencias(s) { try { return { tema: 'claro', avisos: true, ...JSON.parse(s.getItem('ruido:prefs') || '{}') }; } catch { return { tema: 'claro', avisos: true }; } }
+    - reason: Devolve o objeto padrão compartilhado
+      code: |
+        const PADRAO = { tema: 'claro', avisos: true };
+        function salvarPreferencias(s, p) { try { s.setItem('ruido:prefs', JSON.stringify(p)); } catch {} }
+        function carregarPreferencias(s) { try { const v = s.getItem('ruido:prefs'); return v ? { ...PADRAO, ...JSON.parse(v) } : PADRAO; } catch { return PADRAO; } }
+
+- slug: filtros-na-url
+  title: Filtros que dá para compartilhar
+  difficulty: medio
+  kind: js
+  in: [web-apis/URL e histórico]
+  statement: |
+    Os filtros da agenda devem ir para a URL, para quem compartilha o link ver a mesma lista.
+
+    - `filtrosParaURL(base, filtros)`: recebe uma URL base e um objeto como `{ dia: 2, generos: ['thrash', 'doom'], busca: 'maré negra' }` e devolve a URL completa. Listas viram o mesmo parâmetro repetido. Valores vazios, `null` ou `undefined` e listas vazias não entram.
+    - `filtrosDaURL(url)`: faz o caminho inverso. `dia` volta como número, e `generos` volta sempre como lista.
+
+    Use as APIs `URL` e `URLSearchParams`, que cuidam da codificação.
+  must_use: [URLSearchParams]
+  solution: |
+    function filtrosParaURL(base, filtros) {
+      const url = new URL(base);
+      const params = new URLSearchParams();
+      for (const [chave, valor] of Object.entries(filtros)) {
+        if (Array.isArray(valor)) valor.forEach((v) => params.append(chave, v));
+        else if (valor !== null && valor !== undefined && valor !== '') params.set(chave, String(valor));
+      }
+      url.search = params.toString();
+      return url.toString();
+    }
+
+    function filtrosDaURL(url) {
+      const params = new URLSearchParams(new URL(url).search);
+      const filtros = { generos: params.getAll('generos') };
+      if (params.has('dia')) filtros.dia = Number(params.get('dia'));
+      if (params.has('busca')) filtros.busca = params.get('busca');
+      return filtros;
+    }
+  tests:
+    - name: monta a URL
+      code: |
+        const url = filtrosParaURL('https://ruido.test/agenda', { dia: 2, generos: ['thrash', 'doom'] });
+        expect(url).toBe('https://ruido.test/agenda?dia=2&generos=thrash&generos=doom');
+    - name: lê a URL
+      code: |
+        expect(filtrosDaURL('https://ruido.test/agenda?dia=3&generos=punk')).toEqual({ dia: 3, generos: ['punk'] });
+    - name: codifica espaços e acentos
+      hidden: true
+      code: |
+        const url = filtrosParaURL('https://ruido.test/agenda', { busca: 'maré negra & cia' });
+        expect(filtrosDaURL(url)).toEqual({ busca: 'maré negra & cia', generos: [] });
+    - name: ignora vazios
+      hidden: true
+      code: |
+        expect(filtrosParaURL('https://ruido.test/agenda', { dia: null, generos: [], busca: '' })).toBe('https://ruido.test/agenda');
+    - name: dia zero não some
+      hidden: true
+      code: |
+        expect(filtrosParaURL('https://ruido.test/a', { dia: 0 })).toBe('https://ruido.test/a?dia=0');
+  hints:
+    - "`params.append` repete a chave. `params.getAll` lê todas as repetições."
+    - Um valor `0` é válido. Compare com `null`, `undefined` e `''` em vez de usar `if (valor)`.
+  explanation: |
+    `URLSearchParams` codifica e decodifica caracteres especiais, como espaço, `&` e acentos, o que concatenação de texto faz errado. Guardar filtros na URL torna o estado compartilhável e faz o botão voltar funcionar, e `history.pushState` atualiza a barra de endereço sem recarregar a página.
+  traps:
+    - reason: Concatena sem codificar
+      code: |
+        function filtrosParaURL(base, f) {
+          const partes = [];
+          for (const [k, v] of Object.entries(f)) { if (Array.isArray(v)) v.forEach((x) => partes.push(`${k}=${x}`)); else if (v) partes.push(`${k}=${v}`); }
+          return partes.length ? `${base}?${partes.join('&')}` : base;
+        }
+        function filtrosDaURL(url) { const p = new URLSearchParams(new URL(url).search); const r = { generos: p.getAll('generos') }; if (p.has('dia')) r.dia = Number(p.get('dia')); if (p.has('busca')) r.busca = p.get('busca'); return r; }
+    - reason: Some com o zero
+      code: |
+        function filtrosParaURL(base, f) {
+          const u = new URL(base); const p = new URLSearchParams();
+          for (const [k, v] of Object.entries(f)) { if (Array.isArray(v)) v.forEach((x) => p.append(k, x)); else if (v) p.set(k, v); }
+          u.search = p.toString(); return u.toString();
+        }
+        function filtrosDaURL(url) { const p = new URLSearchParams(new URL(url).search); const r = { generos: p.getAll('generos') }; if (p.has('dia')) r.dia = Number(p.get('dia')); if (p.has('busca')) r.busca = p.get('busca'); return r; }
+
+- slug: carregar-ao-aparecer
+  title: Carregar quando aparecer
+  difficulty: medio
+  kind: quiz
+  in: [web-apis/Observadores]
+  statement: |
+    A página do line-up tem 200 cartões com vídeos de apresentação. Para não baixar tudo de uma vez, cada vídeo deve carregar só quando o cartão estiver perto de entrar na tela.
+
+    Qual abordagem é a mais adequada?
+  options:
+    - text: Um `IntersectionObserver` com `rootMargin` de algumas centenas de pixels, que avisa quando cada cartão se aproxima da área visível
+      why: Certo. O navegador calcula as interseções de forma eficiente e chama você só quando o estado muda.
+    - text: Um listener de `scroll` que chama `getBoundingClientRect` em todos os 200 cartões a cada evento
+      why: Funciona, mas força cálculos de layout muitas vezes por segundo e deixa a rolagem pesada.
+    - text: Um `setInterval` de 100ms que confere a posição de cada cartão
+      why: Gasta processamento o tempo todo, mesmo com a página parada.
+    - text: Um `MutationObserver` no body
+      why: MutationObserver avisa sobre mudanças no DOM, não sobre visibilidade na tela.
+  answer: 0
+  explanation: |
+    `IntersectionObserver` informa quando um elemento entra ou sai de uma área, que por padrão é a tela, com uma margem configurável. Ele serve para carregamento sob demanda, rolagem infinita e métricas de visualização. Para imagens, `loading="lazy"` já faz isso nativamente.
+
+- slug: busca-cancelavel
+  title: Cancelar a busca anterior
+  difficulty: dificil
+  kind: js
+  in: [web-apis/Cancelamento e tempo]
+  statement: |
+    A busca de bandas dispara um `fetch` a cada pesquisa. Uma resposta lenta de uma pesquisa antiga não pode sobrescrever a mais recente, e o download antigo deve ser cancelado.
+
+    Escreva `criarBusca()`, que devolve `async function buscar(termo)`:
+
+    - cada chamada cancela o `fetch` da chamada anterior com `AbortController`
+    - faz `fetch('/api/bandas?q=' + encodeURIComponent(termo), { signal })` e devolve o JSON
+    - uma chamada cancelada resolve com `null`, sem lançar erro
+    - outros erros continuam sendo lançados
+  solution: |
+    function criarBusca() {
+      let controle = null;
+      return async function buscar(termo) {
+        controle?.abort();
+        const atual = new AbortController();
+        controle = atual;
+        try {
+          const resposta = await fetch('/api/bandas?q=' + encodeURIComponent(termo), { signal: atual.signal });
+          return await resposta.json();
+        } catch (erro) {
+          if (erro.name === 'AbortError') return null;
+          throw erro;
+        }
+      };
+    }
+  setup: |
+    // fetch falso: responde depois de `ms` e respeita o sinal de cancelamento.
+    function fetchFalso(tempos) {
+      return fn((url, { signal } = {}) => new Promise((resolve, reject) => {
+        const q = decodeURIComponent(url.split('q=')[1]);
+        const timer = setTimeout(() => resolve({ ok: true, json: async () => [`resultado de ${q}`] }), tempos[q] ?? 10);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timer);
+          reject(new DOMException('cancelado', 'AbortError'));
+        });
+      }));
+    }
+  tests:
+    - name: devolve o resultado
+      code: |
+        globalThis.fetch = fetchFalso({});
+        const buscar = criarBusca();
+        expect(await buscar('vórtice')).toEqual(['resultado de vórtice']);
+        expect(fetch.mock.calls[0][0]).toBe('/api/bandas?q=v%C3%B3rtice');
+    - name: cancela a anterior
+      code: |
+        globalThis.fetch = fetchFalso({ ma: 80, mare: 10 });
+        const buscar = criarBusca();
+        const antiga = buscar('ma');
+        const nova = buscar('mare');
+        expect(await nova).toEqual(['resultado de mare']);
+        expect(await antiga).toBeNull();
+    - name: envia o sinal
+      hidden: true
+      code: |
+        globalThis.fetch = fetchFalso({});
+        const buscar = criarBusca();
+        await buscar('x');
+        expect(fetch.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
+    - name: outros erros continuam
+      hidden: true
+      code: |
+        globalThis.fetch = fn(async () => { throw new TypeError('Failed to fetch'); });
+        const buscar = criarBusca();
+        await expect(buscar('x')).rejects.toMatch('Failed to fetch');
+    - name: buscas independentes
+      hidden: true
+      code: |
+        globalThis.fetch = fetchFalso({ a: 30, b: 30 });
+        const uma = criarBusca();
+        const outra = criarBusca();
+        const [ra, rb] = await Promise.all([uma('a'), outra('b')]);
+        expect(ra).toEqual(['resultado de a']);
+        expect(rb).toEqual(['resultado de b']);
+  hints:
+    - Guarde o `AbortController` da última busca na closure e chame `abort()` nele antes de começar outra.
+    - Um `fetch` cancelado rejeita com um erro de `name` igual a `'AbortError'`.
+  explanation: |
+    `AbortController` cria um sinal que o `fetch` observa. Ao chamar `abort()`, o download para e a promessa rejeita com `AbortError`. Tratar esse erro como um caso esperado, e não como falha, evita mensagens de erro falsas na tela. O mesmo sinal funciona com `addEventListener` e outras APIs.
+  traps:
+    - reason: Não cancela
+      code: |
+        function criarBusca() { return async (t) => (await fetch('/api/bandas?q=' + encodeURIComponent(t), {})).json(); }
+    - reason: Controlador global compartilhado
+      code: |
+        let ctrl = null;
+        function criarBusca() {
+          return async (t) => {
+            ctrl?.abort(); ctrl = new AbortController();
+            try { return await (await fetch('/api/bandas?q=' + encodeURIComponent(t), { signal: ctrl.signal })).json(); }
+            catch (e) { if (e.name === 'AbortError') return null; throw e; }
+          };
+        }
+
+- slug: erro-de-cors
+  title: Bloqueado por CORS
+  difficulty: medio
+  kind: quiz
+  in: [web-security/CORS]
+  statement: |
+    O site em `https://ruido.com.br` chama `https://api.ruido.com.br/bandas` com `fetch`. O console mostra: "blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present".
+
+    Onde está a correção?
+  options:
+    - text: Na API, que precisa responder com `Access-Control-Allow-Origin` permitindo `https://ruido.com.br`, e tratar o preflight `OPTIONS` quando houver
+      why: Certo. CORS é o servidor dizendo ao navegador quais origens podem ler suas respostas.
+    - text: No fetch, com o modo `no-cors`
+      why: Com no-cors, o pedido sai, mas a resposta fica opaca e o JavaScript não consegue ler o conteúdo.
+    - text: Instalar uma extensão que desativa o CORS no navegador
+      why: Isso só muda o seu navegador. Os visitantes continuariam bloqueados.
+    - text: Mudar a API para HTTP sem S
+      why: O protocolo não resolve, e um site HTTPS chamando HTTP ainda seria bloqueado como conteúdo misto.
+  answer: 0
+  explanation: |
+    A política de mesma origem impede que uma página leia respostas de outra origem, definida por protocolo, domínio e porta. Um subdomínio diferente já conta como outra origem. CORS é a forma de o servidor liberar origens específicas por cabeçalhos. A proteção é do navegador, então chamadas entre servidores não passam por CORS.
+
+- slug: conteudo-misto
+  title: O cadeado sumiu
+  difficulty: facil
+  kind: quiz
+  in: [web-security/HTTPS]
+  statement: |
+    O site é servido em HTTPS, mas o navegador bloqueia o script do mapa do local, carregado de `http://mapas.exemplo.com/mapa.js`.
+
+    O que está acontecendo?
+  options:
+    - text: Conteúdo misto. Um script por HTTP numa página HTTPS poderia ser alterado no caminho, então o navegador bloqueia. O recurso precisa vir por HTTPS
+      why: Certo. HTTPS protege a página só se tudo o que ela executa também viajar cifrado.
+    - text: O certificado do site venceu
+      why: Com certificado vencido, o aviso aparece na página inteira. Aqui o bloqueio é de um recurso específico.
+    - text: Scripts de terceiros nunca são permitidos em HTTPS
+      why: São permitidos, desde que venham por HTTPS e, se houver CSP, de uma origem autorizada.
+    - text: O navegador bloqueia mapas por privacidade
+      why: O bloqueio é pelo protocolo do recurso, não pelo tipo de conteúdo.
+  answer: 0
+  explanation: |
+    HTTPS cifra e autentica a conexão, o que impede ler ou alterar os dados no caminho. Se um script vier por HTTP, quem está no meio da rede pode trocá-lo e controlar a página. Por isso navegadores bloqueiam scripts mistos e atualizam ou bloqueiam imagens mistas.
+
+- slug: csp-bloqueou
+  title: A política barrou o script
+  difficulty: medio
+  kind: quiz
+  in: [web-security/CSP]
+  statement: |
+    O site envia o cabeçalho `Content-Security-Policy: script-src 'self'`. Depois disso, um `onclick="comprar()"` escrito direto no HTML parou de funcionar, e um script injetado por XSS num comentário também foi bloqueado.
+
+    O que a política está fazendo?
+  options:
+    - text: Permitindo só scripts de arquivos da mesma origem. Scripts inline e atributos de evento são bloqueados, inclusive os legítimos, que devem virar `addEventListener` em arquivos .js
+      why: Certo. Sem `'unsafe-inline'`, a CSP não diferencia o seu inline do injetado, e é isso que corta boa parte dos XSS.
+    - text: Bloqueando todo o JavaScript do site
+      why: Scripts de arquivos da própria origem continuam permitidos com `'self'`.
+    - text: Liberando scripts de qualquer origem, desde que sejam HTTPS
+      why: "`'self'` restringe à própria origem. Outras origens precisariam ser listadas."
+    - text: Bloqueando só scripts de terceiros, e o onclick parou por outro motivo
+      why: O onclick parou justamente porque é inline.
+  answer: 0
+  explanation: |
+    A Content Security Policy diz ao navegador de onde a página pode carregar scripts, estilos e outros recursos. Uma política sem `'unsafe-inline'` torna muitos XSS inofensivos, porque o código injetado é inline. Para os inline necessários, nonces ou hashes autorizam trechos específicos.
+
+- slug: escapar-html
+  title: Escapar antes de mostrar
+  difficulty: medio
+  kind: js
+  in: [web-security/OWASP Risks]
+  statement: |
+    O mural de recados monta HTML a partir do texto enviado pelos fãs. Antes de a equipe migrar para `textContent`, escreva `escaparHTML(texto)`, que troca os caracteres especiais pelas entidades HTML:
+
+    - `&` vira `&amp;`
+    - `<` vira `&lt;`
+    - `>` vira `&gt;`
+    - `"` vira `&quot;`
+    - `'` vira `&#39;`
+  solution: |
+    function escaparHTML(texto) {
+      return String(texto)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+  tests:
+    - name: tags viram texto
+      code: |
+        expect(escaparHTML('<script>alert(1)</script>')).toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
+    - name: aspas
+      code: |
+        expect(escaparHTML(`"oi" e 'tchau'`)).toBe('&quot;oi&quot; e &#39;tchau&#39;');
+    - name: e comercial primeiro
+      hidden: true
+      code: |
+        expect(escaparHTML('Rock & <Roll>')).toBe('Rock &amp; &lt;Roll&gt;');
+        expect(escaparHTML('&lt;')).toBe('&amp;lt;');
+    - name: todas as ocorrências
+      hidden: true
+      code: |
+        expect(escaparHTML('<<>>')).toBe('&lt;&lt;&gt;&gt;');
+    - name: atributo com aspas
+      hidden: true
+      code: |
+        expect(escaparHTML('" onmouseover="alert(1)')).toBe('&quot; onmouseover=&quot;alert(1)');
+  hints:
+    - Troque o `&` primeiro. Se trocar depois, o `&` das entidades criadas também é trocado.
+    - "`replace` com texto troca só a primeira ocorrência. Use uma regex com `g`."
+  explanation: |
+    XSS, a injeção de script, está entre os riscos mais comuns da lista OWASP. Escapar transforma os caracteres especiais em entidades, e o navegador mostra o texto em vez de interpretá-lo. A ordem importa: o `&` vai primeiro. O melhor é evitar montar HTML com dados e usar `textContent`, que dispensa escapar.
+  traps:
+    - reason: Troca o & por último
+      code: |
+        function escaparHTML(t) { return String(t).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/&/g, '&amp;'); }
+    - reason: Só a primeira ocorrência
+      code: |
+        function escaparHTML(t) { return String(t).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;'); }
+
+- slug: comentario-seguro
+  title: O mural de recados
+  difficulty: facil
+  kind: dom
+  editor: js
+  in: [web-security/OWASP Risks]
+  html: |
+    <form id="mural">
+      <label for="recado">Recado</label>
+      <input id="recado" required>
+      <button>Publicar</button>
+    </form>
+    <ul id="recados"></ul>
+  statement: |
+    Ao enviar o formulário `#mural`, acrescente o recado digitado como um `li` no fim de `#recados`, sem recarregar a página, e limpe o campo.
+
+    Um fã mal-intencionado pode digitar HTML com script. O recado deve aparecer como texto, exatamente como foi digitado.
+  forbid: [innerHTML, outerHTML, insertAdjacentHTML, document.write]
+  solution: |
+    const form = document.getElementById('mural');
+    form.addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      const item = document.createElement('li');
+      item.textContent = form.elements.recado.value;
+      document.getElementById('recados').append(item);
+      form.reset();
+    });
+  tests:
+    - name: publica o recado
+      code: |
+        type('#recado', 'Que show!');
+        submit('#mural');
+        await tick();
+        expect($$('#recados li').map((li) => li.textContent)).toEqual(['Que show!']);
+    - name: HTML vira texto
+      hidden: true
+      code: |
+        type('#recado', '<img src=x onerror="window.invadido=1">');
+        submit('#mural');
+        await wait(50);
+        expect($('#recados img')).toBeNull();
+        expect(window.invadido).toBeUndefined();
+        expect(text('#recados li')).toBe('<img src=x onerror="window.invadido=1">');
+    - name: limpa e acumula
+      hidden: true
+      code: |
+        type('#recado', 'um');
+        submit('#mural');
+        await tick();
+        type('#recado', 'dois');
+        submit('#mural');
+        await tick();
+        expect($$('#recados li').map((li) => li.textContent)).toEqual(['um', 'dois']);
+        expect(el('#recado').value).toBe('');
+  hints:
+    - "`textContent` define o texto sem interpretar HTML."
+  explanation: |
+    O ataque do teste não usa a tag script: um `onerror` numa imagem basta. Por isso filtrar palavras não resolve, e a defesa é nunca interpretar dados como HTML. `textContent`, `createElement` e as APIs do DOM tratam o conteúdo como texto.
+  traps:
+    - reason: Interpreta o recado como HTML
+      code: |
+        const f = document.getElementById('mural');
+        f.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const li = document.createElement('li');
+          li.append(document.createRange().createContextualFragment(f.elements.recado.value));
+          document.getElementById('recados').append(li);
+          f.reset();
+        });

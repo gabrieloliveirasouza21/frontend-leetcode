@@ -1,0 +1,754 @@
+- slug: contador-react
+  title: Curtidas no show
+  difficulty: facil
+  kind: react
+  in: [learn-a-framework/React]
+  statement: |
+    Escreva o componente `App` com um botão que mostra `Curtir (0)` e soma 1 a cada clique: `Curtir (1)`, `Curtir (2)`, e assim por diante.
+  solution: |
+    import { useState } from 'react';
+
+    export default function App() {
+      const [curtidas, setCurtidas] = useState(0);
+      return <button onClick={() => setCurtidas(curtidas + 1)}>Curtir ({curtidas})</button>;
+    }
+  tests:
+    - name: começa em zero
+      code: |
+        expect(text('button')).toBe('Curtir (0)');
+    - name: soma a cada clique
+      code: |
+        click('button');
+        await tick();
+        expect(text('button')).toBe('Curtir (1)');
+    - name: vários cliques
+      hidden: true
+      code: |
+        for (let i = 0; i < 5; i++) { click('button'); await tick(); }
+        expect(text('button')).toBe('Curtir (5)');
+  hints:
+    - "`useState(0)` devolve o valor atual e uma função para trocá-lo."
+    - Uma variável comum é recriada a cada renderização e não faz o React redesenhar.
+  explanation: |
+    Estado é o que o componente lembra entre renderizações. Chamar a função de atualização agenda uma nova renderização com o valor novo. Uma variável comum muda, mas o React não fica sabendo e a tela não muda.
+  traps:
+    - reason: Variável comum
+      code: |
+        export default function App() { let c = 0; return <button onClick={() => { c++; }}>Curtir ({c})</button>; }
+    - reason: Começa em um
+      code: |
+        import { useState } from 'react';
+        export default function App() { const [c, setC] = useState(1); return <button onClick={() => setC(c + 1)}>Curtir ({c})</button>; }
+
+- slug: filtro-por-genero
+  title: Filtrar o line-up
+  difficulty: medio
+  kind: react
+  in: [learn-a-framework/React]
+  setup: |
+    window.BANDAS = [
+      { id: 1, nome: 'Vórtice', genero: 'thrash' },
+      { id: 2, nome: 'Maré Negra', genero: 'doom' },
+      { id: 3, nome: 'Asfalto', genero: 'thrash' },
+      { id: 4, nome: 'Ferrugem', genero: 'punk' },
+    ];
+  statement: |
+    A constante global `BANDAS` tem a lista de bandas, com `id`, `nome` e `genero`. Escreva `App` com:
+
+    - um `select` com o rótulo `Gênero` e as opções `todos`, `thrash`, `doom` e `punk`, começando em `todos`
+    - uma `ul` com um `li` por banda do gênero escolhido, mostrando o nome
+    - cada `li` com uma `key` estável, o `id` da banda
+  solution: |
+    import { useState } from 'react';
+
+    export default function App() {
+      const [genero, setGenero] = useState('todos');
+      const visiveis = genero === 'todos' ? BANDAS : BANDAS.filter((b) => b.genero === genero);
+      return (
+        <>
+          <label>
+            Gênero
+            <select value={genero} onChange={(e) => setGenero(e.target.value)}>
+              <option value="todos">todos</option>
+              <option value="thrash">thrash</option>
+              <option value="doom">doom</option>
+              <option value="punk">punk</option>
+            </select>
+          </label>
+          <ul>
+            {visiveis.map((banda) => <li key={banda.id}>{banda.nome}</li>)}
+          </ul>
+        </>
+      );
+    }
+  tests:
+    - name: mostra todas no início
+      code: |
+        expect($$('li').map((li) => li.textContent)).toEqual(['Vórtice', 'Maré Negra', 'Asfalto', 'Ferrugem']);
+    - name: filtra por gênero
+      code: |
+        type('select', 'thrash');
+        await tick();
+        expect($$('li').map((li) => li.textContent)).toEqual(['Vórtice', 'Asfalto']);
+    - name: volta para todos
+      hidden: true
+      code: |
+        type('select', 'doom');
+        await tick();
+        type('select', 'todos');
+        await tick();
+        expect($$('li')).toHaveLength(4);
+    - name: select com rótulo
+      hidden: true
+      code: |
+        expect(el('select').labels[0].textContent).toContain('Gênero');
+    - name: mesmo elemento ao filtrar
+      hidden: true
+      code: |
+        const asfalto = $$('li')[2];
+        type('select', 'thrash');
+        await tick();
+        expect($$('li')[1]).toBe(asfalto);
+  hints:
+    - Guarde só o gênero escolhido no estado. A lista visível é calculada a partir dele a cada renderização.
+    - A `key` identifica o item entre renderizações. Use o `id`, não a posição na lista.
+  explanation: |
+    O estado mínimo aqui é o gênero. A lista filtrada é derivada e não precisa de estado próprio, o que evita duas fontes de verdade fora de sincronia. Com `key` estável, o React reaproveita o mesmo elemento do DOM quando a lista muda. Com o índice como key, o terceiro item viraria outro elemento ao filtrar.
+  traps:
+    - reason: Índice como key
+      code: |
+        import { useState } from 'react';
+        export default function App() {
+          const [g, setG] = useState('todos');
+          const v = g === 'todos' ? BANDAS : BANDAS.filter((b) => b.genero === g);
+          return (<><label>Gênero<select value={g} onChange={(e) => setG(e.target.value)}><option value="todos">todos</option><option value="thrash">thrash</option><option value="doom">doom</option><option value="punk">punk</option></select></label>
+            <ul>{v.map((b, i) => <li key={i}>{b.nome}</li>)}</ul></>);
+        }
+    - reason: Select sem rótulo
+      code: |
+        import { useState } from 'react';
+        export default function App() {
+          const [g, setG] = useState('todos');
+          const v = g === 'todos' ? BANDAS : BANDAS.filter((b) => b.genero === g);
+          return (<><select value={g} onChange={(e) => setG(e.target.value)}><option value="todos">todos</option><option value="thrash">thrash</option><option value="doom">doom</option><option value="punk">punk</option></select>
+            <ul>{v.map((b) => <li key={b.id}>{b.nome}</li>)}</ul></>);
+        }
+
+- slug: formulario-controlado
+  title: Botão só com e-mail válido
+  difficulty: medio
+  kind: react
+  in: [learn-a-framework/React]
+  statement: |
+    Escreva `App` com um formulário de lista de espera:
+
+    - um campo com o rótulo `E-mail`
+    - um botão `Entrar na lista`, desabilitado enquanto o texto não tiver `@` e um ponto depois dele
+    - ao enviar, a página não recarrega, o formulário some e aparece um parágrafo com `Você está na lista, <email>!`
+  solution: |
+    import { useState } from 'react';
+
+    export default function App() {
+      const [email, setEmail] = useState('');
+      const [enviado, setEnviado] = useState(false);
+      const valido = /@.+\./.test(email);
+
+      if (enviado) return <p>Você está na lista, {email}!</p>;
+
+      return (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setEnviado(true);
+          }}
+        >
+          <label htmlFor="email">E-mail</label>
+          <input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <button type="submit" disabled={!valido}>Entrar na lista</button>
+        </form>
+      );
+    }
+  tests:
+    - name: botão começa desabilitado
+      code: |
+        expect(el('button').disabled).toBe(true);
+    - name: habilita com e-mail válido
+      code: |
+        type('input', 'fa@exemplo.com');
+        await tick();
+        expect(el('button').disabled).toBe(false);
+    - name: confirma ao enviar
+      hidden: true
+      code: |
+        type('input', 'fa@exemplo.com');
+        await tick();
+        click('button');
+        await wait(100);
+        expect(text('p')).toBe('Você está na lista, fa@exemplo.com!');
+        expect($('form')).toBeNull();
+    - name: e-mail sem ponto depois do @
+      hidden: true
+      code: |
+        type('input', 'fa@exemplo');
+        await tick();
+        expect(el('button').disabled).toBe(true);
+    - name: campo com rótulo
+      hidden: true
+      code: |
+        expect(el('input').labels[0].textContent).toBe('E-mail');
+  hints:
+    - Num input controlado, `value` vem do estado e `onChange` atualiza o estado.
+    - "`disabled` pode ser calculado a partir do estado a cada renderização."
+  explanation: |
+    No input controlado, o estado do React é a fonte de verdade do valor. Isso permite derivar a validade e habilitar o botão sem consultar o DOM. `preventDefault` no `onSubmit` evita que o navegador recarregue a página.
+  traps:
+    - reason: Sem preventDefault
+      code: |
+        import { useState } from 'react';
+        export default function App() {
+          const [email, setEmail] = useState('');
+          const [ok, setOk] = useState(false);
+          if (ok) return <p>Você está na lista, {email}!</p>;
+          return (<form onSubmit={() => setOk(true)}><label htmlFor="e">E-mail</label><input id="e" value={email} onChange={(e) => setEmail(e.target.value)} /><button disabled={!/@.+\./.test(email)}>Entrar na lista</button></form>);
+        }
+    - reason: Só confere o @
+      code: |
+        import { useState } from 'react';
+        export default function App() {
+          const [email, setEmail] = useState('');
+          const [ok, setOk] = useState(false);
+          if (ok) return <p>Você está na lista, {email}!</p>;
+          return (<form onSubmit={(e) => { e.preventDefault(); setOk(true); }}><label htmlFor="e">E-mail</label><input id="e" value={email} onChange={(e) => setEmail(e.target.value)} /><button disabled={!email.includes('@')}>Entrar na lista</button></form>);
+        }
+
+- slug: favoritos-compartilhados
+  title: O contador de favoritos
+  difficulty: medio
+  kind: react
+  in: [learn-a-framework/React]
+  starter: |
+    import { useState } from 'react';
+
+    const BANDAS = ['Vórtice', 'Maré Negra', 'Asfalto'];
+
+    function Banda({ nome }) {
+      const [favorita, setFavorita] = useState(false);
+      return (
+        <li>
+          {nome}
+          <button aria-pressed={favorita} onClick={() => setFavorita(!favorita)}>
+            {favorita ? 'Desfavoritar' : 'Favoritar'}
+          </button>
+        </li>
+      );
+    }
+
+    export default function App() {
+      return (
+        <>
+          <p id="total">0 favoritas</p>
+          <ul>
+            {BANDAS.map((nome) => <Banda key={nome} nome={nome} />)}
+          </ul>
+        </>
+      );
+    }
+  statement: |
+    Cada banda já pode ser favoritada, mas o total em `#total` fica sempre em `0 favoritas`, porque cada `Banda` guarda o próprio estado e o `App` não sabe de nada.
+
+    Faça o total refletir as favoritas: `1 favoritas`, `2 favoritas`, e assim por diante. Mantenha o componente `Banda` separado, recebendo por props o que precisa.
+  solution: |
+    import { useState } from 'react';
+
+    const BANDAS = ['Vórtice', 'Maré Negra', 'Asfalto'];
+
+    function Banda({ nome, favorita, onAlternar }) {
+      return (
+        <li>
+          {nome}
+          <button aria-pressed={favorita} onClick={onAlternar}>
+            {favorita ? 'Desfavoritar' : 'Favoritar'}
+          </button>
+        </li>
+      );
+    }
+
+    export default function App() {
+      const [favoritas, setFavoritas] = useState(new Set());
+
+      const alternar = (nome) => {
+        setFavoritas((atual) => {
+          const proximo = new Set(atual);
+          if (proximo.has(nome)) proximo.delete(nome);
+          else proximo.add(nome);
+          return proximo;
+        });
+      };
+
+      return (
+        <>
+          <p id="total">{favoritas.size} favoritas</p>
+          <ul>
+            {BANDAS.map((nome) => (
+              <Banda key={nome} nome={nome} favorita={favoritas.has(nome)} onAlternar={() => alternar(nome)} />
+            ))}
+          </ul>
+        </>
+      );
+    }
+  tests:
+    - name: conta as favoritas
+      code: |
+        const botoes = $$('button');
+        click(botoes[0]);
+        await tick();
+        click(botoes[2]);
+        await tick();
+        expect(text('#total')).toBe('2 favoritas');
+    - name: desfavoritar diminui
+      hidden: true
+      code: |
+        click($$('button')[1]);
+        await tick();
+        click($$('button')[1]);
+        await tick();
+        expect(text('#total')).toBe('0 favoritas');
+        expect($$('button')[1].getAttribute('aria-pressed')).toBe('false');
+    - name: botão mostra o estado
+      hidden: true
+      code: |
+        click($$('button')[0]);
+        await tick();
+        expect($$('button')[0].textContent).toBe('Desfavoritar');
+        expect($$('button')[0].getAttribute('aria-pressed')).toBe('true');
+  hints:
+    - Quando dois componentes precisam do mesmo dado, o estado sobe para o ancestral comum.
+    - O filho recebe o valor e uma função para pedir a mudança, por props.
+  explanation: |
+    Elevar o estado é mover o estado para o menor ancestral comum de quem precisa dele. O `App` guarda as favoritas, deriva o total e repassa a cada `Banda` o valor e o callback. Ao atualizar um `Set` no estado, crie um novo: mudar o mesmo objeto não avisa o React.
+  traps:
+    - reason: Muta o mesmo Set
+      code: |
+        import { useState } from 'react';
+        const BANDAS = ['Vórtice', 'Maré Negra', 'Asfalto'];
+        function Banda({ nome, favorita, onAlternar }) { return <li>{nome}<button aria-pressed={favorita} onClick={onAlternar}>{favorita ? 'Desfavoritar' : 'Favoritar'}</button></li>; }
+        export default function App() {
+          const [fav, setFav] = useState(new Set());
+          const alternar = (n) => { fav.has(n) ? fav.delete(n) : fav.add(n); setFav(fav); };
+          return (<><p id="total">{fav.size} favoritas</p><ul>{BANDAS.map((n) => <Banda key={n} nome={n} favorita={fav.has(n)} onAlternar={() => alternar(n)} />)}</ul></>);
+        }
+
+- slug: carregar-com-efeito
+  title: Line-up vindo da API
+  difficulty: dificil
+  kind: react
+  in: [learn-a-framework/React]
+  setup: |
+    window.fetch = (url) => new Promise((resolve) => {
+      const dia = new URL(url, 'https://festival.test').searchParams.get('dia');
+      const bandas = { 1: ['Vórtice', 'Asfalto'], 2: ['Maré Negra'] }[dia];
+      // O dia 1 demora mais, para expor respostas que chegam fora de ordem.
+      setTimeout(() => resolve({ ok: true, json: async () => ({ bandas }) }), dia === '1' ? 120 : 20);
+    });
+  statement: |
+    Escreva `App` com dois botões, `Dia 1` e `Dia 2`, e uma lista com as bandas do dia escolhido, que começa no dia 1.
+
+    As bandas vêm de `fetch('/api/lineup?dia=<n>')`, que responde `{ "bandas": [...] }`. Enquanto carrega, mostre um parágrafo `Carregando…`.
+
+    Se a pessoa trocar de dia antes da resposta chegar, a resposta antiga não pode sobrescrever a nova.
+  solution: |
+    import { useEffect, useState } from 'react';
+
+    export default function App() {
+      const [dia, setDia] = useState(1);
+      const [bandas, setBandas] = useState(null);
+
+      useEffect(() => {
+        let ativo = true;
+        setBandas(null);
+        fetch(`/api/lineup?dia=${dia}`)
+          .then((resposta) => resposta.json())
+          .then((dados) => {
+            if (ativo) setBandas(dados.bandas);
+          });
+        return () => {
+          ativo = false;
+        };
+      }, [dia]);
+
+      return (
+        <>
+          <button onClick={() => setDia(1)}>Dia 1</button>
+          <button onClick={() => setDia(2)}>Dia 2</button>
+          {bandas === null ? <p>Carregando…</p> : <ul>{bandas.map((b) => <li key={b}>{b}</li>)}</ul>}
+        </>
+      );
+    }
+  tests:
+    - name: carrega o dia 1
+      code: |
+        expect(text('p')).toBe('Carregando…');
+        await wait(200);
+        expect($$('li').map((li) => li.textContent)).toEqual(['Vórtice', 'Asfalto']);
+    - name: troca de dia
+      code: |
+        await wait(200);
+        click($$('button')[1]);
+        await wait(80);
+        expect($$('li').map((li) => li.textContent)).toEqual(['Maré Negra']);
+    - name: resposta antiga não sobrescreve
+      hidden: true
+      code: |
+        click($$('button')[1]);
+        await wait(250);
+        expect($$('li').map((li) => li.textContent)).toEqual(['Maré Negra']);
+    - name: mostra carregando ao trocar
+      hidden: true
+      code: |
+        await wait(200);
+        click($$('button')[1]);
+        await wait(5);
+        expect($$('li')).toHaveLength(0);
+        expect(text('p')).toBe('Carregando…');
+  hints:
+    - "`useEffect` com `[dia]` roda de novo sempre que o dia muda."
+    - A função devolvida pelo efeito roda antes do próximo efeito. Use-a para marcar a resposta anterior como descartada.
+  explanation: |
+    Efeitos sincronizam o componente com algo externo, como a rede. Sem limpeza, uma resposta lenta do dia 1 pode chegar depois da do dia 2 e sobrescrevê-la. A função de limpeza marca o pedido anterior como descartado. Um `AbortController` faria o mesmo e ainda cancelaria o download.
+  traps:
+    - reason: Sem limpeza no efeito
+      code: |
+        import { useEffect, useState } from 'react';
+        export default function App() {
+          const [dia, setDia] = useState(1);
+          const [b, setB] = useState(null);
+          useEffect(() => { setB(null); fetch(`/api/lineup?dia=${dia}`).then((r) => r.json()).then((d) => setB(d.bandas)); }, [dia]);
+          return (<><button onClick={() => setDia(1)}>Dia 1</button><button onClick={() => setDia(2)}>Dia 2</button>{b === null ? <p>Carregando…</p> : <ul>{b.map((x) => <li key={x}>{x}</li>)}</ul>}</>);
+        }
+    - reason: Efeito sem dependências
+      code: |
+        import { useEffect, useState } from 'react';
+        export default function App() {
+          const [dia, setDia] = useState(1);
+          const [b, setB] = useState(null);
+          useEffect(() => { let ok = true; fetch(`/api/lineup?dia=${dia}`).then((r) => r.json()).then((d) => ok && setB(d.bandas)); return () => { ok = false; }; }, []);
+          return (<><button onClick={() => setDia(1)}>Dia 1</button><button onClick={() => setDia(2)}>Dia 2</button>{b === null ? <p>Carregando…</p> : <ul>{b.map((x) => <li key={x}>{x}</li>)}</ul>}</>);
+        }
+
+- slug: carrinho-com-reducer
+  title: O carrinho em React
+  difficulty: dificil
+  kind: react
+  in: [learn-a-framework/React]
+  statement: |
+    Escreva `App` com o carrinho de ingressos usando `useReducer`:
+
+    - dois botões, `Adicionar pista` (R$ 300) e `Adicionar camarote` (R$ 900)
+    - para cada setor no carrinho, um `li` com o nome do setor, a quantidade no formato `pista × 2` e um botão `Remover` que tira uma unidade
+    - um parágrafo com `id="total"` e o texto `Total: R$ <valor>`, como `Total: R$ 1500`
+    - um setor com quantidade zero sai da lista
+  must_use: [useReducer]
+  solution: |
+    import { useReducer } from 'react';
+
+    const PRECOS = { pista: 300, camarote: 900 };
+
+    function reducer(itens, acao) {
+      const atual = itens[acao.setor] ?? 0;
+      if (acao.tipo === 'adicionar') return { ...itens, [acao.setor]: atual + 1 };
+      if (acao.tipo === 'remover') {
+        const { [acao.setor]: _, ...resto } = itens;
+        return atual > 1 ? { ...itens, [acao.setor]: atual - 1 } : resto;
+      }
+      return itens;
+    }
+
+    export default function App() {
+      const [itens, dispatch] = useReducer(reducer, {});
+      const total = Object.entries(itens).reduce((soma, [setor, q]) => soma + PRECOS[setor] * q, 0);
+      return (
+        <>
+          <button onClick={() => dispatch({ tipo: 'adicionar', setor: 'pista' })}>Adicionar pista</button>
+          <button onClick={() => dispatch({ tipo: 'adicionar', setor: 'camarote' })}>Adicionar camarote</button>
+          <ul>
+            {Object.entries(itens).map(([setor, q]) => (
+              <li key={setor}>
+                <span>{setor} × {q}</span>
+                <button onClick={() => dispatch({ tipo: 'remover', setor })}>Remover</button>
+              </li>
+            ))}
+          </ul>
+          <p id="total">Total: R$ {total}</p>
+        </>
+      );
+    }
+  tests:
+    - name: adiciona e soma
+      code: |
+        click($$('button')[0]);
+        await tick();
+        click($$('button')[0]);
+        await tick();
+        click($$('button')[1]);
+        await tick();
+        expect(text('#total')).toBe('Total: R$ 1500');
+        expect(text('li:first-child span')).toBe('pista × 2');
+    - name: remove uma unidade
+      hidden: true
+      code: |
+        click($$('button')[0]);
+        await tick();
+        click($$('button')[0]);
+        await tick();
+        click(el('li button'));
+        await tick();
+        expect(text('li span')).toBe('pista × 1');
+        expect(text('#total')).toBe('Total: R$ 300');
+    - name: setor zerado sai da lista
+      hidden: true
+      code: |
+        click($$('button')[1]);
+        await tick();
+        click(el('li button'));
+        await tick();
+        expect($$('li')).toHaveLength(0);
+        expect(text('#total')).toBe('Total: R$ 0');
+    - name: carrinho vazio no início
+      hidden: true
+      code: |
+        expect($$('li')).toHaveLength(0);
+        expect(text('#total')).toBe('Total: R$ 0');
+  hints:
+    - O reducer recebe o estado atual e uma ação, e devolve o novo estado sem alterar o antigo.
+    - O total não precisa de estado próprio. Ele é calculado a partir dos itens.
+  explanation: |
+    `useReducer` concentra as regras de mudança num lugar e deixa o componente só disparar ações. Como o reducer é uma função pura, dá para testá-lo sem renderizar nada. O total é derivado dos itens, então não fica fora de sincronia.
+  traps:
+    - reason: Remover deixa linha com zero
+      code: |
+        import { useReducer } from 'react';
+        const P = { pista: 300, camarote: 900 };
+        function r(s, a) { const q = s[a.setor] ?? 0; return { ...s, [a.setor]: a.tipo === 'adicionar' ? q + 1 : Math.max(0, q - 1) }; }
+        export default function App() {
+          const [s, d] = useReducer(r, {});
+          const t = Object.entries(s).reduce((x, [k, q]) => x + P[k] * q, 0);
+          return (<><button onClick={() => d({ tipo: 'adicionar', setor: 'pista' })}>Adicionar pista</button><button onClick={() => d({ tipo: 'adicionar', setor: 'camarote' })}>Adicionar camarote</button>
+            <ul>{Object.entries(s).map(([k, q]) => <li key={k}><span>{k} × {q}</span><button onClick={() => d({ tipo: 'remover', setor: k })}>Remover</button></li>)}</ul><p id="total">Total: R$ {t}</p></>);
+        }
+
+- slug: reatividade-no-vue
+  title: O contador do Vue
+  difficulty: medio
+  kind: quiz
+  in: [learn-a-framework/Vue.js]
+  statement: |
+    Num componente Vue com `<script setup>`:
+
+    ```
+    const curtidas = ref(0)
+    function curtir() { curtidas++ }
+    ```
+
+    O botão chama `curtir`, mas o número na tela não muda e o console mostra um erro. O que está errado?
+  options:
+    - text: "`ref` devolve um objeto. No script, o valor fica em `curtidas.value`, então o certo é `curtidas.value++`"
+      why: Certo. O Vue rastreia leituras e escritas em `.value`. No template, o `.value` é aplicado automaticamente.
+    - text: Falta chamar `this.$forceUpdate()` depois de mudar o número
+      why: Com ref, a tela atualiza sozinha quando o `.value` muda. Forçar atualização indica que a reatividade não está sendo usada.
+    - text: Variáveis reativas precisam ser declaradas com let, não com const
+      why: O const prende a referência ao objeto do ref, e o valor dentro dele continua mutável. O problema é o `++` direto na constante.
+    - text: O Vue só reage a mudanças feitas dentro do template
+      why: Mudanças no script também são reativas, desde que passem pelo `.value` do ref.
+  answer: 0
+  explanation: |
+    No Vue 3, `ref` embrulha um valor num objeto reativo. Ler e escrever `.value` é o que permite ao Vue saber quem depende do valor e o que redesenhar. Nos templates, refs são desembrulhados automaticamente.
+
+- slug: servicos-no-angular
+  title: Os dados em vários componentes
+  difficulty: medio
+  kind: quiz
+  in: [learn-a-framework/Angular]
+  statement: |
+    No app em Angular, o carrinho aparece no cabeçalho, na página de checkout e num painel lateral. Hoje cada componente busca e guarda os itens por conta própria, e eles ficam diferentes entre si.
+
+    Qual é a solução no jeito Angular?
+  options:
+    - text: 'Criar um serviço `@Injectable({ providedIn: ''root'' })` que guarda o carrinho, e injetá-lo nos três componentes'
+      why: Certo. Com providedIn root, a injeção de dependência entrega a mesma instância a todos, que passam a ler a mesma fonte.
+    - text: Copiar o código do carrinho para cada componente com cuidado
+      why: Isso mantém três fontes de verdade, que é a causa do problema.
+    - text: Guardar o carrinho numa variável global em window
+      why: Funciona, mas escapa da injeção de dependência e dificulta testes, que não conseguem trocar o carrinho por uma versão falsa.
+    - text: Juntar os três componentes num só
+      why: Isso mistura responsabilidades e não resolve o compartilhamento entre telas diferentes.
+  answer: 0
+  explanation: |
+    Angular usa injeção de dependência: componentes declaram do que precisam, e o framework entrega a instância. Um serviço registrado na raiz é compartilhado pelo app todo, e nos testes ele pode ser substituído por um falso.
+
+- slug: svelte-compilado
+  title: Onde está o framework
+  difficulty: medio
+  kind: quiz
+  in: [learn-a-framework/Svelte]
+  statement: |
+    Uma pessoa do time diz que o Svelte "manda pouco framework para o navegador".
+
+    O que explica isso?
+  options:
+    - text: O Svelte é principalmente um compilador. Os componentes viram, no build, JavaScript que atualiza o DOM diretamente, sem um DOM virtual para comparar árvores
+      why: Certo. Boa parte do trabalho que outros frameworks fazem em tempo de execução acontece no build.
+    - text: O Svelte baixa o framework de um CDN só quando o usuário clica em algo
+      why: Não há download sob demanda do framework. A diferença está no que o compilador gera.
+    - text: O Svelte não permite estado nos componentes
+      why: Componentes Svelte têm estado reativo. Na versão 5, ele é declarado com runes como `$state`.
+    - text: O Svelte só funciona com HTML estático, sem JavaScript
+      why: Svelte gera JavaScript interativo. O SvelteKit, por cima dele, ainda faz renderização no servidor.
+  answer: 0
+  explanation: |
+    React e Vue mantêm uma representação da interface em memória e calculam diferenças em tempo de execução. O Svelte analisa os componentes no build e gera código que mexe direto nos nós do DOM afetados por cada mudança de estado.
+
+- slug: sinais-no-solid
+  title: O componente que roda uma vez
+  difficulty: dificil
+  kind: quiz
+  in: [learn-a-framework/Solid JS]
+  statement: |
+    Vindo do React, você escreve no Solid:
+
+    ```
+    function Contador() {
+      const [n, setN] = createSignal(0)
+      console.log('renderizou')
+      return <button onClick={() => setN(n() + 1)}>{n()}</button>
+    }
+    ```
+
+    Você clica cinco vezes. Quantas vezes aparece `renderizou` no console?
+  options:
+    - text: Uma vez. No Solid, a função do componente roda só na criação, e o sinal atualiza só o texto do botão
+      why: Certo. O Solid tem reatividade fina. O JSX cria ligações entre o sinal e o nó exato do DOM.
+    - text: Seis vezes, uma na criação e uma por clique, como no React
+      why: No React, o componente inteiro roda de novo a cada mudança de estado. No Solid, não.
+    - text: Nenhuma, porque o console é desativado dentro de componentes
+      why: O console funciona normalmente. A questão é quantas vezes a função do componente executa.
+    - text: Cinco vezes, uma por clique
+      why: Os cliques mudam o sinal, mas o efeito disso é atualizar o texto, não reexecutar o componente.
+  answer: 0
+  explanation: |
+    Sinais são valores que avisam quem os lê. No Solid, ler `n()` dentro do JSX cria uma assinatura ligada àquele trecho do DOM. Por isso a função do componente é só a configuração inicial, e desestruturar props ou ler sinais fora do JSX perde a reatividade.
+
+- slug: botao-tailwind
+  title: O botão em Tailwind
+  difficulty: facil
+  kind: dom
+  editor: html
+  tailwind: true
+  in: [css-frameworks/Tailwind]
+  statement: |
+    O Tailwind CSS está carregado na página. Escreva um `button` com o texto `Comprar ingresso`, estilizado só com classes utilitárias:
+
+    - padding de 16px nas laterais e 8px em cima e embaixo
+    - cantos arredondados de 8px
+    - texto em negrito (peso 700) e branco
+    - fundo preto
+
+    Não escreva CSS nem o atributo `style`.
+  forbid: ['style=', '<style']
+  solution: |
+    <button class="px-4 py-2 rounded-lg font-bold text-white bg-black">Comprar ingresso</button>
+  tests:
+    - name: espaçamento
+      code: |
+        await wait(60);
+        expect(css('button', 'padding-left')).toBe('16px');
+        expect(css('button', 'padding-top')).toBe('8px');
+    - name: aparência
+      code: |
+        await wait(60);
+        expect(css('button', 'font-weight')).toBe('700');
+        expect(css('button', 'color')).toBe('rgb(255, 255, 255)');
+        expect(css('button', 'background-color')).toBe('rgb(0, 0, 0)');
+    - name: cantos arredondados
+      hidden: true
+      code: |
+        await wait(60);
+        expect(css('button', 'border-top-left-radius')).toBe('8px');
+        expect(text('button')).toBe('Comprar ingresso');
+  hints:
+    - Na escala padrão do Tailwind, cada unidade vale 4px. `px-4` dá 16px nas laterais.
+    - "`rounded-lg` arredonda 8px. Cores fixas como `bg-black` e `text-white` existem prontas."
+  explanation: |
+    Tailwind troca regras CSS escritas à mão por classes de propósito único, aplicadas direto no HTML. O espaçamento segue uma escala, com `1` igual a 4px, o que mantém medidas consistentes. Em projetos com build, o Tailwind gera só o CSS das classes usadas.
+  traps:
+    - reason: Espaçamento invertido
+      code: |
+        <button class="px-2 py-4 rounded-lg font-bold text-white bg-black">Comprar ingresso</button>
+    - reason: Estilo inline
+      code: |
+        <button class="rounded-lg font-bold text-white bg-black" style="padding: 8px 16px">Comprar ingresso</button>
+
+- slug: grade-responsiva-tailwind
+  title: Grade responsiva em Tailwind
+  difficulty: medio
+  kind: dom
+  editor: html
+  tailwind: true
+  in: [css-frameworks/Tailwind]
+  statement: |
+    Com classes do Tailwind, monte uma `div` com 6 cartões `article`, numerados de 1 a 6, em grade:
+
+    - 1 coluna no celular
+    - 3 colunas a partir do breakpoint `md`, que no Tailwind é 768px
+    - 16px de espaço entre os cartões
+  forbid: ['style=', '<style']
+  solution: |
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <article>1</article>
+      <article>2</article>
+      <article>3</article>
+      <article>4</article>
+      <article>5</article>
+      <article>6</article>
+    </div>
+  tests:
+    - name: uma coluna no celular
+      width: 400
+      code: |
+        await wait(60);
+        const a = $$('article').map(rect);
+        expect(a).toHaveLength(6);
+        expect(a[1].left).toBe(a[0].left);
+    - name: três colunas na tela larga
+      width: 1000
+      code: |
+        await wait(60);
+        const a = $$('article').map(rect);
+        expect(a[2].top).toBe(a[0].top);
+        expect(a[3].top).toBeGreaterThan(a[0].top);
+    - name: espaço entre cartões
+      hidden: true
+      width: 1000
+      code: |
+        await wait(60);
+        const a = $$('article').map(rect);
+        expect(Math.round(a[1].left - a[0].right)).toBe(16);
+        expect(Math.round(a[3].top - a[0].bottom)).toBe(16);
+    - name: abaixo do breakpoint
+      hidden: true
+      width: 760
+      code: |
+        await wait(60);
+        const a = $$('article').map(rect);
+        expect(a[1].left).toBe(a[0].left);
+  hints:
+    - No Tailwind, um prefixo como `md:` aplica a classe a partir daquele breakpoint.
+    - As classes sem prefixo valem para todas as larguras, a começar pelo celular.
+  explanation: |
+    Os breakpoints do Tailwind usam `min-width`, então o estilo base atende o celular e os prefixos acrescentam mudanças em telas maiores. `md:grid-cols-3` equivale a uma media query a partir de 768px.
+  traps:
+    - reason: Breakpoint pequeno demais
+      code: |
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><article>1</article><article>2</article><article>3</article><article>4</article><article>5</article><article>6</article></div>
+    - reason: Três colunas sempre
+      code: |
+        <div class="grid grid-cols-3 gap-4"><article>1</article><article>2</article><article>3</article><article>4</article><article>5</article><article>6</article></div>

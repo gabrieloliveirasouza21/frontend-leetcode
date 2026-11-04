@@ -1,0 +1,285 @@
+- slug: desfazer-commit-publicado
+  title: O commit que quebrou a produção
+  difficulty: medio
+  kind: quiz
+  in: [version-control/Git]
+  statement: |
+    Você fez push de um commit na `main` que quebrou a página de ingressos. Outras três pessoas já baixaram a `main` e fizeram commits por cima.
+
+    Qual é o jeito seguro de desfazer a mudança?
+  options:
+    - text: "`git revert <commit>`, que cria um novo commit desfazendo o anterior, e depois push"
+      why: Certo. O histórico publicado continua o mesmo, e quem já baixou a main recebe o novo commit normalmente.
+    - text: "`git reset --hard HEAD~1` seguido de `git push --force`"
+      why: Isso reescreve o histórico publicado. Quem já tinha o commit fica com um histórico divergente e pode trazê-lo de volta sem perceber.
+    - text: Apagar o repositório remoto e criar de novo a partir da sua máquina
+      why: Isso perde o trabalho que os outros publicaram, as issues, as revisões e as configurações do repositório.
+    - text: "`git checkout <commit>~1` e continuar trabalhando a partir dali"
+      why: Isso só muda o que está no seu diretório, sem alterar nenhum branch. A main continua quebrada.
+  answer: 0
+  explanation: |
+    Num histórico compartilhado, prefira adicionar commits a reescrever os que existem. `git revert` aplica o inverso de um commit como um commit novo. `reset` e `push --force` só são seguros em branches que só você usa.
+
+- slug: branch-de-feature
+  title: Duas tarefas ao mesmo tempo
+  difficulty: facil
+  kind: quiz
+  in: [version-control/Git]
+  statement: |
+    Você está no meio do novo filtro do line-up quando chega um bug urgente na página de ingressos. O filtro ainda não funciona.
+
+    Qual fluxo mantém as duas coisas separadas?
+  options:
+    - text: Guardar o filtro num commit ou com `git stash`, criar um branch para o bug a partir da main e, depois do merge, voltar ao branch do filtro
+      why: Certo. Cada mudança vive no seu branch e pode ser revisada, testada e publicada sem a outra.
+    - text: Corrigir o bug no mesmo branch do filtro e publicar os dois juntos
+      why: O filtro incompleto iria para produção junto com a correção, ou a correção teria de esperar o filtro ficar pronto.
+    - text: Copiar a pasta do projeto e corrigir o bug na cópia
+      why: Isso cria duas cópias sem ligação no Git. Juntar as mudanças depois vira um trabalho manual e sujeito a erro.
+    - text: Apagar o filtro, corrigir o bug e reescrever o filtro depois
+      why: Perder trabalho não é necessário. O Git existe justamente para guardar estados intermediários.
+  answer: 0
+  explanation: |
+    Branches são baratos no Git. Um por tarefa permite trocar de contexto sem misturar mudanças, e cada branch vira um pull request revisável. `git stash` guarda alterações ainda não commitadas para recuperar depois.
+
+- slug: conflito-de-merge
+  title: Conflito no line-up
+  difficulty: medio
+  kind: quiz
+  in: [version-control/Git]
+  statement: |
+    Ao fazer merge, o Git para com conflito em `lineup.json`:
+
+    ```
+    <<<<<<< HEAD
+    "headliner": "Vórtice",
+    =======
+    "headliner": "Maré Negra",
+    >>>>>>> feature/novo-headliner
+    ```
+
+    O que isso significa e o que fazer?
+  options:
+    - text: Os dois branches mudaram a mesma linha de forma diferente. Decida o conteúdo certo, apague os marcadores, rode os testes e faça o commit do merge
+      why: Certo. O Git não sabe qual versão é a correta, e quem resolve é você, normalmente conversando com quem fez a outra mudança.
+    - text: O arquivo está corrompido e precisa ser restaurado de um backup
+      why: Os marcadores são texto que o Git escreveu de propósito para mostrar as duas versões.
+    - text: O Git escolheu a versão de HEAD, e basta fazer o commit
+      why: Ele não escolheu nada. Se você fizer o commit com os marcadores, o JSON fica inválido.
+    - text: É preciso cancelar o merge e copiar o arquivo do outro branch por cima
+      why: Isso descarta a mudança do seu branch sem avaliar qual valor é o certo.
+  answer: 0
+  explanation: |
+    Conflito acontece quando os dois lados alteram o mesmo trecho. Entre `<<<<<<<` e `=======` está a sua versão, e entre `=======` e `>>>>>>>` está a que chega. Resolver é editar o arquivo até o estado final desejado, sem marcadores, e então fazer `git add` e o commit.
+
+- slug: pull-request-revisao
+  title: O pull request
+  difficulty: facil
+  kind: quiz
+  in: [vcs-hosting/GitHub, vcs-hosting/GitLab]
+  statement: |
+    O time quer que nenhuma mudança chegue à `main` sem que outra pessoa leia o código e sem que os testes passem.
+
+    Como configurar isso no GitHub ou no GitLab?
+  options:
+    - text: Proteger o branch main, exigindo pull request ou merge request com aprovação e com os testes da CI passando
+      why: Certo. A plataforma passa a bloquear push direto na main e só libera o merge quando as regras são cumpridas.
+    - text: Pedir no README que ninguém faça push direto na main
+      why: Uma regra escrita não impede ninguém de errar. A proteção de branch impõe a regra.
+    - text: Dar acesso de escrita só ao líder técnico e pedir que todos mandem os arquivos por e-mail
+      why: Isso cria um gargalo e perde o histórico de discussão e revisão que um pull request guarda.
+    - text: Rodar os testes na máquina de cada pessoa antes do push
+      why: Ajuda, mas depende de cada um lembrar. A CI roda os testes do mesmo jeito para todo mundo.
+  answer: 0
+  explanation: |
+    Pull request, no GitHub, e merge request, no GitLab, são a mesma ideia: propor a junção de um branch, discutir linha a linha e mostrar o resultado da CI. A proteção de branch transforma isso em regra.
+
+- slug: pipeline-no-merge-request
+  title: Testes em cada mudança
+  difficulty: medio
+  kind: quiz
+  in: [vcs-hosting/GitLab, vcs-hosting/GitHub]
+  statement: |
+    O projeto do site tem `npm test`. O time quer que os testes rodem sozinhos a cada push num merge request do GitLab, e que o resultado apareça na própria página do merge request.
+
+    O que resolve?
+  options:
+    - text: Um arquivo `.gitlab-ci.yml` com um job que instala as dependências e roda `npm test`
+      why: Certo. O GitLab CI lê esse arquivo do repositório e roda os jobs nos runners a cada push. No GitHub, o equivalente fica em `.github/workflows`.
+    - text: Um hook `pre-commit` local
+      why: Hooks locais rodam só na máquina de quem os instalou, e o resultado não aparece no merge request.
+    - text: Um script `postinstall` no package.json
+      why: postinstall roda depois de instalar dependências, em qualquer máquina. Ele não reage a pushes nem reporta ao merge request.
+    - text: Uma issue lembrando de rodar os testes
+      why: Issues organizam o trabalho, mas não executam nada.
+  answer: 0
+  explanation: |
+    Integração contínua roda as mesmas verificações em um ambiente limpo a cada mudança. No GitLab, o pipeline é descrito em `.gitlab-ci.yml`. No GitHub Actions, em arquivos YAML dentro de `.github/workflows`. Em ambos, o resultado aparece na revisão.
+
+- slug: faixa-de-versao
+  title: O que o circunflexo aceita
+  difficulty: medio
+  kind: quiz
+  in: [package-managers/npm]
+  statement: |
+    O `package.json` do site tem `"vite": "^5.4.2"`. Uma pessoa nova no time roda `npm install` num projeto sem lockfile.
+
+    Quais versões o npm pode instalar?
+  options:
+    - text: Qualquer 5.x a partir de 5.4.2, como 5.4.9 ou 5.9.0, mas nunca 6.0.0
+      why: Certo. O circunflexo aceita mudanças que, pelo versionamento semântico, não quebram compatibilidade, sem mudar o primeiro número diferente de zero.
+    - text: Só 5.4.2, exatamente
+      why: A versão exata seria escrita sem prefixo, como `"5.4.2"`.
+    - text: Qualquer 5.4.x, mas não 5.5.0
+      why: Esse é o comportamento do til, `~5.4.2`.
+    - text: A mais recente publicada, inclusive 6.0.0
+      why: Isso seria `"*"` ou `"latest"`. O circunflexo nunca troca a versão principal.
+  answer: 0
+  explanation: |
+    No versionamento semântico, `MAIOR.MENOR.CORREÇÃO`: a maior quebra compatibilidade, a menor adiciona recursos e a correção só corrige. `^5.4.2` significa `>=5.4.2 <6.0.0`, e `~5.4.2` significa `>=5.4.2 <5.5.0`. O lockfile é o que garante a mesma versão para todo mundo.
+
+- slug: satisfaz-versao
+  title: Implemente o circunflexo
+  difficulty: dificil
+  kind: js
+  in: [package-managers/npm]
+  statement: |
+    Escreva `satisfaz(versao, faixa)`, que diz se uma versão `MAIOR.MENOR.CORREÇÃO` atende a uma faixa. Aceite três formatos de faixa:
+
+    - exata: `1.2.3` aceita só `1.2.3`
+    - til: `~1.2.3` aceita `>=1.2.3` e `<1.3.0`
+    - circunflexo: `^1.2.3` aceita `>=1.2.3` e menor que a próxima versão do primeiro número diferente de zero. `^1.2.3` vai até `<2.0.0`, `^0.2.3` até `<0.3.0`, e `^0.0.3` até `<0.0.4`
+
+    Compare os números como números: `1.10.0` é maior que `1.9.0`.
+  solution: |
+    function satisfaz(versao, faixa) {
+      const partes = (v) => v.split('.').map(Number);
+      const comparar = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+      const v = partes(versao);
+      const operador = faixa[0] === '^' || faixa[0] === '~' ? faixa[0] : '';
+      const base = partes(operador ? faixa.slice(1) : faixa);
+      if (!operador) return comparar(v, base) === 0;
+      let limite;
+      if (operador === '~') limite = [base[0], base[1] + 1, 0];
+      else if (base[0] > 0) limite = [base[0] + 1, 0, 0];
+      else if (base[1] > 0) limite = [0, base[1] + 1, 0];
+      else limite = [0, 0, base[2] + 1];
+      return comparar(v, base) >= 0 && comparar(v, limite) < 0;
+    }
+  tests:
+    - name: exata
+      code: |
+        expect(satisfaz('1.2.3', '1.2.3')).toBe(true);
+        expect(satisfaz('1.2.4', '1.2.3')).toBe(false);
+    - name: circunflexo
+      code: |
+        expect(satisfaz('1.9.0', '^1.2.3')).toBe(true);
+        expect(satisfaz('2.0.0', '^1.2.3')).toBe(false);
+        expect(satisfaz('1.2.2', '^1.2.3')).toBe(false);
+    - name: til
+      code: |
+        expect(satisfaz('1.2.9', '~1.2.3')).toBe(true);
+        expect(satisfaz('1.3.0', '~1.2.3')).toBe(false);
+    - name: números com dois dígitos
+      hidden: true
+      code: |
+        expect(satisfaz('1.10.0', '^1.9.0')).toBe(true);
+        expect(satisfaz('1.9.0', '^1.10.0')).toBe(false);
+    - name: circunflexo abaixo de 1.0.0
+      hidden: true
+      code: |
+        expect(satisfaz('0.2.9', '^0.2.3')).toBe(true);
+        expect(satisfaz('0.3.0', '^0.2.3')).toBe(false);
+        expect(satisfaz('0.0.3', '^0.0.3')).toBe(true);
+        expect(satisfaz('0.0.4', '^0.0.3')).toBe(false);
+  hints:
+    - Transforme as versões em listas de três números e compare posição por posição.
+    - Para o circunflexo, calcule o limite superior a partir do primeiro número diferente de zero.
+  explanation: |
+    Comparar versões como texto falha em `1.10.0` contra `1.9.0`. Converter para números e comparar em ordem resolve. Abaixo de 1.0.0, o versionamento semântico trata a versão menor como possível quebra, e por isso o circunflexo fica mais restrito.
+  traps:
+    - reason: Compara como texto
+      code: |
+        function satisfaz(v, f) {
+          if (f[0] === '^') return v >= f.slice(1) && v.split('.')[0] === f.slice(1).split('.')[0];
+          if (f[0] === '~') { const b = f.slice(1).split('.'); const x = v.split('.'); return v >= f.slice(1) && x[0] === b[0] && x[1] === b[1]; }
+          return v === f;
+        }
+    - reason: Circunflexo sempre até a próxima versão maior
+      code: |
+        function satisfaz(versao, faixa) {
+          const p = (v) => v.split('.').map(Number);
+          const c = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+          const v = p(versao);
+          const op = '^~'.includes(faixa[0]) ? faixa[0] : '';
+          const b = p(op ? faixa.slice(1) : faixa);
+          if (!op) return c(v, b) === 0;
+          const lim = op === '~' ? [b[0], b[1] + 1, 0] : [b[0] + 1, 0, 0];
+          return c(v, b) >= 0 && c(v, lim) < 0;
+        }
+
+- slug: lockfile-no-repositorio
+  title: Funciona na minha máquina
+  difficulty: facil
+  kind: quiz
+  in: [package-managers/npm, package-managers/yarn]
+  statement: |
+    O build passa no seu computador e quebra na CI. Vocês descobrem que a CI instalou uma versão mais nova de uma dependência indireta. O `package-lock.json` está no `.gitignore`.
+
+    O que corrige o problema?
+  options:
+    - text: Versionar o lockfile e usar `npm ci` na CI, que instala exatamente o que está nele
+      why: Certo. O lockfile registra a versão de cada pacote da árvore, e `npm ci` falha se ele não bater com o package.json, em vez de atualizar em silêncio.
+    - text: Apagar node_modules antes de cada build
+      why: Sem lockfile, uma instalação limpa resolve as faixas de novo e pode pegar outra versão.
+    - text: Trocar todos os `^` do package.json por versões exatas
+      why: Isso fixa só as dependências diretas. As dependências delas continuam com faixas.
+    - text: Rodar `npm install` duas vezes
+      why: Repetir a instalação não muda a forma como as faixas são resolvidas.
+  answer: 0
+  explanation: |
+    O package.json diz quais faixas são aceitas, e o lockfile diz o que foi instalado de fato, incluindo as dependências indiretas. Cada gerenciador tem o seu: `package-lock.json` no npm, `yarn.lock` no Yarn, `pnpm-lock.yaml` no pnpm e `bun.lock` no Bun. Versione o lockfile e use a instalação congelada na CI.
+
+- slug: dependencia-de-desenvolvimento
+  title: Onde instalar o Vitest
+  difficulty: facil
+  kind: quiz
+  in: [package-managers/npm]
+  statement: |
+    Você vai adicionar o Vitest para os testes do site. Ele só é usado durante o desenvolvimento e na CI, nunca no código que vai para o navegador.
+
+    Qual comando faz mais sentido?
+  options:
+    - text: "`npm install -D vitest`, que salva em devDependencies"
+      why: Certo. devDependencies indica ferramentas de desenvolvimento, e ambientes de produção podem pular essas dependências.
+    - text: "`npm install -g vitest`, instalação global"
+      why: Uma instalação global não fica registrada no projeto, e cada pessoa pode ter uma versão diferente.
+    - text: "`npm install vitest`, em dependencies"
+      why: Funciona, mas comunica que o pacote é necessário para rodar a aplicação.
+    - text: Copiar o código do Vitest para dentro do projeto
+      why: Você perderia atualizações de segurança e passaria a manter um código que não é seu.
+  answer: 0
+  explanation: |
+    `dependencies` são pacotes que a aplicação precisa para rodar. `devDependencies` são ferramentas de build, teste e lint. Num site com bundler, o que vai para o navegador é decidido pelos imports, mas a separação continua documentando a intenção.
+
+- slug: gerenciador-certo
+  title: O que muda entre gerenciadores
+  difficulty: medio
+  kind: quiz
+  in: [package-managers/pnpm, package-managers/Bun, package-managers/yarn]
+  statement: |
+    O time avalia trocar o npm. Uma pessoa defende o pnpm, outra defende o Bun.
+
+    Qual afirmação é correta?
+  options:
+    - text: O pnpm guarda cada versão de pacote uma vez num repositório global e cria links no node_modules. O Bun é também um runtime de JavaScript, com bundler e executor de testes
+      why: Certo. O pnpm economiza disco e evita que o código use pacotes que não declarou. O Bun junta runtime, gerenciador de pacotes e outras ferramentas num só executável.
+    - text: Eles leem o mesmo lockfile, então dá para alternar entre eles sem cuidado
+      why: Cada um tem o próprio lockfile. Misturar gerenciadores no mesmo projeto gera árvores de dependências diferentes.
+    - text: Só o npm acessa o registro público de pacotes
+      why: pnpm, Yarn e Bun instalam do mesmo registro do npm por padrão.
+    - text: O Yarn e o pnpm exigem reescrever o package.json num formato próprio
+      why: Todos usam o mesmo package.json. O que muda é o lockfile e o jeito de montar o node_modules.
+  answer: 0
+  explanation: |
+    npm, Yarn, pnpm e Bun leem o mesmo `package.json` e instalam do mesmo registro. As diferenças estão no lockfile, na velocidade, no uso de disco, no suporte a monorepos e no rigor com dependências não declaradas. Escolha um por projeto e registre a escolha no campo `packageManager`.

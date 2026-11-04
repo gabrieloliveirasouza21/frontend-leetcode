@@ -1,0 +1,490 @@
+- slug: agente-no-repositorio
+  title: O agente mexeu em vinte arquivos
+  difficulty: facil
+  kind: quiz
+  in: [ai-assisted-coding/Claude Code, ai-assisted-coding/Antigravity]
+  statement: |
+    Você pediu a um agente de código, como o Claude Code ou o Antigravity, para adicionar um filtro de data à agenda. Ele terminou, disse que está tudo pronto e alterou vinte arquivos.
+
+    Qual é o próximo passo responsável?
+  options:
+    - text: Ler o diff, rodar os testes e o app, e pedir ajustes antes de fazer commit
+      why: Certo. O código continua sendo sua responsabilidade. O agente acelera a escrita, e a verificação continua com você.
+    - text: Fazer commit e push direto, porque o agente disse que terminou
+      why: O relato do agente não é prova. Ele pode ter entendido errado o pedido ou quebrado algo fora do que testou.
+    - text: Descartar tudo, porque agentes não acertam mudanças grandes
+      why: Rejeitar sem olhar desperdiça o trabalho. Revisar diz o que aproveitar.
+    - text: Pedir para o agente revisar o próprio código e aceitar se ele aprovar
+      why: Uma segunda passada pode achar problemas, mas não substitui rodar os testes e entender a mudança.
+  answer: 0
+  explanation: |
+    Agentes de código leem o repositório, editam arquivos e rodam comandos sozinhos. Isso torna a revisão mais importante: confira o diff, rode testes e o app, e prefira pedidos pequenos e bem definidos. Um arquivo de instruções do projeto, como o CLAUDE.md, ajuda o agente a seguir as convenções do time.
+
+- slug: sugestao-no-editor
+  title: A sugestão que parece certa
+  difficulty: facil
+  kind: quiz
+  in: [ai-assisted-coding/Copilot, ai-assisted-coding/Cursor]
+  statement: |
+    O assistente do editor sugere, com um Tab, uma função `formatarData` inteira. Ela parece certa e usa uma API de datas que você não conhece.
+
+    O que fazer?
+  options:
+    - text: Aceitar só depois de entender a função e de testá-la com casos como fuso horário e datas inválidas
+      why: Certo. Sugestões são geradas a partir de padrões prováveis, e uma API que você não conhece pode nem existir naquela versão.
+    - text: Aceitar, porque o assistente foi treinado com muito código
+      why: Treino amplo não garante que a sugestão sirva ao seu caso ou à sua versão da biblioteca.
+    - text: Desligar o assistente, porque sugestões erradas são perigosas
+      why: O risco existe, mas a resposta é revisar, não abrir mão da ferramenta.
+    - text: Aceitar e esperar o code review pegar algum problema
+      why: Quem escreve é o primeiro revisor. Empurrar a checagem para o colega aumenta o custo do erro.
+  answer: 0
+  explanation: |
+    Assistentes de autocompletar, como Copilot e Cursor, sugerem código a partir do contexto do arquivo e do projeto. Eles são ótimos para código repetitivo, mas podem errar com confiança. Trate cada sugestão como código de um colega novo: leia, entenda e teste.
+
+- slug: proximo-token
+  title: Como o modelo responde
+  difficulty: medio
+  kind: quiz
+  in: [ai-basics/How LLMs work]
+  statement: |
+    Você cola no chat um arquivo enorme, de vários megabytes, e pergunta sobre uma função no fim dele. A resposta ignora essa função.
+
+    Qual explicação faz mais sentido?
+  options:
+    - text: O modelo processa texto em tokens até um limite, a janela de contexto. O que passa do limite não é visto, e contexto demais também dilui a atenção
+      why: Certo. Mande só o trecho relevante, ou use uma ferramenta que leia os arquivos sob demanda.
+    - text: O modelo procura a resposta na internet e não achou a função
+      why: O modelo gera texto a partir do que está no contexto e do que aprendeu no treino. Ele não consulta a internet, a não ser que tenha uma ferramenta para isso.
+    - text: Modelos só entendem código em inglês
+      why: Modelos atuais lidam bem com vários idiomas. O problema aqui é o tamanho do texto.
+    - text: O modelo guarda o arquivo para sempre e vai responder melhor na próxima conversa
+      why: Por padrão, cada conversa começa do zero. O modelo não aprende com o que você cola.
+  answer: 0
+  explanation: |
+    Um LLM recebe texto quebrado em tokens e gera a resposta prevendo um token de cada vez, com base no contexto. A janela de contexto limita quanto texto cabe numa chamada. Dar o contexto certo, e não todo o contexto, é boa parte de usar bem o modelo.
+
+- slug: deterministico-ou-nao
+  title: Quando não usar IA
+  difficulty: medio
+  kind: quiz
+  in: [ai-basics/AI vs Traditional Coding]
+  statement: |
+    O checkout calcula o total com taxas e descontos. Alguém sugere mandar o carrinho para um LLM e usar o número que ele devolver.
+
+    Qual é a melhor avaliação?
+  options:
+    - text: Cálculo de preço tem regra exata e precisa dar sempre o mesmo resultado. Código comum, com testes, é a ferramenta certa
+      why: Certo. A saída de um modelo é probabilística e pode variar ou errar a conta. Use IA onde a tarefa é aberta, como resumir avaliações.
+    - text: É uma boa ideia, porque o modelo entende regras de negócio melhor que código
+      why: O modelo pode explicar regras, mas executar uma conta exata repetidas vezes é o que código faz sem falhar.
+    - text: É uma boa ideia se a temperatura for zero, porque aí o resultado é garantido
+      why: Temperatura baixa reduz a variação, mas não garante que a conta esteja certa.
+    - text: Tanto faz, porque os dois erram na mesma proporção
+      why: Código testado erra de forma reproduzível e corrigível. Um modelo pode errar de formas diferentes a cada chamada.
+  answer: 0
+  explanation: |
+    Código tradicional é determinístico: mesma entrada, mesma saída, e dá para provar com testes. Modelos de linguagem brilham em tarefas com linguagem e ambiguidade, como classificar, resumir e extrair. Combine os dois: o modelo interpreta, e o código valida e calcula.
+
+- slug: onde-a-ia-ajuda
+  title: Funcionalidade com IA no site
+  difficulty: facil
+  kind: quiz
+  in: [ai-basics/Applications]
+  statement: |
+    O festival quer uma funcionalidade com IA no site. Qual destas aproveita melhor um modelo de linguagem?
+  options:
+    - text: Responder perguntas sobre horários e regras do evento a partir do regulamento e da programação oficiais
+      why: Certo. É uma tarefa de linguagem com fonte confiável no contexto, e a resposta pode citar o trecho usado.
+    - text: Decidir quem recebe reembolso, sem revisão humana
+      why: Decisões que afetam dinheiro e direitos precisam de regras claras e revisão. O modelo pode ajudar a triar, não decidir sozinho.
+    - text: Gerar o número do ingresso de forma única e segura
+      why: Identificadores únicos e seguros vêm de geradores criptográficos, não de texto gerado.
+    - text: Substituir o banco de dados de vendas
+      why: Modelos não guardam dados de forma confiável. Vendas precisam de um banco transacional.
+  answer: 0
+  explanation: |
+    Boas aplicações de LLM no produto são tarefas de linguagem: busca em perguntas abertas, resumo, classificação, extração de dados de texto e rascunhos. Funcionam melhor quando o modelo recebe a fonte certa no contexto e quando um erro é barato de detectar.
+
+- slug: revisao-com-ia
+  title: Revisão de código com IA
+  difficulty: medio
+  kind: quiz
+  in: [ai-basics/Code Reviews]
+  statement: |
+    O time quer usar IA nas revisões de pull request. Qual uso é mais útil e seguro?
+  options:
+    - text: Um primeiro passe automático que aponta possíveis bugs e casos de borda, com a aprovação final de uma pessoa
+      why: Certo. A IA amplia a cobertura da revisão, e a pessoa decide o que procede e se a mudança faz sentido para o produto.
+    - text: Aprovar automaticamente todo PR que a IA não comentar
+      why: A ausência de comentários não prova ausência de problemas, ainda mais em requisitos que o modelo não conhece.
+    - text: Pedir à IA para reescrever cada PR do jeito dela
+      why: Isso troca revisão por reescrita, e o autor perde o aprendizado e a responsabilidade pela mudança.
+    - text: Usar a IA só para elogiar o código e motivar o time
+      why: Revisão existe para achar problemas. Elogio automático não melhora o código.
+  answer: 0
+  explanation: |
+    Modelos são bons em notar padrões suspeitos, como null não tratado, condição invertida ou recurso não liberado. Eles não sabem tudo sobre o produto. Use a IA para sugerir e deixe a pessoa revisora filtrar e aprovar.
+
+- slug: refatorar-com-seguranca
+  title: Refatorar com rede de proteção
+  difficulty: medio
+  kind: quiz
+  in: [ai-basics/Refactoring]
+  statement: |
+    O módulo de carrinho tem 800 linhas confusas e nenhum teste. Você quer pedir a uma IA para refatorá-lo.
+
+    Qual é a ordem mais segura?
+  options:
+    - text: Primeiro escrever testes que fixem o comportamento atual, depois refatorar em passos pequenos e rodar os testes a cada passo
+      why: Certo. Os testes provam que o comportamento não mudou, independentemente de quem escreveu a refatoração.
+    - text: Pedir a refatoração inteira de uma vez e testar manualmente no final
+      why: Uma mudança grande sem testes esconde regressões, e fica difícil saber qual parte causou um erro.
+    - text: Refatorar e só depois escrever os testes, já no código novo
+      why: Testes escritos depois testam o código novo como ele ficou, incluindo possíveis bugs introduzidos.
+    - text: Não refatorar código sem testes, nunca
+      why: Dá para refatorar com segurança. O caminho é criar os testes primeiro.
+  answer: 0
+  explanation: |
+    Refatorar é mudar a estrutura sem mudar o comportamento, e só testes provam que o comportamento ficou igual. Testes de caracterização registram o que o código faz hoje, e passos pequenos facilitam achar o que deu errado. A IA pode ajudar nas duas etapas.
+
+- slug: documentacao-gerada
+  title: O README gerado
+  difficulty: facil
+  kind: quiz
+  in: [ai-basics/Docs Generation]
+  statement: |
+    Você pediu para uma IA gerar o README do projeto. Ficou bem escrito e cita o comando `npm run deploy`, mas esse script não existe no package.json.
+
+    O que isso ensina?
+  options:
+    - text: Documentação gerada precisa ser conferida contra o código, porque o modelo pode inventar detalhes plausíveis
+      why: Certo. Modelos completam com o que é comum em outros projetos. Teste cada comando e confirme cada afirmação.
+    - text: Basta criar o script deploy para combinar com o README
+      why: Isso inverte a ordem. A documentação descreve o projeto, não o contrário.
+    - text: IA nunca deve escrever documentação
+      why: Ela acelera bastante o rascunho. O cuidado é revisar antes de publicar.
+    - text: O erro foi do package.json, que estava desatualizado
+      why: O package.json é a fonte de verdade dos scripts. O README é que estava errado.
+  answer: 0
+  explanation: |
+    Um modelo gera texto provável, e para um README é provável existir um script de deploy. Esse tipo de erro, chamado alucinação, parece verdade. Dê ao modelo os arquivos reais como contexto e confira comandos, caminhos e números antes de publicar.
+
+- slug: prompt-especifico
+  title: O pedido vago
+  difficulty: facil
+  kind: quiz
+  in: [prompting-techniques]
+  statement: |
+    O pedido "melhore este componente" voltou com mudanças em tudo: nomes, estilo e até a biblioteca de datas.
+
+    Qual prompt teria dado um resultado mais útil?
+  options:
+    - text: Explicar o objetivo, o problema concreto, o que não pode mudar e como verificar, por exemplo pedir só a correção do bug de fuso horário, sem trocar dependências, com um teste do caso
+      why: Certo. Objetivo, restrições e critério de aceite tiram a ambiguidade, e o modelo não precisa adivinhar o que melhorar quer dizer.
+    - text: '"Melhore MUITO este componente, por favor"'
+      why: Ênfase não substitui informação. O pedido continua sem dizer o que é melhor.
+    - text: Repetir o mesmo pedido até sair algo bom
+      why: Sem mudar o pedido, cada tentativa tem a mesma ambiguidade.
+    - text: Mandar o projeto inteiro sem nenhuma instrução
+      why: Contexto sem instrução deixa o modelo escolher sozinho o que fazer.
+  answer: 0
+  explanation: |
+    Um bom prompt parece um bom ticket: contexto, objetivo, restrições, formato esperado e como saber que deu certo. Quanto mais específico o resultado desejado, menos o modelo preenche lacunas com suposições.
+
+- slug: exemplos-no-prompt
+  title: Mostrar em vez de descrever
+  difficulty: medio
+  kind: quiz
+  in: [prompting-techniques]
+  statement: |
+    Você quer que um modelo transforme descrições soltas de shows em JSON com `banda`, `dia` e `horario`. As descrições variam muito, e o formato da saída vem errado de vez em quando.
+
+    O que mais ajuda?
+  options:
+    - text: Incluir no prompt alguns exemplos de entrada e da saída esperada, cobrindo casos diferentes, e validar o JSON no código
+      why: Certo. Exemplos mostram o formato sem ambiguidade, e a validação no código pega o que ainda escapar.
+    - text: Pedir para o modelo ter cuidado com o formato
+      why: Instruções genéricas ajudam pouco. Exemplos e validação são concretos.
+    - text: Aceitar o que vier e corrigir o JSON com expressões regulares
+      why: Consertar saída mal formada é frágil. Melhor guiar o formato e rejeitar o que não validar.
+    - text: Mandar uma descrição por vez, sem instrução nenhuma
+      why: Menos contexto não melhora o formato. O modelo continua sem saber o que você quer.
+  answer: 0
+  explanation: |
+    Exemplos no prompt, o few-shot, são uma das formas mais fortes de mostrar o formato e o estilo esperados. Em produção, combine com saída estruturada, quando a API oferecer, e com validação de esquema no seu código.
+
+- slug: laco-do-agente
+  title: O que faz um agente
+  difficulty: medio
+  kind: quiz
+  in: [agents]
+  statement: |
+    Qual descrição melhor define um agente construído sobre um LLM?
+  options:
+    - text: Um laço em que o modelo decide qual ferramenta usar, o programa executa, devolve o resultado ao modelo, e isso se repete até a tarefa terminar
+      why: Certo. O modelo planeja e escolhe as ações, e o código executa as ferramentas e mantém os limites.
+    - text: Um modelo maior, treinado para nunca errar
+      why: Agente é uma forma de usar o modelo, não um modelo diferente, e agentes também erram.
+    - text: Um chatbot com uma resposta só, sem ferramentas
+      why: Sem ferramentas e sem laço, é uma chamada simples ao modelo.
+    - text: Um script fixo que chama a API sempre na mesma ordem
+      why: Isso é um fluxo fixo. No agente, o próprio modelo decide o próximo passo.
+  answer: 0
+  explanation: |
+    Um agente combina um modelo, ferramentas, como buscar arquivos, chamar APIs ou rodar testes, e um laço que alimenta o modelo com o resultado de cada ação. Bons agentes têm limites: número máximo de passos, ferramentas com permissões restritas e pontos de confirmação para ações irreversíveis.
+
+- slug: laco-de-ferramentas
+  title: Escreva o laço do agente
+  difficulty: dificil
+  kind: js
+  in: [agents]
+  statement: |
+    Escreva `async function rodarAgente(modelo, ferramentas, pergunta, maxPassos = 5)`.
+
+    - `modelo(mensagens)` devolve uma promessa com `{ tipo: 'resposta', texto }` ou `{ tipo: 'ferramenta', nome, entrada }`.
+    - `ferramentas` é um objeto em que cada chave é o nome de uma função async que recebe `entrada`.
+    - Comece com `[{ papel: 'usuario', conteudo: pergunta }]`. Quando o modelo pedir uma ferramenta, acrescente `{ papel: 'modelo', conteudo: <o pedido> }`, execute a ferramenta e acrescente `{ papel: 'ferramenta', conteudo: <resultado> }`. Chame o modelo de novo.
+    - Quando vier uma resposta, devolva o `texto`.
+    - Ferramenta desconhecida não executa nada: o resultado é `{ erro: 'ferramenta desconhecida' }`, e o laço continua.
+    - Se passar de `maxPassos` chamadas ao modelo sem resposta final, lance um `Error`.
+  solution: |
+    async function rodarAgente(modelo, ferramentas, pergunta, maxPassos = 5) {
+      const mensagens = [{ papel: 'usuario', conteudo: pergunta }];
+      for (let passo = 0; passo < maxPassos; passo++) {
+        const saida = await modelo(mensagens);
+        if (saida.tipo === 'resposta') return saida.texto;
+        mensagens.push({ papel: 'modelo', conteudo: saida });
+        const ferramenta = Object.hasOwn(ferramentas, saida.nome) ? ferramentas[saida.nome] : null;
+        const resultado = ferramenta ? await ferramenta(saida.entrada) : { erro: 'ferramenta desconhecida' };
+        mensagens.push({ papel: 'ferramenta', conteudo: resultado });
+      }
+      throw new Error('O agente passou do limite de passos');
+    }
+  tests:
+    - name: resposta direta
+      code: |
+        const modelo = async () => ({ tipo: 'resposta', texto: 'Oi' });
+        expect(await rodarAgente(modelo, {}, 'Olá?')).toBe('Oi');
+    - name: usa uma ferramenta e responde
+      code: |
+        const horario = fn(async ({ banda }) => (banda === 'Vórtice' ? '22h' : '?'));
+        const modelo = async (msgs) => {
+          const ultima = msgs[msgs.length - 1];
+          if (ultima.papel === 'usuario') return { tipo: 'ferramenta', nome: 'horario', entrada: { banda: 'Vórtice' } };
+          return { tipo: 'resposta', texto: `Toca às ${ultima.conteudo}` };
+        };
+        expect(await rodarAgente(modelo, { horario }, 'Que horas toca o Vórtice?')).toBe('Toca às 22h');
+        expect(horario).toHaveBeenCalledWith({ banda: 'Vórtice' });
+    - name: histórico completo para o modelo
+      hidden: true
+      code: |
+        const vistos = [];
+        const modelo = async (msgs) => {
+          vistos.push(msgs.map((m) => m.papel));
+          return msgs.length < 3 ? { tipo: 'ferramenta', nome: 'x', entrada: 1 } : { tipo: 'resposta', texto: 'ok' };
+        };
+        await rodarAgente(modelo, { x: async () => 2 }, 'p');
+        expect(vistos[1]).toEqual(['usuario', 'modelo', 'ferramenta']);
+    - name: ferramenta desconhecida
+      hidden: true
+      code: |
+        const modelo = async (msgs) => {
+          const ultima = msgs[msgs.length - 1];
+          if (ultima.papel === 'usuario') return { tipo: 'ferramenta', nome: 'apagarTudo', entrada: {} };
+          return { tipo: 'resposta', texto: JSON.stringify(ultima.conteudo) };
+        };
+        expect(await rodarAgente(modelo, {}, 'p')).toBe('{"erro":"ferramenta desconhecida"}');
+    - name: limite de passos
+      hidden: true
+      code: |
+        const modelo = fn(async () => ({ tipo: 'ferramenta', nome: 'x', entrada: 0 }));
+        await expect(rodarAgente(modelo, { x: async () => 0 }, 'p', 3)).rejects.toBeDefined();
+        expect(modelo).toHaveBeenCalledTimes(3);
+    - name: nome herdado não é ferramenta
+      hidden: true
+      code: |
+        const modelo = async (msgs) => msgs.length === 1 ? { tipo: 'ferramenta', nome: 'toString', entrada: 0 } : { tipo: 'resposta', texto: JSON.stringify(msgs[2].conteudo) };
+        expect(await rodarAgente(modelo, {}, 'p')).toBe('{"erro":"ferramenta desconhecida"}');
+  hints:
+    - Um `for` com o limite de passos evita um laço infinito se o modelo nunca responder.
+    - "`ferramentas[nome]` também encontra métodos herdados, como `toString`. Confira com `Object.hasOwn`."
+  explanation: |
+    O laço do agente é simples: perguntar ao modelo, executar a ação pedida, devolver o resultado e repetir. O que o torna seguro são os limites no código. Ele roda só ferramentas da lista, para depois de um número fixo de passos e devolve erros ao modelo em vez de quebrar.
+  traps:
+    - reason: Sem limite de passos
+      code: |
+        async function rodarAgente(modelo, ferramentas, pergunta) {
+          const m = [{ papel: 'usuario', conteudo: pergunta }];
+          for (let i = 0; i < 1000; i++) {
+            const s = await modelo(m);
+            if (s.tipo === 'resposta') return s.texto;
+            m.push({ papel: 'modelo', conteudo: s });
+            const f = Object.hasOwn(ferramentas, s.nome) ? ferramentas[s.nome] : null;
+            m.push({ papel: 'ferramenta', conteudo: f ? await f(s.entrada) : { erro: 'ferramenta desconhecida' } });
+          }
+        }
+    - reason: Executa nomes herdados
+      code: |
+        async function rodarAgente(modelo, ferramentas, pergunta, maxPassos = 5) {
+          const m = [{ papel: 'usuario', conteudo: pergunta }];
+          for (let i = 0; i < maxPassos; i++) {
+            const s = await modelo(m);
+            if (s.tipo === 'resposta') return s.texto;
+            m.push({ papel: 'modelo', conteudo: s });
+            const f = ferramentas[s.nome];
+            m.push({ papel: 'ferramenta', conteudo: f ? await f(s.entrada) : { erro: 'ferramenta desconhecida' } });
+          }
+          throw new Error('limite');
+        }
+
+- slug: o-que-e-mcp
+  title: Ligar o assistente ao Figma e ao banco
+  difficulty: medio
+  kind: quiz
+  in: [mcp]
+  statement: |
+    O time usa um assistente de IA e quer que ele leia os designs do Figma, os tickets e o banco de testes, sem escrever uma integração diferente para cada assistente.
+
+    Para que serve o Model Context Protocol, o MCP?
+  options:
+    - text: É um protocolo aberto em que um servidor expõe ferramentas e dados, e qualquer cliente compatível, como um assistente ou IDE, pode usá-los
+      why: Certo. O mesmo servidor MCP do Figma funciona em vários assistentes, como uma porta padrão.
+    - text: É um modelo de IA especializado em contexto
+      why: MCP não é um modelo. É um padrão de comunicação entre aplicações de IA e fontes externas.
+    - text: É um formato de arquivo para salvar conversas
+      why: Conversas não são o foco. O protocolo descreve como descobrir e chamar ferramentas e recursos.
+    - text: É uma forma de treinar o modelo com os dados da empresa
+      why: MCP não treina nada. Ele dá acesso aos dados no momento do uso, com as permissões que você configurar.
+  answer: 0
+  explanation: |
+    No MCP, clientes, como assistentes e IDEs, conectam-se a servidores que oferecem ferramentas, recursos e prompts. Cada fonte de dados é integrada uma vez, como servidor, e passa a servir qualquer cliente. Como servidores podem agir em seu nome, instale só os confiáveis e revise as permissões.
+
+- slug: skill-sob-demanda
+  title: Instruções que não cabem no prompt
+  difficulty: medio
+  kind: quiz
+  in: [skills]
+  statement: |
+    Seu time tem um processo longo para publicar matérias no CMS, com regras de estilo, um script de validação e modelos de texto. Colar tudo em cada conversa ocupa o contexto e quase sempre é desnecessário.
+
+    Como Agent Skills ajudam?
+  options:
+    - text: A skill empacota instruções, scripts e arquivos numa pasta. O agente vê só uma descrição curta e carrega o resto quando a tarefa pede
+      why: Certo. O carregamento sob demanda mantém o contexto enxuto e torna o processo reutilizável.
+    - text: A skill treina o modelo de novo com o processo do time
+      why: Skills não alteram o modelo. São materiais que ele lê e usa durante a tarefa.
+    - text: A skill é um prompt fixo enviado inteiro em toda conversa
+      why: Esse é justamente o custo que a skill evita. Só a descrição fica sempre presente.
+    - text: A skill substitui a revisão humana do processo
+      why: Ela ajuda a seguir o processo com consistência, mas não tira a responsabilidade de quem revisa.
+  answer: 0
+  explanation: |
+    Uma skill é uma pasta com um arquivo de instruções e, opcionalmente, scripts e referências. O agente mantém no contexto só o nome e a descrição de cada skill e lê o conteúdo quando ela serve à tarefa. Assim, muitos processos ficam disponíveis sem ocupar o contexto.
+
+- slug: chamar-claude
+  title: Pergunte ao Claude
+  difficulty: medio
+  kind: js
+  in: [implementing-ai/Anthropic]
+  statement: |
+    O backend do festival vai responder dúvidas com a API Messages da Anthropic. Escreva `async function perguntar(chave, modelo, pergunta)`:
+
+    - `POST` em `https://api.anthropic.com/v1/messages`
+    - cabeçalhos `x-api-key` com a chave, `anthropic-version` com `2023-06-01` e `content-type` com `application/json`
+    - corpo JSON com `model`, `max_tokens` igual a 1024 e `messages` com uma mensagem de `role` igual a `user` e `content` igual à pergunta
+    - se a resposta não for de sucesso, lance um `Error` com o status
+    - a resposta tem `content`, uma lista de blocos. Devolva o texto de todos os blocos de `type` igual a `text`, juntos
+  solution: |
+    async function perguntar(chave, modelo, pergunta) {
+      const resposta = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': chave,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: modelo,
+          max_tokens: 1024,
+          messages: [{ role: 'user', content: pergunta }],
+        }),
+      });
+      if (!resposta.ok) throw new Error(`Erro ${resposta.status} na API`);
+      const dados = await resposta.json();
+      return dados.content.filter((bloco) => bloco.type === 'text').map((bloco) => bloco.text).join('');
+    }
+  tests:
+    - name: devolve o texto
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: true, status: 200, json: async () => ({ content: [{ type: 'text', text: 'Os portões abrem às 14h.' }] }) }));
+        expect(await perguntar('chave-teste', 'modelo-x', 'Que horas abre?')).toBe('Os portões abrem às 14h.');
+    - name: pedido no formato da API
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: true, status: 200, json: async () => ({ content: [] }) }));
+        await perguntar('chave-teste', 'modelo-x', 'Oi');
+        const [url, opcoes] = fetch.mock.calls[0];
+        expect(url).toBe('https://api.anthropic.com/v1/messages');
+        expect(opcoes.method).toBe('POST');
+        expect(JSON.parse(opcoes.body)).toEqual({ model: 'modelo-x', max_tokens: 1024, messages: [{ role: 'user', content: 'Oi' }] });
+    - name: cabeçalhos
+      hidden: true
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: true, status: 200, json: async () => ({ content: [] }) }));
+        await perguntar('chave-teste', 'modelo-x', 'Oi');
+        const headers = new Headers(fetch.mock.calls[0][1].headers);
+        expect(headers.get('x-api-key')).toBe('chave-teste');
+        expect(headers.get('anthropic-version')).toBe('2023-06-01');
+        expect(headers.get('content-type')).toBe('application/json');
+    - name: vários blocos
+      hidden: true
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: true, status: 200, json: async () => ({ content: [{ type: 'text', text: 'Parte 1. ' }, { type: 'tool_use', id: 't1', name: 'x', input: {} }, { type: 'text', text: 'Parte 2.' }] }) }));
+        expect(await perguntar('k', 'm', 'p')).toBe('Parte 1. Parte 2.');
+    - name: erro da API
+      hidden: true
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: false, status: 429, json: async () => ({ type: 'error' }) }));
+        await expect(perguntar('k', 'm', 'p')).rejects.toMatch('429');
+  hints:
+    - "`body` precisa ser texto: use `JSON.stringify`."
+    - A resposta pode ter blocos de tipos diferentes. Filtre pelos de texto antes de juntar.
+  explanation: |
+    A API Messages recebe a lista de mensagens da conversa e devolve `content` como uma lista de blocos, que podem ser de texto ou de uso de ferramenta. Filtrar por tipo deixa o código pronto para respostas com ferramentas. A chave da API fica só no servidor: no navegador, qualquer pessoa poderia copiá-la.
+  traps:
+    - reason: Pega só o primeiro bloco
+      code: |
+        async function perguntar(chave, modelo, pergunta) {
+          const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': chave, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }, body: JSON.stringify({ model: modelo, max_tokens: 1024, messages: [{ role: 'user', content: pergunta }] }) });
+          if (!r.ok) throw new Error(`Erro ${r.status}`);
+          return (await r.json()).content[0]?.text ?? '';
+        }
+    - reason: Corpo como objeto
+      code: |
+        async function perguntar(chave, modelo, pergunta) {
+          const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': chave, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }, body: { model: modelo, max_tokens: 1024, messages: [{ role: 'user', content: pergunta }] } });
+          if (!r.ok) throw new Error(`Erro ${r.status}`);
+          return (await r.json()).content.filter((b) => b.type === 'text').map((b) => b.text).join('');
+        }
+
+- slug: chave-fora-do-navegador
+  title: Onde fica a chave da API
+  difficulty: facil
+  kind: quiz
+  in: [implementing-ai/Anthropic, implementing-ai/OpenAI, implementing-ai/Gemini]
+  statement: |
+    O site do festival é uma SPA hospedada como arquivos estáticos. Você quer chamar a API de um modelo, seja da Anthropic, da OpenAI ou do Google Gemini, a partir do chat de ajuda.
+
+    Onde deve ficar a chave da API?
+  options:
+    - text: Num backend ou função serverless que recebe a pergunta do site, chama a API com a chave e devolve só a resposta
+      why: Certo. A chave nunca chega ao navegador, e o backend ainda pode limitar uso por pessoa e filtrar pedidos.
+    - text: Numa variável de ambiente do Vite, como `VITE_API_KEY`
+      why: Variáveis com prefixo `VITE_` são embutidas no JavaScript do build e qualquer pessoa pode lê-las.
+    - text: No código, mas ofuscada
+      why: Ofuscação só atrasa. A chave precisa estar legível em algum momento para ser enviada, e o DevTools mostra a requisição.
+    - text: No localStorage, digitada uma vez pela equipe
+      why: O localStorage fica no navegador de quem acessa. A chave não chegaria aos visitantes, ou ficaria exposta a eles.
+  answer: 0
+  explanation: |
+    Tudo o que vai para o navegador pode ser lido por quem acessa a página. Chaves de APIs pagas ficam no servidor, que funciona como intermediário. Esse intermediário também é o lugar de limitar taxa, registrar uso e impedir que o seu endpoint vire um proxy gratuito para terceiros.

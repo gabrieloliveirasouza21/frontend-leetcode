@@ -1,0 +1,561 @@
+- slug: conserte-total-do-pedido
+  title: O total que quebra
+  difficulty: medio
+  kind: js
+  in: [conserte/Lógica]
+  statement: |
+    Clientes relatam dois problemas no checkout:
+
+    - finalizar a compra mostra `Cannot read properties of undefined`
+    - quando a compra tem mais de um setor, a taxa de serviço sai maior que 10%
+
+    A regra é: some `preco * quantidade` de cada item e aplique uma única taxa de serviço de 10% sobre o total. Arredonde para 2 casas. Um pedido vazio custa 0.
+  starter: |
+    function totalDoPedido(itens) {
+      let total = 0;
+      for (let i = 0; i <= itens.length; i++) {
+        total += itens[i].preco * itens[i].quantidade;
+        total += total * 0.1;
+      }
+      return Math.round(total * 100) / 100;
+    }
+  solution: |
+    function totalDoPedido(itens) {
+      let total = 0;
+      for (let i = 0; i < itens.length; i++) {
+        total += itens[i].preco * itens[i].quantidade;
+      }
+      total += total * 0.1;
+      return Math.round(total * 100) / 100;
+    }
+  tests:
+    - name: um item
+      code: |
+        expect(totalDoPedido([{ preco: 300, quantidade: 2 }])).toBe(660);
+    - name: dois setores
+      code: |
+        expect(totalDoPedido([{ preco: 300, quantidade: 1 }, { preco: 900, quantidade: 1 }])).toBe(1320);
+    - name: pedido vazio
+      hidden: true
+      code: |
+        expect(totalDoPedido([])).toBe(0);
+    - name: centavos
+      hidden: true
+      code: |
+        expect(totalDoPedido([{ preco: 33.33, quantidade: 3 }])).toBe(109.99);
+  hints:
+    - O índice do último item é `itens.length - 1`. Olhe a condição do laço.
+    - A taxa está sendo aplicada a cada volta do laço, sobre um total que já tem taxa.
+  explanation: |
+    Dois defeitos clássicos: o `<=` faz o laço ler uma posição depois do fim, e a taxa dentro do laço vira juros compostos a cada item. Com um item só, o segundo defeito não aparece. Por isso o teste com dois setores é o que o expõe.
+  traps:
+    - reason: Corrige só o laço
+      code: |
+        function totalDoPedido(itens) {
+          let total = 0;
+          for (let i = 0; i < itens.length; i++) { total += itens[i].preco * itens[i].quantidade; total += total * 0.1; }
+          return Math.round(total * 100) / 100;
+        }
+
+- slug: conserte-botoes-do-dia
+  title: Todo botão diz Dia 4
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [conserte/Lógica]
+  html: |
+    <button class="dia">Sexta</button>
+    <button class="dia">Sábado</button>
+    <button class="dia">Domingo</button>
+    <p id="escolhido"></p>
+  statement: |
+    Clicar em qualquer botão deveria mostrar `Dia 1`, `Dia 2` ou `Dia 3` em `#escolhido`. Hoje todos mostram `Dia 4`. Encontre a causa e corrija.
+  starter: |
+    var botoes = document.querySelectorAll('.dia');
+    for (var i = 0; i < botoes.length; i++) {
+      botoes[i].addEventListener('click', function () {
+        document.getElementById('escolhido').textContent = 'Dia ' + (i + 1);
+      });
+    }
+  solution: |
+    const botoes = document.querySelectorAll('.dia');
+    for (let i = 0; i < botoes.length; i++) {
+      botoes[i].addEventListener('click', function () {
+        document.getElementById('escolhido').textContent = 'Dia ' + (i + 1);
+      });
+    }
+  tests:
+    - name: primeiro botão
+      code: |
+        click($$('.dia')[0]);
+        expect(text('#escolhido')).toBe('Dia 1');
+    - name: todos os botões
+      hidden: true
+      code: |
+        const botoes = $$('.dia');
+        click(botoes[2]);
+        expect(text('#escolhido')).toBe('Dia 3');
+        click(botoes[1]);
+        expect(text('#escolhido')).toBe('Dia 2');
+  hints:
+    - Quando o clique acontece, o laço já terminou. Qual é o valor de `i` nesse momento?
+    - "`var` cria uma única variável para a função inteira. `let` cria uma por volta do laço."
+  explanation: |
+    Com `var`, existe um único `i`, compartilhado por todas as funções do laço, e ele vale 3 quando alguém clica. Com `let`, cada volta do laço tem o seu `i`, capturado pela closure daquela volta. Ler a posição do próprio botão, ou usar delegação com `data-dia`, também resolve.
+  traps:
+    - reason: Lê o índice só no final
+      code: |
+        var botoes = document.querySelectorAll('.dia');
+        var i;
+        for (i = 0; i < botoes.length; i++) botoes[i].addEventListener('click', () => { document.getElementById('escolhido').textContent = 'Dia ' + i; });
+
+- slug: conserte-cartoes-espremidos
+  title: Os cartões espremidos
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [conserte/Layout]
+  html: |
+    <div class="cartoes">
+      <article class="cartao">Pista</article>
+      <article class="cartao">Premium</article>
+      <article class="cartao">Camarote</article>
+    </div>
+  statement: |
+    Em telas médias, os cartões de setor ficam espremidos e o texto quebra em várias linhas. O design pede cartões sempre com 300px de largura e 16px de espaço entre eles. O que não couber vai para a linha de baixo.
+
+    Corrija o CSS.
+  starter: |
+    .cartoes {
+      display: flex;
+      gap: 16px;
+    }
+    .cartao {
+      width: 300px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+  solution: |
+    .cartoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .cartao {
+      width: 300px;
+      flex-shrink: 0;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+  tests:
+    - name: largura mantida em tela média
+      width: 700
+      code: |
+        for (const c of $$('.cartao')) expect(rect(c).width).toBe(300);
+    - name: quebra de linha
+      width: 700
+      code: |
+        const c = $$('.cartao').map(rect);
+        expect(c[1].top).toBe(c[0].top);
+        expect(c[2].top).toBeGreaterThan(c[0].top);
+    - name: em tela larga, todos lado a lado
+      hidden: true
+      width: 1100
+      code: |
+        const c = $$('.cartao').map(rect);
+        expect(c[2].top).toBe(c[0].top);
+        expect(Math.round(c[1].left - c[0].right)).toBe(16);
+    - name: espaço entre linhas
+      hidden: true
+      width: 700
+      code: |
+        const c = $$('.cartao').map(rect);
+        expect(Math.round(c[2].top - c[0].bottom)).toBe(16);
+  hints:
+    - Itens flex encolhem por padrão quando falta espaço, mesmo com `width` definida.
+    - Por padrão, um contêiner flex não quebra linha.
+  explanation: |
+    Num contêiner flex, `width` é só o tamanho preferido: com `flex-shrink: 1`, o padrão, o item encolhe para caber. E sem `flex-wrap: wrap`, tudo fica numa linha. Liberar a quebra resolve o espaço, e `flex-shrink: 0` garante a largura mesmo quando um único cartão não couber.
+  traps:
+    - reason: Largura mínima sem quebra de linha
+      code: |
+        .cartoes { display: flex; gap: 16px; overflow-x: auto; }
+        .cartao { width: 300px; min-width: 300px; border: 1px solid #ccc; box-sizing: border-box; }
+
+- slug: conserte-lista-que-nao-atualiza
+  title: A banda nova não aparece
+  difficulty: medio
+  kind: react
+  in: [conserte/Componentes]
+  statement: |
+    O formulário deveria acrescentar uma banda à lista de sugestões. O texto é digitado, o botão é clicado, mas a lista não muda. Corrija o componente.
+  starter: |
+    import { useState } from 'react';
+
+    export default function App() {
+      const [bandas, setBandas] = useState(['Vórtice']);
+      const [nome, setNome] = useState('');
+
+      function sugerir(evento) {
+        evento.preventDefault();
+        bandas.push(nome);
+        setBandas(bandas);
+        setNome('');
+      }
+
+      return (
+        <form onSubmit={sugerir}>
+          <label htmlFor="nome">Banda</label>
+          <input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+          <button>Sugerir</button>
+          <ul>{bandas.map((b) => <li key={b}>{b}</li>)}</ul>
+        </form>
+      );
+    }
+  solution: |
+    import { useState } from 'react';
+
+    export default function App() {
+      const [bandas, setBandas] = useState(['Vórtice']);
+      const [nome, setNome] = useState('');
+
+      function sugerir(evento) {
+        evento.preventDefault();
+        if (!nome.trim()) return;
+        setBandas([...bandas, nome.trim()]);
+        setNome('');
+      }
+
+      return (
+        <form onSubmit={sugerir}>
+          <label htmlFor="nome">Banda</label>
+          <input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+          <button>Sugerir</button>
+          <ul>{bandas.map((b) => <li key={b}>{b}</li>)}</ul>
+        </form>
+      );
+    }
+  tests:
+    - name: acrescenta a banda
+      code: |
+        type('#nome', 'Asfalto');
+        await tick();
+        click('button');
+        await tick();
+        expect($$('li').map((li) => li.textContent)).toEqual(['Vórtice', 'Asfalto']);
+    - name: limpa o campo
+      hidden: true
+      code: |
+        type('#nome', 'Asfalto');
+        await tick();
+        click('button');
+        await tick();
+        expect(el('#nome').value).toBe('');
+    - name: nome em branco não entra
+      hidden: true
+      code: |
+        type('#nome', '   ');
+        await tick();
+        click('button');
+        await tick();
+        expect($$('li')).toHaveLength(1);
+  hints:
+    - O React compara o estado novo com o antigo pela referência. Se for o mesmo array, nada muda para ele.
+    - Crie um array novo com o item a mais.
+  explanation: |
+    `push` altera o array existente, e `setBandas` recebe o mesmo objeto. Para o React, o estado não mudou e a renderização é pulada. Criar um array novo, com spread ou `concat`, é o que sinaliza a mudança. Isso é um caso do princípio geral de tratar o estado como imutável.
+  traps:
+    - reason: Ainda usa push, com spread depois
+      code: |
+        import { useState } from 'react';
+        export default function App() {
+          const [b, setB] = useState(['Vórtice']);
+          const [n, setN] = useState('');
+          return (<form onSubmit={(e) => { e.preventDefault(); b.push(n); setB([...b]); setN(''); }}><label htmlFor="nome">Banda</label><input id="nome" value={n} onChange={(e) => setN(e.target.value)} /><button>Sugerir</button><ul>{b.map((x) => <li key={x}>{x}</li>)}</ul></form>);
+        }
+
+- slug: implemente-busca-no-lineup
+  title: Busca no line-up
+  difficulty: medio
+  kind: react
+  in: [implemente/Funcionalidades]
+  setup: |
+    window.BANDAS = ['Vórtice', 'Maré Negra', 'Asfalto', 'Órbita Morta'];
+  starter: |
+    export default function App() {
+      return (
+        <ul>
+          {BANDAS.map((nome) => <li key={nome}>{nome}</li>)}
+        </ul>
+      );
+    }
+  statement: |
+    O componente já lista as bandas da global `BANDAS`. Acrescente uma busca acima da lista:
+
+    - um campo com o rótulo `Buscar banda`
+    - a lista mostra só as bandas cujo nome contém o texto digitado, sem diferenciar maiúsculas, minúsculas e acentos: `orbita` encontra `Órbita Morta`
+    - sem resultados, mostre um parágrafo com `Nenhuma banda encontrada` no lugar da lista
+  solution: |
+    import { useState } from 'react';
+
+    const normalizar = (texto) => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+    export default function App() {
+      const [busca, setBusca] = useState('');
+      const visiveis = BANDAS.filter((nome) => normalizar(nome).includes(normalizar(busca.trim())));
+      return (
+        <>
+          <label htmlFor="busca">Buscar banda</label>
+          <input id="busca" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} />
+          {visiveis.length ? (
+            <ul>{visiveis.map((nome) => <li key={nome}>{nome}</li>)}</ul>
+          ) : (
+            <p>Nenhuma banda encontrada</p>
+          )}
+        </>
+      );
+    }
+  tests:
+    - name: lista inteira no início
+      code: |
+        expect($$('li')).toHaveLength(4);
+    - name: filtra ao digitar
+      code: |
+        type('input', 'mar');
+        await tick();
+        expect($$('li').map((li) => li.textContent)).toEqual(['Maré Negra']);
+    - name: ignora acentos e maiúsculas
+      hidden: true
+      code: |
+        type('input', 'ORBITA');
+        await tick();
+        expect($$('li').map((li) => li.textContent)).toEqual(['Órbita Morta']);
+        type('input', 'vortice');
+        await tick();
+        expect($$('li').map((li) => li.textContent)).toEqual(['Vórtice']);
+    - name: sem resultados
+      hidden: true
+      code: |
+        type('input', 'xyz');
+        await tick();
+        expect($('ul')).toBeNull();
+        expect(text('p')).toBe('Nenhuma banda encontrada');
+    - name: campo com rótulo
+      hidden: true
+      code: |
+        expect(el('input').labels[0].textContent).toBe('Buscar banda');
+  hints:
+    - Guarde só o texto da busca no estado. A lista filtrada é calculada a cada renderização.
+    - Normalize os dois lados da comparação do mesmo jeito.
+  explanation: |
+    Acrescentar uma funcionalidade sem quebrar o que existe começa por manter o comportamento atual, a lista inteira com busca vazia, e derivar o novo a partir de um estado mínimo. Normalizar com `NFD` e remover os acentos deixa a busca tolerante ao jeito que as pessoas digitam.
+  traps:
+    - reason: Diferencia acentos
+      code: |
+        import { useState } from 'react';
+        export default function App() {
+          const [b, setB] = useState('');
+          const v = BANDAS.filter((n) => n.toLowerCase().includes(b.toLowerCase()));
+          return (<><label htmlFor="busca">Buscar banda</label><input id="busca" value={b} onChange={(e) => setB(e.target.value)} />{v.length ? <ul>{v.map((n) => <li key={n}>{n}</li>)}</ul> : <p>Nenhuma banda encontrada</p>}</>);
+        }
+
+- slug: implemente-cupom-no-carrinho
+  title: Cupom no carrinho
+  difficulty: medio
+  kind: js
+  in: [implemente/Funcionalidades]
+  starter: |
+    class Carrinho {
+      itens = [];
+
+      adicionar(setor, preco, quantidade = 1) {
+        this.itens.push({ setor, preco, quantidade });
+      }
+
+      subtotal() {
+        return this.itens.reduce((t, i) => t + i.preco * i.quantidade, 0);
+      }
+
+      total() {
+        return this.subtotal();
+      }
+    }
+  statement: |
+    O carrinho já existe. Acrescente cupons sem quebrar o que funciona:
+
+    - `aplicarCupom(codigo)`: aceita `RUIDO10`, 10% de desconto, e `MEIA50`, 50% de desconto, sem diferenciar maiúsculas e minúsculas. Um código desconhecido lança `Error` e mantém o cupom anterior
+    - só um cupom vale por vez: aplicar outro substitui o anterior
+    - `removerCupom()` volta ao preço cheio
+    - `total()` aplica o desconto e arredonda para 2 casas. `subtotal()` continua sem desconto
+  solution: |
+    const CUPONS = { RUIDO10: 0.1, MEIA50: 0.5 };
+
+    class Carrinho {
+      itens = [];
+      desconto = 0;
+
+      adicionar(setor, preco, quantidade = 1) {
+        this.itens.push({ setor, preco, quantidade });
+      }
+
+      subtotal() {
+        return this.itens.reduce((t, i) => t + i.preco * i.quantidade, 0);
+      }
+
+      aplicarCupom(codigo) {
+        const desconto = CUPONS[String(codigo).toUpperCase()];
+        if (desconto === undefined || !Object.hasOwn(CUPONS, String(codigo).toUpperCase())) throw new Error('Cupom inválido');
+        this.desconto = desconto;
+      }
+
+      removerCupom() {
+        this.desconto = 0;
+      }
+
+      total() {
+        return Math.round(this.subtotal() * (1 - this.desconto) * 100) / 100;
+      }
+    }
+  tests:
+    - name: o carrinho continua funcionando
+      code: |
+        const c = new Carrinho();
+        c.adicionar('pista', 300, 2);
+        expect(c.total()).toBe(600);
+    - name: aplica o cupom
+      code: |
+        const c = new Carrinho();
+        c.adicionar('pista', 300, 2);
+        c.aplicarCupom('RUIDO10');
+        expect(c.total()).toBe(540);
+        expect(c.subtotal()).toBe(600);
+    - name: substitui e remove
+      hidden: true
+      code: |
+        const c = new Carrinho();
+        c.adicionar('camarote', 900);
+        c.aplicarCupom('ruido10');
+        c.aplicarCupom('MEIA50');
+        expect(c.total()).toBe(450);
+        c.removerCupom();
+        expect(c.total()).toBe(900);
+    - name: cupom inválido
+      hidden: true
+      code: |
+        const c = new Carrinho();
+        c.adicionar('pista', 300);
+        c.aplicarCupom('RUIDO10');
+        expect(() => c.aplicarCupom('GRATIS')).toThrow();
+        expect(() => c.aplicarCupom('constructor')).toThrow();
+        expect(c.total()).toBe(270);
+    - name: arredonda
+      hidden: true
+      code: |
+        const c = new Carrinho();
+        c.adicionar('pista', 33.33);
+        c.aplicarCupom('RUIDO10');
+        expect(c.total()).toBe(30);
+  hints:
+    - Guarde o desconto atual como um número entre 0 e 1. Sem cupom, ele vale 0.
+    - Valide o código antes de alterar o desconto, para um erro não apagar o cupom anterior.
+  explanation: |
+    A funcionalidade nova entra como um estado a mais, o desconto, e o `total` passa a usá-lo, sem mudar o `subtotal`, que outras partes podem usar. Validar antes de alterar preserva o estado anterior num erro. `Object.hasOwn` evita que nomes herdados, como `constructor`, passem por cupom válido.
+  traps:
+    - reason: Desconto acumula
+      code: |
+        class Carrinho {
+          itens = []; fator = 1;
+          adicionar(s, p, q = 1) { this.itens.push({ s, p, q }); }
+          subtotal() { return this.itens.reduce((t, i) => t + i.p * i.q, 0); }
+          aplicarCupom(c) { const d = { RUIDO10: 0.9, MEIA50: 0.5 }[c.toUpperCase()]; if (!d) throw new Error('x'); this.fator *= d; }
+          removerCupom() { this.fator = 1; }
+          total() { return Math.round(this.subtotal() * this.fator * 100) / 100; }
+        }
+    - reason: Erro apaga o cupom anterior
+      code: |
+        class Carrinho {
+          itens = []; d = 0;
+          adicionar(s, p, q = 1) { this.itens.push({ s, p, q }); }
+          subtotal() { return this.itens.reduce((t, i) => t + i.p * i.q, 0); }
+          aplicarCupom(c) { this.d = 0; const v = { RUIDO10: 0.1, MEIA50: 0.5 }[c.toUpperCase()]; if (v === undefined) throw new Error('x'); this.d = v; }
+          removerCupom() { this.d = 0; }
+          total() { return Math.round(this.subtotal() * (1 - this.d) * 100) / 100; }
+        }
+
+- slug: implemente-modo-compacto
+  title: Modo compacto
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [implemente/Interface]
+  html: |
+    <ul class="lista">
+      <li class="item"><strong>Vórtice</strong><span class="descricao">Thrash de São Paulo</span></li>
+      <li class="item"><strong>Asfalto</strong><span class="descricao">Punk do Recife</span></li>
+    </ul>
+  starter: |
+    .lista {
+      list-style: none;
+      padding: 0;
+    }
+    .item {
+      padding: 16px;
+      font-size: 18px;
+      border-bottom: 1px solid #ddd;
+    }
+    .descricao {
+      display: block;
+      color: #666;
+    }
+  statement: |
+    O CSS da lista já existe. Acrescente o modo compacto, ativado pela classe `compacta` na `.lista`:
+
+    - itens com padding de 4px e fonte de 14px
+    - a `.descricao` some
+
+    Sem a classe, a lista continua exatamente como está.
+  solution: |
+    .lista {
+      list-style: none;
+      padding: 0;
+    }
+    .item {
+      padding: 16px;
+      font-size: 18px;
+      border-bottom: 1px solid #ddd;
+    }
+    .descricao {
+      display: block;
+      color: #666;
+    }
+    .lista.compacta .item {
+      padding: 4px;
+      font-size: 14px;
+    }
+    .lista.compacta .descricao {
+      display: none;
+    }
+  tests:
+    - name: modo compacto
+      code: |
+        el('.lista').classList.add('compacta');
+        expect(css('.item', 'padding-top')).toBe('4px');
+        expect(css('.item', 'font-size')).toBe('14px');
+        expect(css('.descricao', 'display')).toBe('none');
+    - name: modo normal intacto
+      hidden: true
+      code: |
+        expect(css('.item', 'padding-top')).toBe('16px');
+        expect(css('.item', 'font-size')).toBe('18px');
+        expect(css('.descricao', 'display')).toBe('block');
+        expect(css('.item', 'border-bottom-width')).toBe('1px');
+  hints:
+    - Um seletor como `.lista.compacta .item` só vale quando a lista tem as duas classes.
+  explanation: |
+    Uma variante entra como regras extras com um seletor mais específico, sem tocar nas regras base. Assim, o modo normal não muda, e a variante pode ser ligada e desligada com uma classe só.
+  traps:
+    - reason: Muda o modo normal
+      code: |
+        .lista { list-style: none; padding: 0; }
+        .item { padding: 4px; font-size: 14px; border-bottom: 1px solid #ddd; }
+        .descricao { display: none; color: #666; }

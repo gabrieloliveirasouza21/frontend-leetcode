@@ -1,0 +1,810 @@
+- slug: zebra-na-agenda
+  title: Agenda listrada
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Seletores e cascata]
+  html: |
+    <table class="agenda">
+      <thead><tr><th>Horário</th><th>Banda</th></tr></thead>
+      <tbody>
+        <tr><td>16h</td><td>Ferrugem</td></tr>
+        <tr><td>17h</td><td>Os Insones</td></tr>
+        <tr><td>18h</td><td>Maré Negra</td></tr>
+        <tr><td>19h</td><td>Asfalto</td></tr>
+        <tr><td>20h</td><td>Vórtice</td></tr>
+      </tbody>
+    </table>
+  statement: |
+    A agenda do palco é difícil de ler. Pinte de `#f2f2f2` o fundo das linhas pares do corpo da tabela: a segunda, a quarta, e assim por diante.
+
+    A agenda ganha linhas novas durante o festival, então a regra precisa valer para linhas que ainda não existem. Não altere o HTML.
+  solution: |
+    .agenda tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+  tests:
+    - name: segunda linha pintada
+      code: |
+        const rows = $$('tbody tr');
+        expect(css(rows[1], 'background-color')).toBe('rgb(242, 242, 242)');
+        expect(css(rows[0], 'background-color')).toBe('rgba(0, 0, 0, 0)');
+    - name: só as pares
+      hidden: true
+      code: |
+        const rows = $$('tbody tr');
+        expect(rows.map((r) => css(r, 'background-color') === 'rgb(242, 242, 242)')).toEqual([false, true, false, true, false]);
+    - name: vale para linhas novas
+      hidden: true
+      code: |
+        const row = document.createElement('tr');
+        row.innerHTML = '<td>21h</td><td>Encerramento</td>';
+        el('tbody').appendChild(row);
+        expect(css(row, 'background-color')).toBe('rgb(242, 242, 242)');
+    - name: cabeçalho sem fundo
+      hidden: true
+      code: |
+        expect(css('thead tr', 'background-color')).toBe('rgba(0, 0, 0, 0)');
+  hints:
+    - A pseudo-classe `:nth-child()` aceita `even` e `odd`.
+  explanation: |
+    `:nth-child(even)` calcula a posição na hora, então novas linhas entram no padrão sem classe nenhuma. Restringir a `tbody` evita pintar a linha do cabeçalho em tabelas com mais de uma linha no `thead`.
+  traps:
+    - reason: Ímpares no lugar de pares
+      code: |
+        .agenda tbody tr:nth-child(odd) { background-color: #f2f2f2; }
+    - reason: Só a segunda linha
+      code: |
+        .agenda tbody tr:nth-child(2) { background-color: #f2f2f2; }
+
+- slug: destaque-headliner
+  title: O headliner sumiu no meio
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Seletores e cascata]
+  html: |
+    <style>
+      #lineup li { color: rgb(51, 51, 51); font-weight: 400; }
+    </style>
+    <ul id="lineup">
+      <li>Ferrugem</li>
+      <li class="headliner">Vórtice</li>
+      <li>Maré Negra</li>
+    </ul>
+  statement: |
+    O tema do site, que você não pode alterar, já pinta os itens do line-up com `#lineup li`. Agora a banda principal, marcada com a classe `headliner`, deve aparecer em `#c0392b` e em negrito (peso 700).
+
+    A regra `.headliner { ... }` não funciona. Escreva uma que funcione, sem `!important` e sem mexer no HTML.
+  starter: |
+    .headliner {
+      color: #c0392b;
+      font-weight: 700;
+    }
+  solution: |
+    #lineup .headliner {
+      color: #c0392b;
+      font-weight: 700;
+    }
+  forbid: ['!important']
+  tests:
+    - name: headliner em destaque
+      code: |
+        expect(css('.headliner', 'color')).toBe('rgb(192, 57, 43)');
+        expect(css('.headliner', 'font-weight')).toBe('700');
+    - name: outras bandas iguais
+      hidden: true
+      code: |
+        for (const li of $$('#lineup li:not(.headliner)')) {
+          expect(css(li, 'color')).toBe('rgb(51, 51, 51)');
+          expect(css(li, 'font-weight')).toBe('400');
+        }
+  hints:
+    - "`#lineup li` tem um id e um elemento. `.headliner` tem só uma classe, e um id pesa mais que qualquer quantidade de classes."
+    - Um seletor com o mesmo id e mais uma classe vence.
+  explanation: |
+    Quando duas regras disputam a mesma propriedade, vence a de maior especificidade, contada como ids, depois classes e pseudo-classes, depois elementos. `#lineup li` vale (1, 0, 1). `#lineup .headliner` vale (1, 1, 0) e vence. `!important` resolveria, mas começa uma escalada em que a próxima exceção também vai precisar dele.
+  traps:
+    - reason: Só a classe
+      code: |
+        .headliner { color: #c0392b; font-weight: 700; }
+    - reason: Classe repetida, sem id
+      code: |
+        .headliner.headliner.headliner { color: #c0392b; font-weight: 700; }
+
+- slug: cartao-de-banda
+  title: O cartão estourou
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Box model]
+  html: |
+    <div class="cards">
+      <article class="card"><h3>Ferrugem</h3><p>Sábado, 16h</p></article>
+      <article class="card"><h3>Vórtice</h3><p>Sábado, 22h</p></article>
+    </div>
+  statement: |
+    O design pede cartões de exatamente 300px de largura na tela, com 20px de espaçamento interno e borda de 2px. Com o CSS atual, cada cartão ocupa 344px e quebra o layout.
+
+    Corrija para que a largura total seja 300px, mantendo o espaçamento interno e a borda.
+  starter: |
+    .card {
+      width: 300px;
+      padding: 20px;
+      border: 2px solid #444;
+    }
+  solution: |
+    .card {
+      box-sizing: border-box;
+      width: 300px;
+      padding: 20px;
+      border: 2px solid #444;
+    }
+  tests:
+    - name: largura total de 300px
+      code: |
+        expect(rect('.card').width).toBe(300);
+    - name: espaçamento e borda mantidos
+      code: |
+        expect(css('.card', 'padding-left')).toBe('20px');
+        expect(css('.card', 'border-left-width')).toBe('2px');
+    - name: todos os cartões
+      hidden: true
+      code: |
+        for (const card of $$('.card')) expect(rect(card).width).toBe(300);
+    - name: área de conteúdo
+      hidden: true
+      code: |
+        const card = el('.card');
+        expect(card.clientWidth - 40).toBe(256);
+  hints:
+    - Por padrão, `width` define só a área de conteúdo. Padding e borda somam por fora.
+    - A propriedade `box-sizing` muda o que `width` mede.
+  explanation: |
+    No modelo padrão, `content-box`, a largura visível é `width + padding + borda`: 300 + 40 + 4 = 344. Com `border-box`, `width` passa a incluir padding e borda, e o conteúdo encolhe para caber. Muitos projetos aplicam `box-sizing: border-box` a todos os elementos logo no início do CSS.
+  traps:
+    - reason: Subtrai a mão, e o padding some
+      code: |
+        .card { width: 296px; border: 2px solid #444; }
+    - reason: Largura calculada a mão
+      code: |
+        .card { width: 256px; padding: 20px; border: 2px solid #444; }
+        .card + .card { width: 300px; }
+
+- slug: menu-do-site
+  title: O menu empilhado
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Flexbox]
+  html: |
+    <nav class="menu">
+      <a class="logo" href="#">RUÍDO</a>
+      <ul class="links">
+        <li><a href="#lineup">Line-up</a></li>
+        <li><a href="#ingressos">Ingressos</a></li>
+        <li><a href="#local">Local</a></li>
+      </ul>
+    </nav>
+  statement: |
+    Monte a barra de navegação:
+
+    - o logo encostado na esquerda e a lista de links encostada na direita, centralizados na vertical
+    - os links lado a lado, com 24px de espaço entre eles
+    - a lista sem marcadores, sem margem e sem padding
+  solution: |
+    .menu {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+  tests:
+    - name: logo na esquerda e links na direita
+      code: |
+        const nav = rect('.menu');
+        expect(Math.round(rect('.logo').left)).toBe(Math.round(nav.left));
+        expect(Math.round(rect('.links').right)).toBe(Math.round(nav.right));
+    - name: links lado a lado
+      code: |
+        const items = $$('.links li').map(rect);
+        expect(items[0].top).toBe(items[1].top);
+        expect(items[1].top).toBe(items[2].top);
+    - name: espaço de 24px entre os links
+      hidden: true
+      code: |
+        const items = $$('.links li').map(rect);
+        expect(Math.round(items[1].left - items[0].right)).toBe(24);
+        expect(Math.round(items[2].left - items[1].right)).toBe(24);
+        expect(Math.round(items[2].right)).toBe(Math.round(rect('.menu').right));
+    - name: lista limpa
+      hidden: true
+      code: |
+        expect(css('.links li', 'list-style-type')).toBe('none');
+        expect(css('.links', 'padding-left')).toBe('0px');
+        expect(css('.links', 'margin-top')).toBe('0px');
+    - name: centralização vertical
+      hidden: true
+      code: |
+        const logo = rect('.logo');
+        const links = rect('.links');
+        expect(Math.abs((logo.top + logo.bottom) / 2 - (links.top + links.bottom) / 2)).toBeLessThanOrEqual(1);
+  hints:
+    - "`justify-content: space-between` empurra o primeiro e o último filho para as pontas."
+    - A lista também pode ser um contêiner flex. `gap` define o espaço entre os itens.
+  explanation: |
+    Flexbox distribui itens num eixo. No `nav`, `space-between` separa logo e lista, e `align-items: center` alinha os dois no eixo cruzado. Na lista, `gap` cria espaço só entre os itens, sem sobrar margem na ponta, como aconteceria com `margin-right` em cada item.
+  traps:
+    - reason: Margem nos itens no lugar de gap
+      code: |
+        .menu { display: flex; justify-content: space-between; align-items: center; }
+        .links { display: flex; list-style: none; margin: 0; padding: 0; }
+        .links li { margin-right: 24px; }
+    - reason: Links com float
+      code: |
+        .menu { display: flex; justify-content: space-between; align-items: center; }
+        .links { list-style: none; margin: 0; padding: 0; }
+        .links li { float: left; }
+
+- slug: centralizar-aviso
+  title: O aviso no centro
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Flexbox]
+  html: |
+    <style>body { margin: 0; }</style>
+    <div class="overlay">
+      <div class="aviso">Portões abrem às 14h</div>
+    </div>
+  statement: |
+    A camada `.overlay` cobre a tela inteira, com 100% da largura e `100vh` de altura. Centralize o `.aviso` dentro dela, na horizontal e na vertical, qualquer que seja o tamanho do texto.
+  solution: |
+    .overlay {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  tests:
+    - name: centralizado
+      code: |
+        const overlay = rect('.overlay');
+        const aviso = rect('.aviso');
+        expect(Math.abs((aviso.left + aviso.right) / 2 - (overlay.left + overlay.right) / 2)).toBeLessThanOrEqual(1);
+        expect(Math.abs((aviso.top + aviso.bottom) / 2 - (overlay.top + overlay.bottom) / 2)).toBeLessThanOrEqual(1);
+    - name: cobre a tela
+      code: |
+        expect(Math.round(rect('.overlay').height)).toBe(innerHeight);
+    - name: texto maior continua no centro
+      hidden: true
+      code: |
+        el('.aviso').textContent = 'Atenção: os portões do festival abrem às 14h, e a fila começa na rua lateral';
+        el('.aviso').style.maxWidth = '300px';
+        await frame();
+        const overlay = rect('.overlay');
+        const aviso = rect('.aviso');
+        expect(Math.abs((aviso.left + aviso.right) / 2 - (overlay.left + overlay.right) / 2)).toBeLessThanOrEqual(1);
+        expect(Math.abs((aviso.top + aviso.bottom) / 2 - (overlay.top + overlay.bottom) / 2)).toBeLessThanOrEqual(1);
+  hints:
+    - Num contêiner flex, `justify-content` alinha no eixo principal e `align-items` no eixo cruzado.
+  explanation: |
+    Com o pai em `display: flex`, `justify-content: center` e `align-items: center` centralizam o filho nos dois eixos sem conhecer o tamanho dele. `display: grid` com `place-items: center` faz o mesmo. Truques com margens e posições fixas quebram quando o texto muda.
+  traps:
+    - reason: Só na horizontal
+      code: |
+        .overlay { height: 100vh; }
+        .aviso { width: fit-content; margin: 0 auto; }
+    - reason: Posição calculada para um tamanho fixo
+      code: |
+        .overlay { height: 100vh; position: relative; }
+        .aviso { position: absolute; top: 340px; left: 420px; }
+
+- slug: rodape-grudado
+  title: O rodapé flutuante
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Flexbox]
+  html: |
+    <style>body { margin: 0; }</style>
+    <div class="pagina">
+      <header>Festival Ruído</header>
+      <main><p>Página em construção.</p></main>
+      <footer>© 2026 Festival Ruído</footer>
+    </div>
+  statement: |
+    Em páginas com pouco conteúdo, o rodapé fica no meio da tela. Faça o rodapé ficar no fim da janela quando o conteúdo for curto.
+
+    Quando o conteúdo for longo, o rodapé deve vir depois dele, sem cobrir nada.
+  solution: |
+    .pagina {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    main {
+      flex: 1;
+    }
+  tests:
+    - name: rodapé no fim da janela
+      code: |
+        expect(Math.round(rect('footer').bottom)).toBe(innerHeight);
+    - name: cabeçalho no topo
+      code: |
+        expect(Math.round(rect('header').top)).toBe(0);
+    - name: conteúdo longo empurra o rodapé
+      hidden: true
+      code: |
+        const main = el('main');
+        for (let i = 0; i < 60; i++) main.insertAdjacentHTML('beforeend', '<p>Mais uma banda confirmada.</p>');
+        await frame();
+        expect(rect('footer').top).toBeGreaterThanOrEqual(rect('main').bottom - 1);
+        expect(rect('footer').top).toBeGreaterThan(innerHeight);
+  hints:
+    - O contêiner precisa ter pelo menos a altura da janela.
+    - Em coluna flex, o filho com `flex: 1` ocupa o espaço que sobrar.
+  explanation: |
+    `min-height: 100vh` deixa a página com pelo menos a altura da janela e permite crescer além dela. Em coluna flex, `flex: 1` no `main` absorve o espaço livre e empurra o rodapé para baixo. `position: fixed` parece funcionar, mas tira o rodapé do fluxo e faz ele cobrir o conteúdo longo.
+  traps:
+    - reason: Rodapé fixo na tela
+      code: |
+        footer { position: fixed; bottom: 0; left: 0; right: 0; }
+    - reason: Altura fixa no lugar de mínima
+      code: |
+        .pagina { height: 100vh; display: flex; flex-direction: column; }
+        main { flex: 1; overflow: hidden; }
+
+- slug: galeria-de-posters
+  title: Galeria de pôsteres
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Grid]
+  html: |
+    <div class="galeria">
+      <div class="poster">2019</div>
+      <div class="poster">2020</div>
+      <div class="poster">2021</div>
+      <div class="poster">2022</div>
+      <div class="poster">2023</div>
+      <div class="poster">2024</div>
+    </div>
+  statement: |
+    Mostre os pôsteres das edições anteriores em 3 colunas de mesma largura, com 16px de espaço entre colunas e entre linhas.
+
+    Todo pôster tem a mesma largura, inclusive um que sobre sozinho na última linha.
+  solution: |
+    .galeria {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+  tests:
+    - name: três por linha
+      code: |
+        const p = $$('.poster').map(rect);
+        expect(p[0].top).toBe(p[2].top);
+        expect(p[3].top).toBeGreaterThan(p[0].top);
+    - name: 16px entre colunas e linhas
+      code: |
+        const p = $$('.poster').map(rect);
+        expect(Math.round(p[1].left - p[0].right)).toBe(16);
+        expect(Math.round(p[3].top - p[0].bottom)).toBe(16);
+    - name: mesma largura, mesmo sozinho na linha
+      hidden: true
+      code: |
+        const extra = document.createElement('div');
+        extra.className = 'poster';
+        extra.textContent = '2025';
+        el('.galeria').appendChild(extra);
+        await frame();
+        const p = $$('.poster').map(rect);
+        expect(Math.round(p[6].width)).toBe(Math.round(p[0].width));
+        expect(Math.round(p[6].left)).toBe(Math.round(p[0].left));
+    - name: ocupa a largura toda
+      hidden: true
+      code: |
+        const p = $$('.poster').map(rect);
+        expect(Math.round(p[2].right)).toBe(Math.round(rect('.galeria').right));
+  hints:
+    - "`repeat(3, 1fr)` cria três colunas que dividem o espaço igualmente."
+  explanation: |
+    Grid define as colunas no contêiner, e os itens só ocupam as células. Um item sozinho na última linha fica do tamanho de uma coluna. Com Flexbox e `flex: 1`, ele cresceria até ocupar a linha inteira. `gap` vale para linhas e colunas.
+  traps:
+    - reason: Flex que estica o último
+      code: |
+        .galeria { display: flex; flex-wrap: wrap; gap: 16px; }
+        .poster { flex: 1 1 30%; }
+    - reason: Sem espaço entre as linhas
+      code: |
+        .galeria { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 16px; }
+
+- slug: layout-com-sidebar
+  title: Página com barra lateral
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Grid]
+  html: |
+    <div class="layout">
+      <header class="topo">Festival Ruído</header>
+      <aside class="lateral">Filtros</aside>
+      <main class="conteudo">Bandas</main>
+      <footer class="rodape">© 2026</footer>
+    </div>
+  statement: |
+    Monte o layout da página de bandas:
+
+    - topo e rodapé ocupam a largura toda
+    - a barra lateral tem 240px de largura, à esquerda
+    - o conteúdo ocupa o resto da largura, à direita da barra lateral
+    - sem espaço entre as áreas
+
+    Use `grid-template-areas`, para o layout ficar legível no próprio CSS.
+  must_use: [grid-template-areas]
+  solution: |
+    .layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-areas:
+        "topo topo"
+        "lateral conteudo"
+        "rodape rodape";
+    }
+    .topo { grid-area: topo; }
+    .lateral { grid-area: lateral; }
+    .conteudo { grid-area: conteudo; }
+    .rodape { grid-area: rodape; }
+  tests:
+    - name: barra lateral de 240px
+      code: |
+        expect(rect('.lateral').width).toBe(240);
+        expect(Math.round(rect('.lateral').left)).toBe(Math.round(rect('.layout').left));
+    - name: conteúdo ao lado
+      code: |
+        expect(rect('.conteudo').left).toBe(rect('.lateral').right);
+        expect(rect('.conteudo').top).toBe(rect('.lateral').top);
+    - name: topo e rodapé na largura toda
+      hidden: true
+      code: |
+        const width = rect('.layout').width;
+        expect(rect('.topo').width).toBe(width);
+        expect(rect('.rodape').width).toBe(width);
+        expect(rect('.rodape').top).toBe(rect('.conteudo').bottom);
+    - name: em tela larga, só o conteúdo cresce
+      hidden: true
+      width: 1400
+      code: |
+        expect(rect('.lateral').width).toBe(240);
+        expect(Math.round(rect('.conteudo').right)).toBe(Math.round(rect('.layout').right));
+  hints:
+    - Cada linha de `grid-template-areas` é um texto com o nome das áreas, coluna por coluna.
+    - Repetir o nome numa linha faz a área ocupar várias colunas.
+    - Cada filho escolhe a área com `grid-area`.
+  explanation: |
+    `grid-template-areas` desenha o layout como um mapa, e cada filho entra na sua área com `grid-area`. Com `240px 1fr`, a lateral fica fixa e o conteúdo absorve o resto da largura. Para mudar o layout no celular, basta redesenhar o mapa numa media query.
+  traps:
+    - reason: Lateral em porcentagem
+      code: |
+        .layout { display: grid; grid-template-columns: 24% 1fr; grid-template-areas: "topo topo" "lateral conteudo" "rodape rodape"; }
+        .topo { grid-area: topo; } .lateral { grid-area: lateral; } .conteudo { grid-area: conteudo; } .rodape { grid-area: rodape; }
+    - reason: Topo só na primeira coluna
+      code: |
+        .layout { display: grid; grid-template-columns: 240px 1fr; grid-template-areas: "topo ." "lateral conteudo" "rodape rodape"; }
+        .topo { grid-area: topo; } .lateral { grid-area: lateral; } .conteudo { grid-area: conteudo; } .rodape { grid-area: rodape; }
+
+- slug: selo-esgotado
+  title: Selo de esgotado
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Posicionamento]
+  html: |
+    <div class="setores">
+      <article class="setor"><h3>Pista</h3><p>R$ 300</p><span class="selo">Esgotado</span></article>
+      <article class="setor"><h3>Camarote</h3><p>R$ 900</p><span class="selo">Esgotado</span></article>
+    </div>
+  statement: |
+    Cada cartão de setor esgotado tem um selo. Posicione o selo no canto superior direito do seu cartão, a 12px do topo e a 12px da direita, por cima do conteúdo.
+
+    Os cartões ficam um embaixo do outro. Cada selo precisa acompanhar o próprio cartão.
+  solution: |
+    .setor {
+      position: relative;
+    }
+    .selo {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+    }
+  tests:
+    - name: canto do primeiro cartão
+      code: |
+        const card = rect('.setor');
+        const selo = rect('.selo');
+        expect(Math.round(selo.top - card.top)).toBe(12);
+        expect(Math.round(card.right - selo.right)).toBe(12);
+    - name: cada selo no seu cartão
+      hidden: true
+      code: |
+        const cards = $$('.setor').map(rect);
+        const selos = $$('.selo').map(rect);
+        expect(Math.round(selos[1].top - cards[1].top)).toBe(12);
+        expect(Math.round(cards[1].right - selos[1].right)).toBe(12);
+    - name: selo fora do fluxo
+      hidden: true
+      code: |
+        expect(css('.selo', 'position')).toBe('absolute');
+  hints:
+    - Um elemento com `position: absolute` se posiciona em relação ao ancestral posicionado mais próximo.
+    - Sem nenhum ancestral posicionado, ele usa a página inteira como referência.
+  explanation: |
+    `position: absolute` tira o selo do fluxo e o posiciona em relação ao bloco de contenção, que é o ancestral mais próximo com `position` diferente de `static`. `position: relative` no cartão não o move, mas faz dele essa referência.
+  traps:
+    - reason: Sem referência no cartão
+      code: |
+        .selo { position: absolute; top: 12px; right: 12px; }
+    - reason: Selo no fluxo, deslocado
+      code: |
+        .setor { position: relative; }
+        .selo { position: relative; top: 12px; right: 12px; }
+
+- slug: cabecalho-fixo
+  title: O menu que acompanha a rolagem
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Posicionamento]
+  html: |
+    <style>body { margin: 0; } section { height: 600px; border-bottom: 1px solid #ccc; }</style>
+    <header class="topo">Festival Ruído · Line-up · Ingressos</header>
+    <main>
+      <section>Sábado</section>
+      <section>Domingo</section>
+      <section>Segunda</section>
+    </main>
+  statement: |
+    O cabeçalho deve continuar visível no topo da janela quando a pessoa rola a página.
+
+    Antes de rolar, ele não pode cobrir o começo do conteúdo. Ele continua ocupando o espaço dele no fluxo.
+  solution: |
+    .topo {
+      position: sticky;
+      top: 0;
+      background: white;
+    }
+  tests:
+    - name: grudado no topo depois de rolar
+      code: |
+        scrollTo(0, 700);
+        await frame();
+        expect(Math.round(rect('.topo').top)).toBe(0);
+    - name: não cobre o conteúdo no início
+      hidden: true
+      code: |
+        scrollTo(0, 0);
+        await frame();
+        expect(rect('main').top).toBeGreaterThanOrEqual(rect('.topo').bottom - 0.5);
+  hints:
+    - "`position: sticky` se comporta como `relative` até atingir o limite definido por `top`."
+  explanation: |
+    `position: sticky` mantém o elemento no fluxo, sem cobrir nada no início, e o prende quando a rolagem chega ao limite de `top`. `position: fixed` também prende, mas tira o elemento do fluxo, e o conteúdo sobe para baixo dele.
+  traps:
+    - reason: Fixo, cobrindo o conteúdo
+      code: |
+        .topo { position: fixed; top: 0; left: 0; right: 0; background: white; }
+    - reason: Sticky sem limite
+      code: |
+        .topo { position: sticky; background: white; }
+
+- slug: lineup-responsivo
+  title: Line-up no celular
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Responsividade]
+  html: |
+    <div class="lineup">
+      <div class="banda">Ferrugem</div>
+      <div class="banda">Vórtice</div>
+      <div class="banda">Maré Negra</div>
+      <div class="banda">Asfalto</div>
+      <div class="banda">Os Insones</div>
+      <div class="banda">Concreto</div>
+    </div>
+  statement: |
+    O line-up mostra as bandas em grade. Em telas com menos de 600px de largura, use uma coluna. A partir de 600px, use três colunas iguais. Mantenha 12px de espaço entre os itens nos dois casos.
+
+    Escreva o CSS a partir do celular: a regra sem media query vale para telas pequenas.
+  must_use: ['@media']
+  solution: |
+    .lineup {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 600px) {
+      .lineup {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  tests:
+    - name: uma coluna no celular
+      width: 400
+      code: |
+        const b = $$('.banda').map(rect);
+        expect(b[1].left).toBe(b[0].left);
+        expect(Math.round(b[1].top - b[0].bottom)).toBe(12);
+    - name: três colunas na tela larga
+      width: 1000
+      code: |
+        const b = $$('.banda').map(rect);
+        expect(b[2].top).toBe(b[0].top);
+        expect(b[3].top).toBeGreaterThan(b[0].top);
+    - name: no limite de 600px
+      hidden: true
+      width: 600
+      code: |
+        const b = $$('.banda').map(rect);
+        expect(b[2].top).toBe(b[0].top);
+    - name: logo abaixo do limite
+      hidden: true
+      width: 599
+      code: |
+        const b = $$('.banda').map(rect);
+        expect(b[1].left).toBe(b[0].left);
+  hints:
+    - "`@media (min-width: 600px)` vale a partir de 600px, inclusive."
+    - A largura que importa é a da janela. Aqui, o corretor muda a largura da página em cada teste.
+  explanation: |
+    Mobile first: a regra base serve ao celular e a media query com `min-width` acrescenta o layout de tela larga. O limite de `min-width` é inclusivo, então 600px já recebe três colunas e 599px fica com uma.
+  traps:
+    - reason: max-width com limite trocado
+      code: |
+        .lineup { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        @media (max-width: 600px) { .lineup { grid-template-columns: 1fr; } }
+    - reason: Sem media query
+      code: |
+        .lineup { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+
+- slug: tema-escuro
+  title: Tema escuro
+  difficulty: medio
+  kind: dom
+  editor: css
+  in: [css/Variáveis e temas]
+  html: |
+    <main>
+      <h1>Line-up</h1>
+      <div class="cartao">Vórtice · Sábado, 22h</div>
+    </main>
+  statement: |
+    O site terá tema escuro, ativado pela classe `escuro` no elemento `html`. Organize as cores em variáveis CSS:
+
+    - `--fundo`: `#ffffff` no tema claro e `#111111` no escuro
+    - `--texto`: `#111111` no claro e `#f5f5f5` no escuro
+    - `--cartao`: `#f0f0f0` no claro e `#222222` no escuro
+
+    O `body` usa `--fundo` e `--texto`. O `.cartao` usa `--cartao` como fundo. Trocar de tema deve mudar só os valores das variáveis.
+  must_use: ['var(--fundo)', 'var(--texto)', 'var(--cartao)']
+  solution: |
+    :root {
+      --fundo: #ffffff;
+      --texto: #111111;
+      --cartao: #f0f0f0;
+    }
+    :root.escuro {
+      --fundo: #111111;
+      --texto: #f5f5f5;
+      --cartao: #222222;
+    }
+    body {
+      background: var(--fundo);
+      color: var(--texto);
+    }
+    .cartao {
+      background: var(--cartao);
+    }
+  tests:
+    - name: tema claro
+      code: |
+        expect(css('body', 'background-color')).toBe('rgb(255, 255, 255)');
+        expect(css('body', 'color')).toBe('rgb(17, 17, 17)');
+    - name: tema escuro
+      code: |
+        document.documentElement.classList.add('escuro');
+        expect(css('body', 'background-color')).toBe('rgb(17, 17, 17)');
+        expect(css('body', 'color')).toBe('rgb(245, 245, 245)');
+    - name: cartão nos dois temas
+      hidden: true
+      code: |
+        expect(css('.cartao', 'background-color')).toBe('rgb(240, 240, 240)');
+        document.documentElement.classList.add('escuro');
+        expect(css('.cartao', 'background-color')).toBe('rgb(34, 34, 34)');
+        expect(css('.cartao', 'color')).toBe('rgb(245, 245, 245)');
+    - name: variáveis declaradas na raiz
+      hidden: true
+      code: |
+        expect(getComputedStyle(document.documentElement).getPropertyValue('--fundo').trim()).toBeTruthy();
+        expect(getComputedStyle(document.documentElement).getPropertyValue('--cartao').trim()).toBeTruthy();
+  hints:
+    - Variáveis declaradas em `:root` valem para a página inteira.
+    - O tema escuro só redefine as variáveis, num seletor como `:root.escuro`.
+  explanation: |
+    Propriedades personalizadas são herdadas e resolvidas na hora. Os componentes usam `var(--fundo)` e não sabem qual tema está ativo, e o tema escuro só troca os valores. Para seguir o sistema operacional, a mesma troca pode ir dentro de `@media (prefers-color-scheme: dark)`.
+  traps:
+    - reason: Cores repetidas em cada regra
+      code: |
+        :root { --fundo: #ffffff; --texto: #111111; --cartao: #f0f0f0; }
+        body { background: var(--fundo); color: var(--texto); }
+        .cartao { background: var(--cartao); }
+        .escuro body { background: #111111; color: #f5f5f5; }
+    - reason: Esquece o cartão no escuro
+      code: |
+        :root { --fundo: #ffffff; --texto: #111111; --cartao: #f0f0f0; }
+        :root.escuro { --fundo: #111111; --texto: #f5f5f5; }
+        body { background: var(--fundo); color: var(--texto); }
+        .cartao { background: var(--cartao); }
+
+- slug: botao-com-transicao
+  title: O botão que muda de cor
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [css/Transições e animações]
+  html: |
+    <button class="comprar">Comprar ingresso</button>
+  statement: |
+    O botão `.comprar` tem fundo `#1f6feb`. Com o mouse em cima, o fundo fica `#0d4fb8`.
+
+    A troca deve ser suave: anime só a cor de fundo, em 200ms, com `ease`.
+  solution: |
+    .comprar {
+      background-color: #1f6feb;
+      transition: background-color 200ms ease;
+    }
+    .comprar:hover {
+      background-color: #0d4fb8;
+    }
+  tests:
+    - name: cor inicial
+      code: |
+        expect(css('.comprar', 'background-color')).toBe('rgb(31, 111, 235)');
+    - name: transição de 200ms
+      code: |
+        expect(css('.comprar', 'transition-duration')).toBe('0.2s');
+        expect(css('.comprar', 'transition-timing-function')).toBe('ease');
+    - name: só a cor de fundo anima
+      hidden: true
+      code: |
+        expect(css('.comprar', 'transition-property')).toBe('background-color');
+    - name: cor no hover
+      hidden: true
+      code: |
+        const rule = Array.from(document.styleSheets).flatMap((s) => Array.from(s.cssRules)).find((r) => r.selectorText && r.selectorText.includes('.comprar:hover'));
+        expect(rule).toBeDefined();
+        const probe = document.createElement('div');
+        probe.style.backgroundColor = rule.style.backgroundColor;
+        document.body.appendChild(probe);
+        expect(getComputedStyle(probe).backgroundColor).toBe('rgb(13, 79, 184)');
+  hints:
+    - "`transition` recebe a propriedade, a duração e a curva: `transition: background-color 200ms ease`."
+    - A transição vai na regra normal, não só no `:hover`, para animar também na volta.
+  explanation: |
+    A transição fica no estado base para animar nos dois sentidos, entrando e saindo do hover. Animar só `background-color`, em vez de `all`, evita animar sem querer propriedades que mudem no futuro, como largura ou borda.
+  traps:
+    - reason: Anima tudo
+      code: |
+        .comprar { background-color: #1f6feb; transition: all 200ms ease; }
+        .comprar:hover { background-color: #0d4fb8; }
+    - reason: Transição só no hover
+      code: |
+        .comprar { background-color: #1f6feb; }
+        .comprar:hover { background-color: #0d4fb8; transition: background-color 200ms ease; }

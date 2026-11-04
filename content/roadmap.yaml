@@ -1,0 +1,422 @@
+# Hierarquia da trilha. Seções, tópicos e subtópicos seguem https://roadmap.sh/frontend.
+# Exceção: os subtópicos de HTML, CSS, JavaScript e Web APIs são desta trilha, porque o roadmap não divide esses tópicos.
+# Um problema pode aparecer em mais de um subtópico. A primeira aparição define a ordem.
+title: Frontend
+sections:
+  - id: fundamentos
+    title: Fundamentos
+    summary: A base da web e as ferramentas do dia a dia.
+    topics:
+      - id: internet
+        title: Internet
+        summary: O caminho de uma página, do endereço digitado até os pixels na tela.
+        study:
+          - label: Como a web funciona (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Learn/Getting_started_with_the_web/How_the_Web_works
+          - label: Visão geral do HTTP (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Overview
+        subtopics:
+          - { name: How does the internet work?, problems: [] }
+          - { name: What is HTTP?, problems: [] }
+          - { name: What is Domain Name?, problems: [] }
+          - { name: What is hosting?, problems: [] }
+          - { name: DNS and how it works?, problems: [] }
+          - { name: Browsers and how they work?, problems: [] }
+      - id: html
+        title: HTML
+        summary: A estrutura e o significado do conteúdo. Navegadores, leitores de tela e buscadores leem o HTML antes de tudo.
+        study:
+          - label: Referência de elementos HTML (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/HTML/Element
+          - label: Formulários web (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Learn/Forms
+        subtopics:
+          - { name: Estrutura e semântica, problems: [] }
+          - { name: "Textos, listas e links", problems: [] }
+          - { name: Imagens e mídia, problems: [] }
+          - { name: Tabelas, problems: [] }
+          - { name: Formulários, problems: [] }
+          - { name: Metadados e SEO, problems: [] }
+      - id: css
+        title: CSS
+        summary: Aparência e layout. O que mais pesa no trabalho é a cascata, o box model, o Flexbox e o Grid.
+        study:
+          - label: Aprenda CSS (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Learn/CSS
+          - label: Flexbox (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Learn/CSS/CSS_layout/Flexbox
+          - label: Grid (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Learn/CSS/CSS_layout/Grids
+        subtopics:
+          - { name: Seletores e cascata, problems: [] }
+          - { name: Box model, problems: [] }
+          - { name: Flexbox, problems: [] }
+          - { name: Grid, problems: [] }
+          - { name: Posicionamento, problems: [] }
+          - { name: Responsividade, problems: [] }
+          - { name: Variáveis e temas, problems: [] }
+          - { name: Transições e animações, problems: [] }
+      - id: javascript
+        title: JavaScript
+        summary: A linguagem que dá comportamento à página. Aqui você escreve funções testadas na hora.
+        study:
+          - label: Guia de JavaScript (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide
+          - label: Manipulando documentos (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Learn/JavaScript/Client-side_web_APIs/Manipulating_documents
+        subtopics:
+          - { name: Tipos e operadores, problems: [] }
+          - { name: Funções e escopo, problems: [] }
+          - { name: Arrays, problems: [] }
+          - { name: Objetos e classes, problems: [] }
+          - { name: Strings e regex, problems: [] }
+          - { name: Assíncrono, problems: [] }
+          - { name: Fetch e JSON, problems: [] }
+          - { name: DOM, problems: [] }
+          - { name: Eventos, problems: [] }
+          - { name: Erros, problems: [] }
+      - id: version-control
+        title: Version Control
+        summary: Guardar o histórico do código, voltar atrás e trabalhar em paralelo sem sobrescrever o colega.
+        study:
+          - label: Livro Pro Git em português
+            url: https://git-scm.com/book/pt-br/v2
+        subtopics:
+          - { name: Git, problems: [] }
+      - id: vcs-hosting
+        title: VCS Hosting
+        summary: Onde o repositório mora na nuvem, e onde acontecem revisão de código e automação.
+        study:
+          - label: Documentação do GitHub
+            url: https://docs.github.com/pt
+          - label: Documentação do GitLab
+            url: https://docs.gitlab.com/
+        subtopics:
+          - { name: GitHub, problems: [] }
+          - { name: GitLab, problems: [] }
+      - id: package-managers
+        title: Package Managers
+        summary: Instalar dependências, travar versões e rodar scripts do projeto.
+        study:
+          - label: Documentação do npm
+            url: https://docs.npmjs.com/
+          - label: Calculadora de versões semânticas
+            url: https://semver.npmjs.com/
+        subtopics:
+          - { name: npm, problems: [] }
+          - { name: yarn, problems: [] }
+          - { name: pnpm, problems: [] }
+          - { name: Bun, problems: [] }
+      - id: learn-a-framework
+        title: Learn a Framework
+        summary: Componentes, estado e renderização. Os exercícios práticos usam React, que roda aqui no navegador.
+        study:
+          - label: Documentação do React
+            url: https://react.dev/learn
+          - label: Documentação do Vue
+            url: https://vuejs.org/guide/introduction.html
+        subtopics:
+          - { name: React, problems: [] }
+          - { name: Vue.js, problems: [] }
+          - { name: Angular, problems: [] }
+          - { name: Svelte, problems: [] }
+          - { name: Solid JS, problems: [] }
+      - id: css-frameworks
+        title: CSS Frameworks
+        summary: Estilo a partir de classes prontas. O Tailwind roda de verdade nos exercícios.
+        study:
+          - label: Documentação do Tailwind CSS
+            url: https://tailwindcss.com/docs
+        subtopics:
+          - { name: Tailwind, problems: [] }
+  - id: ia
+    title: IA no desenvolvimento
+    summary: Usar assistentes de código com critério e integrar modelos de linguagem num produto.
+    topics:
+      - id: ai-assisted-coding
+        title: AI Assisted Coding
+        summary: Ferramentas que escrevem, explicam e revisam código junto com você.
+        study:
+          - label: Documentação do Claude Code
+            url: https://docs.claude.com/en/docs/claude-code/overview
+          - label: Documentação do GitHub Copilot
+            url: https://docs.github.com/pt/copilot
+        subtopics:
+          - { name: Claude Code, problems: [] }
+          - { name: Cursor, problems: [] }
+          - { name: Copilot, problems: [] }
+          - { name: Antigravity, problems: [] }
+      - id: ai-basics
+        title: Learn the Basics
+        summary: Como um modelo de linguagem funciona e onde ele ajuda ou atrapalha no trabalho.
+        study:
+          - label: Visão geral dos modelos Claude
+            url: https://docs.claude.com/en/docs/about-claude/models/overview
+        subtopics:
+          - { name: How LLMs work, problems: [] }
+          - { name: AI vs Traditional Coding, problems: [] }
+          - { name: Applications, problems: [] }
+          - { name: Code Reviews, problems: [] }
+          - { name: Refactoring, problems: [] }
+          - { name: Docs Generation, problems: [] }
+      - id: prompting-techniques
+        title: Prompting Techniques
+        summary: Pedir do jeito certo. Contexto, exemplos e critérios claros mudam o resultado.
+        study:
+          - label: Guia de engenharia de prompt da Anthropic
+            url: https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview
+      - id: agents
+        title: Agents
+        summary: Modelos que usam ferramentas em laço até cumprir uma tarefa.
+        study:
+          - label: Construindo agentes eficazes (Anthropic)
+            url: https://www.anthropic.com/engineering/building-effective-agents
+      - id: mcp
+        title: MCP
+        summary: Um protocolo padrão para ligar assistentes a ferramentas e dados.
+        study:
+          - label: Model Context Protocol
+            url: https://modelcontextprotocol.io/
+      - id: skills
+        title: Skills
+        summary: Instruções e scripts empacotados que o agente carrega só quando precisa.
+        study:
+          - label: Agent Skills na documentação da Anthropic
+            url: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview
+      - id: implementing-ai
+        title: Implementing AI
+        summary: Chamar a API de um modelo a partir do seu produto, com segurança e tratamento de erros.
+        study:
+          - label: API Messages da Anthropic
+            url: https://docs.claude.com/en/api/messages
+          - label: API da OpenAI
+            url: https://platform.openai.com/docs
+          - label: API do Gemini
+            url: https://ai.google.dev/gemini-api/docs
+        subtopics:
+          - { name: Anthropic, problems: [] }
+          - { name: OpenAI, problems: [] }
+          - { name: Gemini, problems: [] }
+  - id: avancado
+    title: Frontend avançado
+    summary: O que separa uma página que funciona de um produto que aguenta o mundo real.
+    topics:
+      - id: auth-strategies
+        title: Auth Strategies
+        summary: Sessão, cookie, token e OAuth. Quem é o usuário e por quanto tempo vale essa resposta.
+        study:
+          - label: Cookies HTTP (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Cookies
+          - label: Introdução ao JWT
+            url: https://jwt.io/introduction
+      - id: module-bundlers
+        title: Module Bundlers
+        summary: Juntar, transformar e otimizar os arquivos do projeto para o navegador.
+        study:
+          - label: Por que Vite
+            url: https://vite.dev/guide/why.html
+          - label: Módulos JavaScript (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Modules
+        subtopics:
+          - { name: Vite, problems: [] }
+          - { name: SWC, problems: [] }
+          - { name: esbuild, problems: [] }
+          - { name: Rollup, problems: [] }
+          - { name: Rolldown, problems: [] }
+          - { name: Parcel, problems: [] }
+      - id: linters-formatters
+        title: Linters & Formatters
+        summary: Achar bugs prováveis e padronizar o estilo sem discussão em code review.
+        study:
+          - label: Documentação do ESLint
+            url: https://eslint.org/docs/latest/
+          - label: Por que Prettier
+            url: https://prettier.io/docs/en/why-prettier
+        subtopics:
+          - { name: ESLint, problems: [] }
+          - { name: Prettier, problems: [] }
+          - { name: Biome, problems: [] }
+      - id: testing
+        title: Testing
+        summary: Testes que pegam defeitos de verdade. Aqui você escreve testes e o corretor tenta enganá-los.
+        study:
+          - label: Documentação do Vitest
+            url: https://vitest.dev/guide/
+          - label: Documentação do Playwright
+            url: https://playwright.dev/docs/intro
+        subtopics:
+          - { name: Vitest, problems: [] }
+          - { name: Jest, problems: [] }
+          - { name: Playwright, problems: [] }
+          - { name: Cypress, problems: [] }
+      - id: web-apis
+        title: Web APIs
+        summary: O que o navegador oferece além do DOM, como armazenamento, URLs, observadores e cancelamento.
+        study:
+          - label: Lista de Web APIs (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/API
+        subtopics:
+          - { name: Armazenamento, problems: [] }
+          - { name: URL e histórico, problems: [] }
+          - { name: Observadores, problems: [] }
+          - { name: Cancelamento e tempo, problems: [] }
+      - id: web-security
+        title: Web Security
+        summary: Os ataques mais comuns contra o frontend e as defesas que o navegador oferece.
+        study:
+          - label: Segurança na web (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/Security
+          - label: OWASP Top 10
+            url: https://owasp.org/www-project-top-ten/
+        subtopics:
+          - { name: CORS, problems: [] }
+          - { name: HTTPS, problems: [] }
+          - { name: CSP, problems: [] }
+          - { name: OWASP Risks, problems: [] }
+      - id: ssr
+        title: SSR
+        summary: Renderizar no servidor para a primeira tela chegar pronta, e hidratar no navegador.
+        study:
+          - label: Documentação do Next.js
+            url: https://nextjs.org/docs
+          - label: Documentação do Nuxt
+            url: https://nuxt.com/docs
+        subtopics:
+          - { group: React, name: Next.js, problems: [] }
+          - { group: React, name: Tanstack Start, problems: [] }
+          - { group: React, name: Astro, problems: [] }
+          - { group: React, name: react-router, problems: [] }
+          - { group: Vue.js, name: Nuxt.js, problems: [] }
+          - { group: SvelteKit, name: Svelte, problems: [] }
+          - { name: Angular, problems: [] }
+      - id: deployment
+        title: Deployment
+        summary: Colocar o site no ar, com build automático, prévias e variáveis de ambiente.
+        study:
+          - label: Publicar um site estático com Vite
+            url: https://vite.dev/guide/static-deploy.html
+        subtopics:
+          - { name: GitHub Pages, problems: [] }
+          - { name: Vercel, problems: [] }
+          - { name: Netlify, problems: [] }
+          - { name: Cloudflare, problems: [] }
+          - { name: Railway, problems: [] }
+          - { name: Render, problems: [] }
+      - id: type-checkers
+        title: Type Checkers
+        summary: Pegar erros antes de rodar. Aqui o compilador do TypeScript corrige seus tipos.
+        study:
+          - label: Manual do TypeScript
+            url: https://www.typescriptlang.org/docs/handbook/intro.html
+        subtopics:
+          - { name: TypeScript, problems: [] }
+      - id: ssg
+        title: SSG
+        summary: Gerar as páginas no build e servir arquivos prontos, rápidos e baratos.
+        study:
+          - label: Documentação do Astro
+            url: https://docs.astro.build/
+          - label: Documentação do Eleventy
+            url: https://www.11ty.dev/docs/
+        subtopics:
+          - { name: Astro, problems: [] }
+          - { name: Next.js, problems: [] }
+          - { name: Nuxt.js, problems: [] }
+          - { name: Vuepress, problems: [] }
+          - { name: Eleventy, problems: [] }
+      - id: design-systems
+        title: Design Systems
+        summary: Componentes e tokens compartilhados para o produto ter uma cara só.
+        study:
+          - label: Design tokens (W3C Community Group)
+            url: https://www.designtokens.org/
+      - id: performance
+        title: Performance
+        summary: Medir antes de otimizar, e então cortar trabalho, bytes e espera.
+        study:
+          - label: Performance na web (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/Performance
+          - label: Cache HTTP (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Caching
+        subtopics:
+          - { name: Lighthouse, problems: [] }
+          - { name: DevTools Usage, problems: [] }
+          - { name: Service Workers, problems: [] }
+          - { name: Cache-Control, problems: [] }
+          - { name: Streamed Responses, problems: [] }
+      - id: web-components
+        title: Web Components
+        summary: Componentes nativos do navegador, sem framework.
+        study:
+          - label: Web Components (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/API/Web_components
+        subtopics:
+          - { name: HTML Templates, problems: [] }
+          - { name: Custom Elements, problems: [] }
+          - { name: Shadow DOM, problems: [] }
+      - id: graphql
+        title: GraphQL
+        summary: O cliente pede exatamente os campos que precisa, numa consulta só.
+        study:
+          - label: Aprenda GraphQL
+            url: https://graphql.org/learn/
+        subtopics:
+          - { name: Apollo, problems: [] }
+          - { name: Relay Modern, problems: [] }
+      - id: accessibility
+        title: Accessibility
+        summary: Uma página que funciona com teclado, leitor de tela e zoom. Os testes conferem o DOM como uma tecnologia assistiva leria.
+        study:
+          - label: Acessibilidade (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Learn/Accessibility
+          - label: Guia de padrões ARIA (W3C)
+            url: https://www.w3.org/WAI/ARIA/apg/
+      - id: pwas
+        title: PWAs
+        summary: Um site que se instala, abre offline e se comporta como aplicativo.
+        study:
+          - label: Progressive Web Apps (MDN)
+            url: https://developer.mozilla.org/pt-BR/docs/Web/Progressive_web_apps
+      - id: desktop-apps
+        title: Desktop Apps
+        summary: Levar o que você sabe de web para aplicativos de computador.
+        study:
+          - label: Documentação do Electron
+            url: https://www.electronjs.org/docs/latest
+          - label: Documentação do Tauri
+            url: https://tauri.app/start/
+        subtopics:
+          - { name: Electron, problems: [] }
+          - { name: Tauri, problems: [] }
+          - { name: Flutter, problems: [] }
+      - id: mobile-apps
+        title: Mobile Apps
+        summary: Aplicativos de celular a partir de uma base de código web ou multiplataforma.
+        study:
+          - label: Documentação do React Native
+            url: https://reactnative.dev/docs/getting-started
+        subtopics:
+          - { name: React Native, problems: [] }
+          - { name: Flutter, problems: [] }
+          - { name: Ionic, problems: [] }
+
+practice:
+  - id: conserte
+    title: Conserte
+    summary: O código já existe e tem um defeito. Descubra a causa a partir do sintoma e corrija.
+    study:
+      - label: Depurando JavaScript no navegador (MDN)
+        url: https://developer.mozilla.org/pt-BR/docs/Learn/JavaScript/First_steps/What_went_wrong
+    subtopics:
+      - { name: Lógica, problems: [] }
+      - { name: Layout, problems: [] }
+      - { name: Componentes, problems: [] }
+  - id: implemente
+    title: Implemente
+    summary: A base está pronta. Acrescente o que a tarefa pede sem quebrar o que já funciona.
+    study:
+      - label: Documentação do React
+        url: https://react.dev/learn
+    subtopics:
+      - { name: Funcionalidades, problems: [] }
+      - { name: Interface, problems: [] }

@@ -1,0 +1,205 @@
+- slug: caminho-dos-pacotes
+  title: O ingresso atravessou o oceano
+  difficulty: facil
+  kind: quiz
+  in: [internet/How does the internet work?]
+  statement: |
+    Uma fã em Lisboa compra ingresso no site do festival, hospedado em São Paulo. A página chega inteira, mas os dados não viajaram por um cabo exclusivo entre as duas cidades.
+
+    Como a resposta do servidor chega até ela?
+  options:
+    - text: Dividida em pacotes, que roteadores encaminham de rede em rede, às vezes por caminhos diferentes, e o TCP remonta na ordem certa
+      why: Certo. A internet é uma rede de redes. Cada pacote leva o endereço de destino, e o TCP confere, reordena e pede de novo o que se perdeu.
+    - text: Por uma conexão direta que o provedor reserva entre os dois computadores enquanto a página carrega
+      why: Isso descreve a telefonia antiga, por comutação de circuitos. A internet compartilha os links entre todos, pacote a pacote.
+    - text: Pelo DNS, que transporta o conteúdo da página até o navegador
+      why: O DNS só traduz o nome do site para um endereço IP. O conteúdo vem do servidor, por outra conexão.
+    - text: Por satélite, sempre, porque cabos submarinos só transportam chamadas de voz
+      why: A maior parte do tráfego entre continentes passa por cabos submarinos de fibra óptica.
+  answer: 0
+  explanation: |
+    A internet troca dados em pacotes. O IP cuida do endereçamento e do encaminhamento entre redes. O TCP, por cima dele, garante que os bytes cheguem completos e na ordem. Quando um pacote se perde, só ele é reenviado.
+
+- slug: metodo-e-status
+  title: O pedido e a resposta
+  difficulty: facil
+  kind: quiz
+  in: [internet/What is HTTP?]
+  statement: |
+    O formulário de cadastro do fã clube envia nome e e-mail para `/api/fas`. O servidor grava o fã e responde.
+
+    Qual combinação de método e status descreve melhor essa troca quando tudo dá certo?
+  options:
+    - text: POST, com resposta 201 Created
+      why: Certo. POST envia dados para criar algo, e 201 diz que um recurso novo foi criado.
+    - text: GET, com resposta 200 OK
+      why: GET serve para ler. Mandar dados de cadastro na URL de um GET expõe esses dados em histórico e logs, e um GET não deve mudar o estado do servidor.
+    - text: POST, com resposta 302 Found
+      why: 302 é um redirecionamento. Pode até aparecer depois de um formulário, mas não diz que o cadastro foi criado.
+    - text: DELETE, com resposta 204 No Content
+      why: DELETE remove um recurso. Aqui o fã está sendo criado.
+  answer: 0
+  explanation: |
+    O método diz a intenção do pedido: GET lê, POST cria, PUT e PATCH alteram, DELETE remove. O status diz o que aconteceu: 2xx sucesso, 3xx redirecionamento, 4xx erro de quem pediu, 5xx erro do servidor.
+
+- slug: classificar-status
+  title: O que o servidor quis dizer
+  difficulty: facil
+  kind: js
+  in: [internet/What is HTTP?]
+  statement: |
+    O painel de monitoramento do site mostra uma etiqueta para cada resposta HTTP.
+
+    Escreva a função `categoria(status)`, que recebe um número e devolve:
+
+    - `'informativo'` de 100 a 199
+    - `'sucesso'` de 200 a 299
+    - `'redirecionamento'` de 300 a 399
+    - `'erro do cliente'` de 400 a 499
+    - `'erro do servidor'` de 500 a 599
+    - `'inválido'` para qualquer outro valor, inclusive não inteiros
+  solution: |
+    function categoria(status) {
+      if (!Number.isInteger(status) || status < 100 || status > 599) return 'inválido';
+      return ['informativo', 'sucesso', 'redirecionamento', 'erro do cliente', 'erro do servidor'][Math.floor(status / 100) - 1];
+    }
+  tests:
+    - name: casos comuns
+      code: |
+        expect(categoria(200)).toBe('sucesso');
+        expect(categoria(404)).toBe('erro do cliente');
+        expect(categoria(500)).toBe('erro do servidor');
+    - name: redirecionamento e informativo
+      code: |
+        expect(categoria(301)).toBe('redirecionamento');
+        expect(categoria(101)).toBe('informativo');
+    - name: limites das faixas
+      hidden: true
+      code: |
+        expect(categoria(199)).toBe('informativo');
+        expect(categoria(299)).toBe('sucesso');
+        expect(categoria(399)).toBe('redirecionamento');
+        expect(categoria(499)).toBe('erro do cliente');
+        expect(categoria(599)).toBe('erro do servidor');
+    - name: fora das faixas
+      hidden: true
+      code: |
+        expect(categoria(99)).toBe('inválido');
+        expect(categoria(600)).toBe('inválido');
+        expect(categoria(0)).toBe('inválido');
+    - name: valores que não são inteiros
+      hidden: true
+      code: |
+        expect(categoria(200.5)).toBe('inválido');
+        expect(categoria(NaN)).toBe('inválido');
+  hints:
+    - Toda faixa começa num múltiplo de 100. `Math.floor(status / 100)` dá o primeiro dígito.
+    - Rejeite primeiro o que não é inteiro ou está fora de 100 a 599.
+  explanation: |
+    Verificar os casos inválidos primeiro deixa o resto simples. O primeiro dígito do status identifica a classe da resposta, então um array indexado por ele substitui uma cadeia de if.
+  traps:
+    - reason: Não trata números quebrados
+      code: |
+        function categoria(s) {
+          if (s < 100 || s > 599) return 'inválido';
+          return ['informativo', 'sucesso', 'redirecionamento', 'erro do cliente', 'erro do servidor'][Math.floor(s / 100) - 1];
+        }
+    - reason: Erra o limite superior
+      code: |
+        function categoria(s) {
+          if (!Number.isInteger(s)) return 'inválido';
+          if (s >= 100 && s < 199) return 'informativo';
+          if (s >= 200 && s < 299) return 'sucesso';
+          if (s >= 300 && s < 399) return 'redirecionamento';
+          if (s >= 400 && s < 499) return 'erro do cliente';
+          if (s >= 500 && s < 599) return 'erro do servidor';
+          return 'inválido';
+        }
+
+- slug: partes-do-dominio
+  title: Anatomia de um endereço
+  difficulty: facil
+  kind: quiz
+  in: [internet/What is Domain Name?]
+  statement: |
+    O festival usa o endereço `ingressos.festivalruido.com.br`.
+
+    Qual afirmação está correta?
+  options:
+    - text: "`.com.br` é o domínio de topo, `festivalruido` é o nome registrado e `ingressos` é um subdomínio que o dono cria sem novo registro"
+      why: Certo. Quem registra `festivalruido.com.br` pode criar quantos subdomínios quiser no próprio DNS.
+    - text: "`ingressos` é o domínio de topo, porque é a primeira parte do endereço"
+      why: O nome é lido da direita para a esquerda. O topo da hierarquia é a última parte.
+    - text: Cada subdomínio precisa ser comprado separadamente no registro.br
+      why: Só o domínio registrado é comprado. Os subdomínios são registros no DNS do próprio dono.
+    - text: O domínio é o endereço IP do servidor, escrito com letras
+      why: O domínio é um nome. O DNS é que aponta esse nome para um ou mais IPs, e o IP pode mudar sem o nome mudar.
+  answer: 0
+  explanation: |
+    Um nome de domínio é uma hierarquia lida da direita para a esquerda: domínio de topo, nome registrado e subdomínios. Ele existe para pessoas, e o DNS traduz o nome para o endereço IP que as máquinas usam.
+
+- slug: estatico-ou-servidor
+  title: Onde hospedar
+  difficulty: facil
+  kind: quiz
+  in: [internet/What is hosting?]
+  statement: |
+    O site do festival tem duas partes: as páginas de line-up, iguais para todo mundo e geradas no build, e a venda de ingressos, que consulta estoque e cobra o cartão.
+
+    Que hospedagem atende cada parte?
+  options:
+    - text: As páginas de line-up cabem numa hospedagem estática ou CDN. A venda precisa de um servidor ou funções que executem código e guardem segredos
+      why: Certo. Arquivos prontos podem ser servidos de perto do usuário, sem processamento. Cobrar cartão exige código no servidor e chaves que não podem ir para o navegador.
+    - text: As duas partes podem ficar na hospedagem estática, chamando a API de pagamento direto do navegador com a chave secreta
+      why: Qualquer coisa enviada ao navegador pode ser lida por quem abre o DevTools. A chave secreta de pagamento seria exposta.
+    - text: As duas partes exigem um servidor dedicado, porque hospedagem estática não serve HTML
+      why: Hospedagem estática serve exatamente HTML, CSS, JS e imagens. O que ela não faz é executar código seu a cada pedido.
+    - text: Hospedagem é só o registro do domínio, então a escolha não muda nada
+      why: Registrar o nome e hospedar o conteúdo são serviços diferentes, às vezes vendidos juntos.
+  answer: 0
+  explanation: |
+    Hospedar é deixar os arquivos ou o código do site num computador sempre ligado e acessível. Conteúdo estático é barato e rápido de servir. Lógica com segredo ou banco de dados precisa rodar num servidor, num contêiner ou em funções serverless.
+
+- slug: dns-desatualizado
+  title: Mudamos de servidor, mas nem todo mundo viu
+  difficulty: medio
+  kind: quiz
+  in: [internet/DNS and how it works?]
+  statement: |
+    A equipe trocou o registro A de `festivalruido.com.br` para o IP do servidor novo. Uma hora depois, parte do público ainda chega ao servidor antigo. O TTL do registro era de 86400 segundos.
+
+    O que explica isso?
+  options:
+    - text: Resolvedores e navegadores guardam a resposta antiga em cache até o TTL vencer, que aqui é de um dia
+      why: Certo. O TTL diz por quanto tempo a resposta pode ser reaproveitada. Baixar o TTL dias antes de uma migração encurta essa janela.
+    - text: O DNS demora para copiar o site do servidor antigo para o novo
+      why: O DNS não copia arquivos. Ele só responde qual IP corresponde ao nome.
+    - text: O registro A só vale para quem acessa pelo celular
+      why: O registro A vale para qualquer cliente IPv4. Celular e computador consultam o mesmo DNS.
+    - text: Os usuários digitaram o endereço errado
+      why: O endereço é o mesmo. O que difere é a resposta guardada em cache por cada resolvedor.
+  answer: 0
+  explanation: |
+    Para achar o IP de um nome, o resolvedor pergunta aos servidores raiz, depois aos do domínio de topo e por fim aos servidores autoritativos do domínio. Para não repetir esse caminho, cada resposta fica em cache pelo tempo do TTL.
+
+- slug: script-que-trava
+  title: A página em branco
+  difficulty: medio
+  kind: quiz
+  in: [internet/Browsers and how they work?]
+  statement: |
+    A página do line-up tem `<script src="analytics.js"></script>` no início do `<head>`. Quando o servidor desse script fica lento, a página inteira demora a aparecer.
+
+    Qual é a melhor correção?
+  options:
+    - text: Adicionar `defer` ao script, para o navegador baixar em paralelo e executar só depois de montar o HTML
+      why: Certo. Um script comum interrompe a leitura do HTML até ser baixado e executado. Com defer, o HTML continua sendo lido e o script roda na ordem, ao final.
+    - text: Mover o CSS para o fim do body, para o script carregar primeiro
+      why: Isso piora o resultado, porque a página aparece sem estilo e depois muda. O problema é o script que bloqueia a leitura.
+    - text: Trocar a extensão do arquivo para .mjs
+      why: O nome do arquivo não muda como o navegador carrega o script. O que muda é o atributo type="module", defer ou async.
+    - text: Não há correção, porque o navegador sempre espera todos os scripts antes de desenhar
+      why: O navegador desenha assim que tem HTML e CSS suficientes. Só scripts que bloqueiam a leitura impedem isso.
+  answer: 0
+  explanation: |
+    O navegador lê o HTML e monta o DOM, lê o CSS e monta o CSSOM, combina os dois, calcula o layout e pinta. Um script sem defer ou async para a leitura do HTML até ser baixado e executado.

@@ -1,0 +1,1272 @@
+- slug: preco-com-desconto
+  title: Meia-entrada
+  difficulty: facil
+  kind: js
+  in: [javascript/Tipos e operadores]
+  statement: |
+    Escreva `precoFinal(ingresso)`. O ingresso tem `preco`, em reais, e pode ter `desconto`, uma fração entre 0 e 1. Por exemplo, `0.5` é meia-entrada.
+
+    - Sem `desconto`, ou com `desconto` igual a `null` ou `undefined`, o preço não muda.
+    - Desconto `0` é válido e também não muda o preço.
+    - Arredonde o resultado para 2 casas decimais.
+  solution: |
+    function precoFinal(ingresso) {
+      const desconto = ingresso.desconto ?? 0;
+      return Math.round(ingresso.preco * (1 - desconto) * 100) / 100;
+    }
+  tests:
+    - name: meia-entrada
+      code: |
+        expect(precoFinal({ preco: 300, desconto: 0.5 })).toBe(150);
+    - name: sem desconto
+      code: |
+        expect(precoFinal({ preco: 300 })).toBe(300);
+    - name: desconto nulo
+      hidden: true
+      code: |
+        expect(precoFinal({ preco: 120, desconto: null })).toBe(120);
+    - name: arredondamento
+      hidden: true
+      code: |
+        expect(precoFinal({ preco: 99.9, desconto: 0.15 })).toBe(84.92);
+        expect(precoFinal({ preco: 10, desconto: 1 / 3 })).toBe(6.67);
+    - name: desconto zero
+      hidden: true
+      code: |
+        expect(precoFinal({ preco: 80, desconto: 0 })).toBe(80);
+  hints:
+    - "`??` só troca `null` e `undefined`. `||` troca também o `0`."
+    - Para 2 casas, multiplique por 100, arredonde e divida por 100.
+  explanation: |
+    `??`, o operador de coalescência nula, usa o valor da direita só quando o da esquerda é `null` ou `undefined`. Com `||`, um desconto `0` também seria trocado, o que aqui dá o mesmo resultado por sorte, mas quebra em casos como uma quantidade zero. Dinheiro em ponto flutuante acumula erros como `0.1 + 0.2`, então arredonde no fim ou trabalhe em centavos inteiros.
+  traps:
+    - reason: Não arredonda
+      code: |
+        function precoFinal(i) { return i.preco * (1 - (i.desconto ?? 0)); }
+    - reason: Quebra sem desconto
+      code: |
+        function precoFinal(i) { return Math.round(i.preco * (1 - i.desconto) * 100) / 100; }
+
+- slug: preco-em-texto
+  title: O preço veio como texto
+  difficulty: medio
+  kind: js
+  in: [javascript/Tipos e operadores]
+  statement: |
+    A planilha de patrocínio exporta valores como texto no formato brasileiro, como `"R$ 1.250,50"`.
+
+    Escreva `paraNumero(texto)`, que devolve o valor como número: `1250.5`. Aceite espaços extras, valores sem o `R$` e valores sem centavos. Para texto que não é um valor, devolva `NaN`.
+  solution: |
+    function paraNumero(texto) {
+      const limpo = String(texto).replace('R$', '').trim().replace(/\./g, '').replace(',', '.');
+      if (!/^-?\d+(\.\d+)?$/.test(limpo)) return NaN;
+      return Number(limpo);
+    }
+  tests:
+    - name: valor completo
+      code: |
+        expect(paraNumero('R$ 1.250,50')).toBe(1250.5);
+    - name: sem R$ e sem centavos
+      code: |
+        expect(paraNumero('300')).toBe(300);
+        expect(paraNumero('  R$ 45,90  ')).toBe(45.9);
+    - name: milhões
+      hidden: true
+      code: |
+        expect(paraNumero('R$ 2.300.000,00')).toBe(2300000);
+    - name: texto inválido
+      hidden: true
+      code: |
+        expect(paraNumero('a combinar')).toBeNaN();
+        expect(paraNumero('')).toBeNaN();
+    - name: centavos sem milhar
+      hidden: true
+      code: |
+        expect(paraNumero('0,99')).toBe(0.99);
+  hints:
+    - No formato brasileiro, o ponto separa milhares e a vírgula separa os centavos. Em JavaScript, o ponto é o separador decimal.
+    - "`Number('')` dá `0`, não `NaN`. Confira o formato antes de converter."
+  explanation: |
+    `parseFloat('1.250,50')` dá `1.25`, porque lê até o primeiro caractere que não entende. Por isso o texto é normalizado antes: tirar o `R$`, remover os pontos de milhar e trocar a vírgula por ponto. Conferir o formato com uma regex evita que `Number('')` vire `0` em silêncio.
+  traps:
+    - reason: parseFloat direto
+      code: |
+        function paraNumero(t) { return parseFloat(String(t).replace('R$', '').trim()); }
+    - reason: Texto vazio vira zero
+      code: |
+        function paraNumero(t) { return Number(String(t).replace('R$', '').trim().replace(/\./g, '').replace(',', '.')); }
+
+- slug: contador-de-cliques
+  title: Contadores independentes
+  difficulty: facil
+  kind: js
+  in: [javascript/Funções e escopo]
+  statement: |
+    Cada palco tem um contador de público. Escreva `criarContador(inicial)`, que devolve um objeto com:
+
+    - `incrementar()`: soma 1 e devolve o novo valor
+    - `valor()`: devolve o valor atual
+
+    `inicial` é opcional, e o padrão é 0. Cada contador é independente, e o valor não pode ser alterado de fora sem passar por `incrementar`.
+  solution: |
+    function criarContador(inicial = 0) {
+      let total = inicial;
+      return {
+        incrementar() {
+          total += 1;
+          return total;
+        },
+        valor() {
+          return total;
+        },
+      };
+    }
+  tests:
+    - name: conta a partir de zero
+      code: |
+        const c = criarContador();
+        c.incrementar();
+        expect(c.incrementar()).toBe(2);
+        expect(c.valor()).toBe(2);
+    - name: valor inicial
+      code: |
+        const c = criarContador(10);
+        expect(c.incrementar()).toBe(11);
+    - name: contadores independentes
+      hidden: true
+      code: |
+        const a = criarContador();
+        const b = criarContador();
+        a.incrementar();
+        a.incrementar();
+        b.incrementar();
+        expect(a.valor()).toBe(2);
+        expect(b.valor()).toBe(1);
+    - name: valor protegido
+      hidden: true
+      code: |
+        const c = criarContador();
+        expect(Object.values(c).every((v) => typeof v === 'function')).toBe(true);
+        c.total = 99;
+        c.incrementar();
+        expect(c.valor()).toBe(1);
+  hints:
+    - Uma variável declarada dentro de `criarContador` continua viva para as funções criadas ali dentro.
+  explanation: |
+    Uma closure é uma função que lembra as variáveis do escopo onde foi criada. Cada chamada de `criarContador` cria um novo `total`, visível só para `incrementar` e `valor`. Por isso os contadores não interferem entre si e ninguém altera o valor por fora.
+  traps:
+    - reason: Variável compartilhada fora da função
+      code: |
+        let total = 0;
+        function criarContador(inicial = 0) {
+          total = inicial;
+          return { incrementar: () => ++total, valor: () => total };
+        }
+    - reason: Valor exposto no objeto
+      code: |
+        function criarContador(inicial = 0) {
+          return { total: inicial, incrementar() { return ++this.total; }, valor() { return this.total; } };
+        }
+
+- slug: busca-com-debounce
+  title: Busca sem enxurrada
+  difficulty: medio
+  kind: js
+  in: [javascript/Funções e escopo]
+  statement: |
+    A busca de bandas chama a API a cada tecla. Escreva `debounce(funcao, espera)`, que devolve uma nova função. Ela só chama `funcao` depois de `espera` milissegundos sem novas chamadas.
+
+    A chamada final usa os argumentos da última chamada.
+  solution: |
+    function debounce(funcao, espera) {
+      let timer;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => funcao.apply(this, args), espera);
+      };
+    }
+  tests:
+    - name: espera parar de digitar
+      code: |
+        const spy = fn();
+        const buscar = debounce(spy, 30);
+        buscar('v');
+        buscar('vo');
+        buscar('vor');
+        expect(spy).not.toHaveBeenCalled();
+        await wait(60);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith('vor');
+    - name: pausas longas chamam de novo
+      hidden: true
+      code: |
+        const spy = fn();
+        const buscar = debounce(spy, 20);
+        buscar('a');
+        await wait(50);
+        buscar('b');
+        await wait(50);
+        expect(spy).toHaveBeenCalledTimes(2);
+    - name: reinicia a espera a cada chamada
+      hidden: true
+      code: |
+        const spy = fn();
+        const buscar = debounce(spy, 40);
+        buscar(1);
+        await wait(25);
+        buscar(2);
+        await wait(25);
+        expect(spy).not.toHaveBeenCalled();
+        await wait(40);
+        expect(spy).toHaveBeenCalledWith(2);
+  hints:
+    - Guarde o identificador do `setTimeout` numa variável da closure.
+    - A cada chamada, cancele o timer anterior com `clearTimeout` antes de criar outro.
+  explanation: |
+    O debounce agrupa uma rajada de chamadas numa só: cada chamada cancela a anterior e agenda de novo. A variável `timer` mora na closure, compartilhada entre as chamadas da função devolvida. Para buscas, isso troca uma requisição por tecla por uma requisição quando a pessoa para de digitar.
+  traps:
+    - reason: Não cancela o timer anterior
+      code: |
+        function debounce(f, espera) { return (...args) => setTimeout(() => f(...args), espera); }
+    - reason: Usa os primeiros argumentos
+      code: |
+        function debounce(f, espera) {
+          let timer = null;
+          let primeiros;
+          return (...args) => {
+            if (!timer) primeiros = args;
+            clearTimeout(timer);
+            timer = setTimeout(() => { timer = null; f(...primeiros); }, espera);
+          };
+        }
+
+- slug: soma-dos-ingressos
+  title: Faturamento da noite
+  difficulty: facil
+  kind: js
+  in: [javascript/Arrays]
+  statement: |
+    Escreva `faturamento(vendas)`. Cada venda tem `setor`, `quantidade`, `preco` e `status`. Some `quantidade * preco` só das vendas com `status` igual a `'pago'`.
+
+    Sem vendas pagas, o faturamento é 0.
+  solution: |
+    function faturamento(vendas) {
+      return vendas
+        .filter((venda) => venda.status === 'pago')
+        .reduce((total, venda) => total + venda.quantidade * venda.preco, 0);
+    }
+  tests:
+    - name: soma as pagas
+      code: |
+        const vendas = [
+          { setor: 'pista', quantidade: 2, preco: 300, status: 'pago' },
+          { setor: 'camarote', quantidade: 1, preco: 900, status: 'cancelado' },
+          { setor: 'pista', quantidade: 1, preco: 150, status: 'pago' },
+        ];
+        expect(faturamento(vendas)).toBe(750);
+    - name: lista vazia
+      hidden: true
+      code: |
+        expect(faturamento([])).toBe(0);
+    - name: nenhuma paga
+      hidden: true
+      code: |
+        expect(faturamento([{ setor: 'pista', quantidade: 3, preco: 300, status: 'pendente' }])).toBe(0);
+    - name: não altera a lista
+      hidden: true
+      code: |
+        const vendas = [{ setor: 'pista', quantidade: 2, preco: 300, status: 'pago' }];
+        const copia = JSON.parse(JSON.stringify(vendas));
+        faturamento(vendas);
+        expect(vendas).toEqual(copia);
+  hints:
+    - "`filter` escolhe as vendas, e `reduce` acumula o total."
+    - Sem o valor inicial, `reduce` numa lista vazia lança um erro.
+  explanation: |
+    `filter` seguido de `reduce` descreve o cálculo em duas etapas legíveis. O segundo argumento de `reduce`, o `0`, é o valor inicial: sem ele, uma lista vazia lança `TypeError` e uma lista com um item devolve o objeto, não um número.
+  traps:
+    - reason: Sem valor inicial
+      code: |
+        function faturamento(v) { return v.filter((x) => x.status === 'pago').map((x) => x.quantidade * x.preco).reduce((a, b) => a + b); }
+    - reason: Ignora a quantidade
+      code: |
+        function faturamento(v) { return v.filter((x) => x.status === 'pago').reduce((t, x) => t + x.preco, 0); }
+
+- slug: bandas-por-genero
+  title: Bandas por gênero
+  difficulty: medio
+  kind: js
+  in: [javascript/Arrays]
+  statement: |
+    Escreva `agruparPorGenero(bandas)`, que recebe uma lista de `{ nome, genero }` e devolve um objeto em que cada chave é um gênero e o valor é a lista de nomes desse gênero, em ordem alfabética.
+
+    Ignore bandas sem gênero.
+  solution: |
+    function agruparPorGenero(bandas) {
+      const grupos = {};
+      for (const banda of bandas) {
+        if (!banda.genero) continue;
+        (grupos[banda.genero] ??= []).push(banda.nome);
+      }
+      for (const genero in grupos) grupos[genero].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      return grupos;
+    }
+  tests:
+    - name: agrupa
+      code: |
+        expect(agruparPorGenero([
+          { nome: 'Vórtice', genero: 'thrash' },
+          { nome: 'Maré Negra', genero: 'doom' },
+          { nome: 'Asfalto', genero: 'thrash' },
+        ])).toEqual({ thrash: ['Asfalto', 'Vórtice'], doom: ['Maré Negra'] });
+    - name: lista vazia
+      hidden: true
+      code: |
+        expect(agruparPorGenero([])).toEqual({});
+    - name: sem gênero
+      hidden: true
+      code: |
+        expect(agruparPorGenero([{ nome: 'Ferrugem' }, { nome: 'Concreto', genero: '' }, { nome: 'Asfalto', genero: 'thrash' }])).toEqual({ thrash: ['Asfalto'] });
+    - name: ordem com acentos
+      hidden: true
+      code: |
+        const r = agruparPorGenero([{ nome: 'Órbita', genero: 'prog' }, { nome: 'Pulso', genero: 'prog' }, { nome: 'Abismo', genero: 'prog' }]);
+        expect(r.prog).toEqual(['Abismo', 'Órbita', 'Pulso']);
+  hints:
+    - "`??=` cria a lista na primeira vez que o gênero aparece."
+    - "`sort()` sem função compara códigos Unicode e põe `Ó` depois do `Z`. Use `localeCompare`."
+  explanation: |
+    Agrupar é percorrer a lista uma vez e empurrar cada item no balde da sua chave. `Object.groupBy` faz isso nos navegadores mais novos. Para ordenar nomes em português, `localeCompare` com `pt-BR` trata acentos como o leitor espera.
+  traps:
+    - reason: Ordena por código Unicode
+      code: |
+        function agruparPorGenero(b) {
+          const g = {};
+          for (const x of b) if (x.genero) (g[x.genero] ??= []).push(x.nome);
+          for (const k in g) g[k].sort();
+          return g;
+        }
+    - reason: Cria grupo para undefined
+      code: |
+        function agruparPorGenero(b) {
+          const g = {};
+          for (const x of b) (g[x.genero] ??= []).push(x.nome);
+          for (const k in g) g[k].sort((a, c) => a.localeCompare(c, 'pt-BR'));
+          return g;
+        }
+
+- slug: ordenar-programacao
+  title: A ordem dos shows
+  difficulty: medio
+  kind: js
+  in: [javascript/Arrays]
+  statement: |
+    Escreva `ordenarShows(shows)`. Cada show tem `dia`, de 1 a 3, `horario`, como `'21:30'`, e `banda`. Devolva uma nova lista ordenada por dia e, dentro do dia, por horário.
+
+    A lista original não pode mudar: ela também alimenta outra tela.
+  solution: |
+    function ordenarShows(shows) {
+      return [...shows].sort((a, b) => a.dia - b.dia || a.horario.localeCompare(b.horario));
+    }
+  tests:
+    - name: ordena por dia e horário
+      code: |
+        const r = ordenarShows([
+          { dia: 2, horario: '20:00', banda: 'C' },
+          { dia: 1, horario: '22:00', banda: 'B' },
+          { dia: 1, horario: '18:30', banda: 'A' },
+        ]);
+        expect(r.map((s) => s.banda)).toEqual(['A', 'B', 'C']);
+    - name: não altera a original
+      hidden: true
+      code: |
+        const original = [{ dia: 2, horario: '20:00', banda: 'C' }, { dia: 1, horario: '18:00', banda: 'A' }];
+        ordenarShows(original);
+        expect(original.map((s) => s.banda)).toEqual(['C', 'A']);
+    - name: horários com hora de um dígito
+      hidden: true
+      code: |
+        const r = ordenarShows([{ dia: 1, horario: '21:00', banda: 'B' }, { dia: 1, horario: '09:00', banda: 'A' }]);
+        expect(r.map((s) => s.banda)).toEqual(['A', 'B']);
+    - name: dias com dois dígitos
+      hidden: true
+      code: |
+        const r = ordenarShows([{ dia: 10, horario: '10:00', banda: 'B' }, { dia: 2, horario: '10:00', banda: 'A' }]);
+        expect(r.map((s) => s.banda)).toEqual(['A', 'B']);
+  hints:
+    - "`sort` ordena a própria lista. Faça uma cópia antes."
+    - "Na função de comparação, `a.dia - b.dia || ...` só olha o horário quando o dia empata."
+  explanation: |
+    `Array.prototype.sort` altera a lista original. `[...shows]` ou `toSorted` evitam isso. Comparar dias como número evita que `10` venha antes de `2`. Horários no formato `HH:MM`, com zero à esquerda, ordenam corretamente como texto.
+  traps:
+    - reason: Altera a lista original
+      code: |
+        function ordenarShows(s) { return s.sort((a, b) => a.dia - b.dia || a.horario.localeCompare(b.horario)); }
+    - reason: Compara o dia como texto
+      code: |
+        function ordenarShows(s) { return [...s].sort((a, b) => String(a.dia).localeCompare(String(b.dia)) || a.horario.localeCompare(b.horario)); }
+
+- slug: carrinho-de-compras
+  title: O carrinho
+  difficulty: medio
+  kind: js
+  in: [javascript/Objetos e classes]
+  statement: |
+    Escreva a classe `Carrinho`:
+
+    - `adicionar(setor, preco, quantidade = 1)`: se o setor já está no carrinho, soma a quantidade
+    - `remover(setor)`: tira o setor do carrinho
+    - `total()`: soma de `preco * quantidade`
+    - `quantidade()`: número total de ingressos
+    - `adicionar` lança um `Error` quando a quantidade não é um inteiro positivo
+  solution: |
+    class Carrinho {
+      #itens = new Map();
+
+      adicionar(setor, preco, quantidade = 1) {
+        if (!Number.isInteger(quantidade) || quantidade <= 0) throw new Error('Quantidade inválida');
+        const atual = this.#itens.get(setor);
+        this.#itens.set(setor, { preco, quantidade: (atual?.quantidade ?? 0) + quantidade });
+      }
+
+      remover(setor) {
+        this.#itens.delete(setor);
+      }
+
+      total() {
+        let soma = 0;
+        for (const item of this.#itens.values()) soma += item.preco * item.quantidade;
+        return soma;
+      }
+
+      quantidade() {
+        let soma = 0;
+        for (const item of this.#itens.values()) soma += item.quantidade;
+        return soma;
+      }
+    }
+  tests:
+    - name: adiciona e soma
+      code: |
+        const c = new Carrinho();
+        c.adicionar('pista', 300, 2);
+        c.adicionar('camarote', 900);
+        expect(c.total()).toBe(1500);
+        expect(c.quantidade()).toBe(3);
+    - name: remove
+      code: |
+        const c = new Carrinho();
+        c.adicionar('pista', 300, 2);
+        c.remover('pista');
+        expect(c.total()).toBe(0);
+    - name: mesmo setor duas vezes
+      hidden: true
+      code: |
+        const c = new Carrinho();
+        c.adicionar('pista', 300);
+        c.adicionar('pista', 300, 2);
+        expect(c.quantidade()).toBe(3);
+        expect(c.total()).toBe(900);
+    - name: quantidade inválida
+      hidden: true
+      code: |
+        const c = new Carrinho();
+        expect(() => c.adicionar('pista', 300, 0)).toThrow();
+        expect(() => c.adicionar('pista', 300, -1)).toThrow();
+        expect(() => c.adicionar('pista', 300, 1.5)).toThrow();
+        expect(c.quantidade()).toBe(0);
+    - name: carrinhos independentes
+      hidden: true
+      code: |
+        const a = new Carrinho();
+        const b = new Carrinho();
+        a.adicionar('pista', 300);
+        expect(b.total()).toBe(0);
+  hints:
+    - Um `Map` com o setor como chave facilita somar a quantidade quando o setor se repete.
+    - Valide antes de alterar qualquer coisa.
+  explanation: |
+    A classe guarda o estado e expõe só operações que mantêm esse estado coerente. O campo privado `#itens` impede que alguém mexa nos itens por fora. Validar antes de alterar garante que uma chamada inválida não deixa o carrinho pela metade.
+  traps:
+    - reason: Setor repetido vira duas linhas sem somar a quantidade certa
+      code: |
+        class Carrinho {
+          itens = {};
+          adicionar(s, p, q = 1) { if (!Number.isInteger(q) || q <= 0) throw new Error('x'); this.itens[s] = { p, q }; }
+          remover(s) { delete this.itens[s]; }
+          total() { return Object.values(this.itens).reduce((t, i) => t + i.p * i.q, 0); }
+          quantidade() { return Object.values(this.itens).reduce((t, i) => t + i.q, 0); }
+        }
+    - reason: Itens compartilhados entre carrinhos
+      code: |
+        const itens = new Map();
+        class Carrinho {
+          adicionar(s, p, q = 1) { if (!Number.isInteger(q) || q <= 0) throw new Error('x'); itens.set(s, { p, q: (itens.get(s)?.q ?? 0) + q }); }
+          remover(s) { itens.delete(s); }
+          total() { let t = 0; for (const i of itens.values()) t += i.p * i.q; return t; }
+          quantidade() { let t = 0; for (const i of itens.values()) t += i.q; return t; }
+        }
+
+- slug: atualizar-sem-mutar
+  title: Mudança de palco
+  difficulty: medio
+  kind: js
+  in: [javascript/Objetos e classes]
+  statement: |
+    O estado do app guarda a programação assim:
+
+    ```
+    { dias: [{ numero: 1, shows: [{ id: 'a1', banda: 'Vórtice', palco: 'Norte' }] }] }
+    ```
+
+    Escreva `mudarPalco(estado, id, palco)`, que devolve um novo estado com o show de `id` no novo palco. O estado antigo não pode mudar, porque a tela compara os dois para decidir o que redesenhar.
+
+    Partes que não mudaram devem ser reaproveitadas: o mesmo objeto, não uma cópia.
+  solution: |
+    function mudarPalco(estado, id, palco) {
+      return {
+        ...estado,
+        dias: estado.dias.map((dia) =>
+          dia.shows.some((show) => show.id === id)
+            ? { ...dia, shows: dia.shows.map((show) => (show.id === id ? { ...show, palco } : show)) }
+            : dia,
+        ),
+      };
+    }
+  tests:
+    - name: muda o palco
+      code: |
+        const estado = { dias: [{ numero: 1, shows: [{ id: 'a1', banda: 'Vórtice', palco: 'Norte' }] }] };
+        const novo = mudarPalco(estado, 'a1', 'Sul');
+        expect(novo.dias[0].shows[0]).toEqual({ id: 'a1', banda: 'Vórtice', palco: 'Sul' });
+    - name: não altera o estado antigo
+      code: |
+        const estado = { dias: [{ numero: 1, shows: [{ id: 'a1', banda: 'Vórtice', palco: 'Norte' }] }] };
+        mudarPalco(estado, 'a1', 'Sul');
+        expect(estado.dias[0].shows[0].palco).toBe('Norte');
+    - name: reaproveita o que não mudou
+      hidden: true
+      code: |
+        const show2 = { id: 'b1', banda: 'Asfalto', palco: 'Norte' };
+        const dia2 = { numero: 2, shows: [show2] };
+        const show1 = { id: 'a2', banda: 'Ferrugem', palco: 'Sul' };
+        const estado = { titulo: 'Ruído', dias: [{ numero: 1, shows: [{ id: 'a1', banda: 'Vórtice', palco: 'Norte' }, show1] }, dia2] };
+        const novo = mudarPalco(estado, 'a1', 'Sul');
+        expect(novo).not.toBe(estado);
+        expect(novo.dias[1]).toBe(dia2);
+        expect(novo.dias[0].shows[1]).toBe(show1);
+        expect(novo.titulo).toBe('Ruído');
+        expect(novo.dias[0]).not.toBe(estado.dias[0]);
+    - name: id inexistente
+      hidden: true
+      code: |
+        const estado = { dias: [{ numero: 1, shows: [{ id: 'a1', banda: 'Vórtice', palco: 'Norte' }] }] };
+        const novo = mudarPalco(estado, 'zz', 'Sul');
+        expect(novo.dias[0]).toBe(estado.dias[0]);
+  hints:
+    - O spread `{ ...obj, campo: valor }` cria um objeto novo com um campo trocado.
+    - Só copie o caminho até o show alterado. O resto pode ser o mesmo objeto.
+  explanation: |
+    Atualização imutável copia apenas o caminho até o que mudou e reaproveita o resto. Assim, `antigo !== novo` em cada nível alterado e `antigo === novo` no que ficou igual. React e outras bibliotecas usam essa comparação barata para decidir o que redesenhar. `structuredClone` copiaria tudo e faria a tela redesenhar o que não mudou.
+  traps:
+    - reason: Altera o objeto original
+      code: |
+        function mudarPalco(estado, id, palco) {
+          for (const d of estado.dias) for (const s of d.shows) if (s.id === id) s.palco = palco;
+          return { ...estado };
+        }
+    - reason: Copia tudo
+      code: |
+        function mudarPalco(estado, id, palco) {
+          const novo = structuredClone(estado);
+          for (const d of novo.dias) for (const s of d.shows) if (s.id === id) s.palco = palco;
+          return novo;
+        }
+
+- slug: slug-da-banda
+  title: Endereço da página da banda
+  difficulty: medio
+  kind: js
+  in: [javascript/Strings e regex]
+  statement: |
+    Cada banda tem uma página em `/bandas/<slug>`. Escreva `criarSlug(nome)`:
+
+    - letras minúsculas, sem acentos: `Maré Negra` vira `mare-negra`
+    - qualquer sequência de caracteres que não seja letra ou número vira um único hífen
+    - sem hífen no começo nem no fim
+  solution: |
+    function criarSlug(nome) {
+      return nome
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+  tests:
+    - name: acentos e espaços
+      code: |
+        expect(criarSlug('Maré Negra')).toBe('mare-negra');
+        expect(criarSlug('Vórtice')).toBe('vortice');
+    - name: símbolos
+      code: |
+        expect(criarSlug('Os Insones & Convidados')).toBe('os-insones-convidados');
+    - name: pontas
+      hidden: true
+      code: |
+        expect(criarSlug('  ...Ferrugem!!  ')).toBe('ferrugem');
+    - name: cedilha e til
+      hidden: true
+      code: |
+        expect(criarSlug('Canção Ácida 2')).toBe('cancao-acida-2');
+    - name: hífens seguidos
+      hidden: true
+      code: |
+        expect(criarSlug('A -- B')).toBe('a-b');
+  hints:
+    - "`normalize('NFD')` separa a letra do acento. Depois, os acentos estão na faixa `\\u0300-\\u036f`."
+    - "`[^a-z0-9]+` pega uma sequência inteira de caracteres indesejados."
+  explanation: |
+    Com `normalize('NFD')`, `é` vira `e` seguido de um acento combinante, que a regex remove. `+` na classe negada junta símbolos e espaços seguidos num único hífen, e a última troca limpa as pontas.
+  traps:
+    - reason: Remove letras acentuadas em vez do acento
+      code: |
+        function criarSlug(n) { return n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+    - reason: Um hífen por caractere
+      code: |
+        function criarSlug(n) { return n.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '-'); }
+
+- slug: validar-cupom
+  title: Cupom de desconto
+  difficulty: facil
+  kind: js
+  in: [javascript/Strings e regex]
+  statement: |
+    Os cupons do festival têm o formato `RUIDO-` seguido de 4 dígitos e de uma letra maiúscula: `RUIDO-2026A`.
+
+    Escreva `cupomValido(texto)`. Aceite espaços nas pontas e letras minúsculas digitadas pelo usuário, mas recuse qualquer texto extra.
+  solution: |
+    function cupomValido(texto) {
+      return /^RUIDO-\d{4}[A-Z]$/.test(texto.trim().toUpperCase());
+    }
+  tests:
+    - name: cupom certo
+      code: |
+        expect(cupomValido('RUIDO-2026A')).toBe(true);
+    - name: formato errado
+      code: |
+        expect(cupomValido('RUIDO-26A')).toBe(false);
+        expect(cupomValido('BARULHO-2026A')).toBe(false);
+    - name: minúsculas e espaços
+      hidden: true
+      code: |
+        expect(cupomValido('  ruido-2026b ')).toBe(true);
+    - name: texto extra
+      hidden: true
+      code: |
+        expect(cupomValido('RUIDO-2026AB')).toBe(false);
+        expect(cupomValido('XRUIDO-2026A')).toBe(false);
+  hints:
+    - "`^` e `$` prendem a regex no começo e no fim do texto."
+  explanation: |
+    Sem `^` e `$`, a regex aceita o padrão em qualquer lugar do texto, então `XRUIDO-2026AB` passaria. Normalizar a entrada com `trim` e `toUpperCase` antes de validar deixa a regex simples.
+  traps:
+    - reason: Sem âncoras
+      code: |
+        function cupomValido(t) { return /RUIDO-\d{4}[A-Z]/.test(t.trim().toUpperCase()); }
+    - reason: Não normaliza
+      code: |
+        function cupomValido(t) { return /^RUIDO-\d{4}[A-Z]$/.test(t); }
+
+- slug: carregar-tudo-junto
+  title: Três pedidos, uma espera
+  difficulty: medio
+  kind: js
+  in: [javascript/Assíncrono]
+  setup: |
+    const api = {
+      bandas: () => new Promise((r) => setTimeout(() => r(['Vórtice', 'Asfalto']), 40)),
+      palcos: () => new Promise((r) => setTimeout(() => r(['Norte', 'Sul']), 40)),
+      horarios: () => new Promise((r) => setTimeout(() => r(['20h', '22h']), 40)),
+    };
+  statement: |
+    A página inicial precisa de três dados, cada um com sua função no objeto `api`, que já existe: `api.bandas()`, `api.palcos()` e `api.horarios()`. Cada uma devolve uma promessa.
+
+    Escreva `async function carregarInicio()`, que devolve `{ bandas, palcos, horarios }`. Os três pedidos são independentes, então devem rodar ao mesmo tempo, não um depois do outro.
+  solution: |
+    async function carregarInicio() {
+      const [bandas, palcos, horarios] = await Promise.all([api.bandas(), api.palcos(), api.horarios()]);
+      return { bandas, palcos, horarios };
+    }
+  tests:
+    - name: devolve os três dados
+      code: |
+        expect(await carregarInicio()).toEqual({ bandas: ['Vórtice', 'Asfalto'], palcos: ['Norte', 'Sul'], horarios: ['20h', '22h'] });
+    - name: pedidos em paralelo
+      hidden: true
+      code: |
+        const inicio = Date.now();
+        await carregarInicio();
+        expect(Date.now() - inicio).toBeLessThan(100);
+    - name: falha se um pedido falha
+      hidden: true
+      code: |
+        api.palcos = () => Promise.reject(new Error('fora do ar'));
+        await expect(carregarInicio()).rejects.toMatch('fora do ar');
+  hints:
+    - Três `await` seguidos esperam um pedido terminar para começar o próximo.
+    - "`Promise.all` recebe uma lista de promessas e espera todas."
+  explanation: |
+    Cada `await` pausa a função até a promessa terminar, então três `await` seguidos somam os tempos. Criar as três promessas primeiro e esperar com `Promise.all` faz os pedidos correrem juntos, e o tempo total é o do mais lento. Se um falha, `Promise.all` rejeita na hora. `Promise.allSettled` serve quando cada resultado pode falhar sozinho.
+  traps:
+    - reason: Um pedido depois do outro
+      code: |
+        async function carregarInicio() {
+          const bandas = await api.bandas();
+          const palcos = await api.palcos();
+          const horarios = await api.horarios();
+          return { bandas, palcos, horarios };
+        }
+    - reason: Engole o erro
+      code: |
+        async function carregarInicio() {
+          const [b, p, h] = await Promise.allSettled([api.bandas(), api.palcos(), api.horarios()]);
+          return { bandas: b.value, palcos: p.value ?? [], horarios: h.value };
+        }
+
+- slug: tentar-de-novo
+  title: A API instável
+  difficulty: dificil
+  kind: js
+  in: [javascript/Assíncrono]
+  statement: |
+    A API de pagamento falha de vez em quando e funciona na tentativa seguinte. Escreva `async function comRetentativa(operacao, tentativas, espera)`:
+
+    - chama `operacao()`, que devolve uma promessa
+    - se ela rejeitar, espera `espera` milissegundos e tenta de novo, até `tentativas` vezes no total
+    - devolve o primeiro resultado de sucesso
+    - se todas falharem, rejeita com o erro da última tentativa
+  solution: |
+    async function comRetentativa(operacao, tentativas, espera) {
+      let ultimoErro;
+      for (let i = 0; i < tentativas; i++) {
+        try {
+          return await operacao();
+        } catch (erro) {
+          ultimoErro = erro;
+          if (i < tentativas - 1) await new Promise((r) => setTimeout(r, espera));
+        }
+      }
+      throw ultimoErro;
+    }
+  tests:
+    - name: sucesso na segunda tentativa
+      code: |
+        let chamadas = 0;
+        const op = () => (++chamadas < 2 ? Promise.reject(new Error('falhou')) : Promise.resolve('pago'));
+        expect(await comRetentativa(op, 3, 5)).toBe('pago');
+        expect(chamadas).toBe(2);
+    - name: desiste depois do limite
+      code: |
+        let chamadas = 0;
+        const op = () => Promise.reject(new Error(`falha ${++chamadas}`));
+        await expect(comRetentativa(op, 3, 5)).rejects.toMatch('falha 3');
+        expect(chamadas).toBe(3);
+    - name: espera entre tentativas
+      hidden: true
+      code: |
+        const horarios = [];
+        const op = () => { horarios.push(Date.now()); return Promise.reject(new Error('x')); };
+        await comRetentativa(op, 2, 60).catch(() => {});
+        expect(horarios[1] - horarios[0]).toBeGreaterThanOrEqual(50);
+    - name: sem espera depois da última
+      hidden: true
+      code: |
+        const inicio = Date.now();
+        await comRetentativa(() => Promise.reject(new Error('x')), 1, 300).catch(() => {});
+        expect(Date.now() - inicio).toBeLessThan(150);
+    - name: sucesso de primeira
+      hidden: true
+      code: |
+        const op = fn(() => Promise.resolve(42));
+        expect(await comRetentativa(op, 5, 5)).toBe(42);
+        expect(op).toHaveBeenCalledTimes(1);
+  hints:
+    - "`return await` dentro do `try` faz a rejeição cair no `catch`. Sem o `await`, a promessa é devolvida antes de falhar."
+    - Uma espera pode ser escrita como `await new Promise((r) => setTimeout(r, ms))`.
+  explanation: |
+    O laço tenta, captura a falha, espera e tenta de novo. O ponto sutil é `return await`: sem `await`, a promessa rejeitada sai da função sem passar pelo `catch`. Em produção, a espera costuma crescer a cada tentativa, num backoff exponencial, para não sobrecarregar um serviço já com problemas.
+  traps:
+    - reason: return sem await não captura a falha
+      code: |
+        async function comRetentativa(op, n, espera) {
+          let erro;
+          for (let i = 0; i < n; i++) {
+            try { return op(); } catch (e) { erro = e; await new Promise((r) => setTimeout(r, espera)); }
+          }
+          throw erro;
+        }
+    - reason: Tenta uma vez a mais
+      code: |
+        async function comRetentativa(op, n, espera) {
+          let erro;
+          for (let i = 0; i <= n; i++) {
+            try { return await op(); } catch (e) { erro = e; if (i < n) await new Promise((r) => setTimeout(r, espera)); }
+          }
+          throw erro;
+        }
+
+- slug: buscar-lineup
+  title: Carregar o line-up
+  difficulty: medio
+  kind: js
+  in: [javascript/Fetch e JSON]
+  statement: |
+    Escreva `async function buscarLineup(dia)`, que busca `GET /api/lineup?dia=<dia>` com `fetch` e devolve a lista de bandas do JSON.
+
+    - Se a resposta não for de sucesso, lance um `Error` com a mensagem `Erro <status> ao buscar o line-up`.
+    - O JSON tem o formato `{ "bandas": [...] }`. Devolva só a lista.
+  solution: |
+    async function buscarLineup(dia) {
+      const resposta = await fetch(`/api/lineup?dia=${encodeURIComponent(dia)}`);
+      if (!resposta.ok) throw new Error(`Erro ${resposta.status} ao buscar o line-up`);
+      const dados = await resposta.json();
+      return dados.bandas;
+    }
+  tests:
+    - name: devolve as bandas
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: true, status: 200, json: async () => ({ bandas: ['Vórtice', 'Asfalto'] }) }));
+        expect(await buscarLineup(1)).toEqual(['Vórtice', 'Asfalto']);
+        expect(fetch).toHaveBeenCalledWith('/api/lineup?dia=1');
+    - name: erro do servidor
+      hidden: true
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: false, status: 503, json: async () => ({ erro: 'manutenção' }) }));
+        await expect(buscarLineup(2)).rejects.toMatch('Erro 503 ao buscar o line-up');
+    - name: não encontrado
+      hidden: true
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: false, status: 404, json: async () => { throw new Error('não é JSON'); } }));
+        await expect(buscarLineup(9)).rejects.toMatch('Erro 404');
+  hints:
+    - "`fetch` só rejeita em falha de rede. Uma resposta 404 ou 500 chega normalmente, com `ok` igual a `false`."
+    - "`resposta.json()` também devolve uma promessa."
+  explanation: |
+    `fetch` considera sucesso qualquer resposta que chegue, mesmo um 500. Por isso você precisa conferir `resposta.ok`, que é verdadeiro para status de 200 a 299. Conferir antes de chamar `json()` também evita um erro confuso quando o servidor devolve uma página HTML de erro.
+  traps:
+    - reason: Não confere o status
+      code: |
+        async function buscarLineup(dia) { const r = await fetch(`/api/lineup?dia=${dia}`); return (await r.json()).bandas; }
+    - reason: Devolve o objeto inteiro
+      code: |
+        async function buscarLineup(dia) { const r = await fetch(`/api/lineup?dia=${dia}`); if (!r.ok) throw new Error(`Erro ${r.status} ao buscar o line-up`); return r.json(); }
+
+- slug: lista-de-bandas
+  title: Desenhar a lista
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [javascript/DOM]
+  html: |
+    <ul id="bandas"></ul>
+  setup: |
+    window.bandas = [
+      { nome: 'Vórtice', confirmada: true },
+      { nome: 'Maré Negra', confirmada: false },
+      { nome: '<b>Asfalto</b>', confirmada: true },
+    ];
+  statement: |
+    A variável global `bandas` tem a lista de bandas, cada uma com `nome` e `confirmada`. Escreva o JavaScript que preenche `#bandas` com um `li` por banda.
+
+    - O texto do `li` é o nome da banda, exatamente como está, mesmo que tenha caracteres como `<`.
+    - Bandas não confirmadas recebem a classe `a-confirmar`.
+    - Crie os elementos com a API do DOM, sem montar HTML em texto.
+  forbid: [innerHTML, outerHTML, insertAdjacentHTML]
+  solution: |
+    const lista = document.getElementById('bandas');
+    for (const banda of bandas) {
+      const item = document.createElement('li');
+      item.textContent = banda.nome;
+      if (!banda.confirmada) item.classList.add('a-confirmar');
+      lista.append(item);
+    }
+  tests:
+    - name: um item por banda
+      code: |
+        expect($$('#bandas li')).toHaveLength(3);
+        expect(text('#bandas li:first-child')).toBe('Vórtice');
+    - name: classe para não confirmadas
+      code: |
+        const items = $$('#bandas li');
+        expect(items.map((li) => li.classList.contains('a-confirmar'))).toEqual([false, true, false]);
+    - name: nome como texto
+      hidden: true
+      code: |
+        const ultimo = $$('#bandas li')[2];
+        expect(ultimo.textContent).toBe('<b>Asfalto</b>');
+        expect(ultimo.querySelector('b')).toBeNull();
+  hints:
+    - "`document.createElement('li')` cria o elemento, e `textContent` define o texto sem interpretar HTML."
+    - "`classList.add` adiciona uma classe."
+  explanation: |
+    `textContent` trata o valor como texto puro, então `<b>` aparece na tela em vez de virar negrito. Montar HTML com dados abre espaço para injeção de script, o XSS. Criar elementos com a API do DOM também evita refazer a lista inteira a cada mudança.
+  traps:
+    - reason: Interpreta o nome como HTML
+      code: |
+        const lista = document.getElementById('bandas');
+        for (const b of bandas) {
+          const li = document.createElement('li');
+          li.append(document.createRange().createContextualFragment(b.nome));
+          if (!b.confirmada) li.className = 'a-confirmar';
+          lista.append(li);
+        }
+    - reason: Classe em todas
+      code: |
+        const lista = document.getElementById('bandas');
+        for (const b of bandas) {
+          const li = document.createElement('li');
+          li.textContent = b.nome;
+          li.className = 'a-confirmar';
+          lista.append(li);
+        }
+
+- slug: contador-de-ingressos
+  title: Mais um, menos um
+  difficulty: facil
+  kind: dom
+  editor: js
+  in: [javascript/DOM, javascript/Eventos]
+  html: |
+    <div class="seletor">
+      <button id="menos" aria-label="Diminuir">−</button>
+      <output id="quantidade">1</output>
+      <button id="mais" aria-label="Aumentar">+</button>
+    </div>
+  statement: |
+    O seletor de quantidade começa em 1. Faça os botões funcionarem:
+
+    - `#mais` soma 1, até no máximo 6
+    - `#menos` subtrai 1, até no mínimo 1
+    - no limite, o botão correspondente fica desabilitado, com `disabled`
+  solution: |
+    const saida = document.getElementById('quantidade');
+    const menos = document.getElementById('menos');
+    const mais = document.getElementById('mais');
+    let quantidade = 1;
+
+    function atualizar() {
+      saida.textContent = String(quantidade);
+      menos.disabled = quantidade <= 1;
+      mais.disabled = quantidade >= 6;
+    }
+
+    menos.addEventListener('click', () => {
+      quantidade = Math.max(1, quantidade - 1);
+      atualizar();
+    });
+    mais.addEventListener('click', () => {
+      quantidade = Math.min(6, quantidade + 1);
+      atualizar();
+    });
+    atualizar();
+  tests:
+    - name: soma
+      code: |
+        click('#mais');
+        click('#mais');
+        expect(text('#quantidade')).toBe('3');
+    - name: subtrai
+      code: |
+        click('#mais');
+        click('#menos');
+        expect(text('#quantidade')).toBe('1');
+    - name: começa com menos desabilitado
+      hidden: true
+      code: |
+        expect(el('#menos').disabled).toBe(true);
+        expect(el('#mais').disabled).toBe(false);
+    - name: limite superior
+      hidden: true
+      code: |
+        for (let i = 0; i < 10; i++) el('#mais').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(text('#quantidade')).toBe('6');
+        expect(el('#mais').disabled).toBe(true);
+        expect(el('#menos').disabled).toBe(false);
+  hints:
+    - Guarde a quantidade numa variável e redesenhe a tela a partir dela, numa função só.
+    - Chame essa função também no início, para o estado inicial dos botões.
+  explanation: |
+    Manter o número numa variável e derivar a tela dela evita ler e converter o texto do DOM a cada clique. Uma função `atualizar` única garante que texto e botões nunca fiquem fora de sincronia. Desabilitar o botão no limite mostra a regra para quem usa a página. O limite no código continua necessário, porque um evento pode chegar mesmo com o botão desabilitado.
+  traps:
+    - reason: Sem limite
+      code: |
+        let q = 1;
+        const out = document.getElementById('quantidade');
+        document.getElementById('mais').addEventListener('click', () => { q++; out.textContent = q; });
+        document.getElementById('menos').addEventListener('click', () => { q--; out.textContent = q; });
+    - reason: Esquece o estado inicial dos botões
+      code: |
+        let q = 1;
+        const out = document.getElementById('quantidade');
+        const menos = document.getElementById('menos');
+        const mais = document.getElementById('mais');
+        mais.addEventListener('click', () => { q = Math.min(6, q + 1); out.textContent = q; mais.disabled = q >= 6; menos.disabled = q <= 1; });
+        menos.addEventListener('click', () => { q = Math.max(1, q - 1); out.textContent = q; mais.disabled = q >= 6; menos.disabled = q <= 1; });
+
+- slug: favoritos-com-delegacao
+  title: Favoritar bandas
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [javascript/Eventos]
+  html: |
+    <ul id="lineup">
+      <li data-banda="vortice">Vórtice</li>
+      <li data-banda="asfalto">Asfalto</li>
+    </ul>
+  statement: |
+    Clicar numa banda do `#lineup` alterna a classe `favorita` no `li`. Bandas novas são adicionadas à lista durante o festival, depois que a página carrega, e também precisam funcionar.
+
+    Use um único listener, na lista.
+  solution: |
+    document.getElementById('lineup').addEventListener('click', (evento) => {
+      const item = evento.target.closest('li');
+      if (item) item.classList.toggle('favorita');
+    });
+  tests:
+    - name: alterna ao clicar
+      code: |
+        click('li[data-banda="vortice"]');
+        expect(el('li[data-banda="vortice"]').classList.contains('favorita')).toBe(true);
+        click('li[data-banda="vortice"]');
+        expect(el('li[data-banda="vortice"]').classList.contains('favorita')).toBe(false);
+    - name: bandas adicionadas depois
+      hidden: true
+      code: |
+        const li = document.createElement('li');
+        li.dataset.banda = 'mare';
+        li.textContent = 'Maré Negra';
+        el('#lineup').append(li);
+        click(li);
+        expect(li.classList.contains('favorita')).toBe(true);
+    - name: clique dentro de um elemento filho
+      hidden: true
+      code: |
+        const li = el('li[data-banda="asfalto"]');
+        li.innerHTML = '<strong>Asfalto</strong> <small>sábado</small>';
+        click(li.querySelector('small'));
+        expect(li.classList.contains('favorita')).toBe(true);
+        expect(li.querySelector('small').classList.contains('favorita')).toBe(false);
+  hints:
+    - Eventos de clique sobem do elemento clicado até a raiz. Um listener na lista ouve cliques em todos os itens.
+    - "`evento.target` pode ser um filho do `li`. `closest('li')` sobe até o item."
+  explanation: |
+    Delegação de eventos usa a propagação: um único listener no pai atende todos os filhos, inclusive os criados depois. Como `target` é o elemento exato clicado, `closest` encontra o item certo mesmo quando o clique acerta um texto em negrito dentro dele.
+  traps:
+    - reason: Um listener por item, no carregamento
+      code: |
+        for (const li of document.querySelectorAll('#lineup li')) li.addEventListener('click', () => li.classList.toggle('favorita'));
+    - reason: Usa target sem closest
+      code: |
+        document.getElementById('lineup').addEventListener('click', (e) => e.target.classList.toggle('favorita'));
+
+- slug: formulario-sem-recarregar
+  title: Cadastro sem recarregar
+  difficulty: facil
+  kind: dom
+  editor: js
+  in: [javascript/Eventos]
+  html: |
+    <form id="newsletter">
+      <label for="email">Seu e-mail</label>
+      <input id="email" name="email" type="email" required>
+      <button type="submit">Assinar</button>
+    </form>
+    <p id="mensagem" role="status"></p>
+  statement: |
+    Ao enviar o formulário `#newsletter`, a página não pode recarregar. Mostre em `#mensagem` o texto `Inscrição confirmada para <email>` e limpe o campo.
+
+    O envio pode acontecer por clique no botão ou por Enter no campo, então trate o evento do formulário, não o do botão.
+  solution: |
+    const form = document.getElementById('newsletter');
+    form.addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      const email = form.elements.email.value.trim();
+      document.getElementById('mensagem').textContent = `Inscrição confirmada para ${email}`;
+      form.reset();
+    });
+  tests:
+    - name: mostra a confirmação
+      code: |
+        type('#email', 'fa@exemplo.com');
+        submit('#newsletter');
+        await tick();
+        expect(text('#mensagem')).toBe('Inscrição confirmada para fa@exemplo.com');
+    - name: limpa o campo
+      hidden: true
+      code: |
+        type('#email', 'fa@exemplo.com');
+        submit('#newsletter');
+        await tick();
+        expect(el('#email').value).toBe('');
+    - name: não recarrega a página
+      hidden: true
+      code: |
+        type('#email', 'outro@exemplo.com');
+        submit('#newsletter');
+        await wait(100);
+        expect(text('#mensagem')).toContain('outro@exemplo.com');
+  hints:
+    - O evento `submit` do formulário acontece no clique e no Enter.
+    - "`evento.preventDefault()` cancela o envio padrão, que recarregaria a página."
+  explanation: |
+    O comportamento padrão de um formulário é navegar para a URL de `action`, o que recarrega a página. `preventDefault` cancela isso. Tratar `submit`, e não `click` no botão, cobre o Enter e mantém a validação nativa, que roda antes do evento.
+  traps:
+    - reason: Sem preventDefault
+      code: |
+        const form = document.getElementById('newsletter');
+        form.addEventListener('submit', () => {
+          document.getElementById('mensagem').textContent = `Inscrição confirmada para ${form.elements.email.value}`;
+          form.reset();
+        });
+    - reason: Ouve só o clique do botão
+      code: |
+        const form = document.getElementById('newsletter');
+        form.querySelector('button').addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById('mensagem').textContent = `Inscrição confirmada para ${form.elements.email.value}`;
+          form.reset();
+        });
+
+- slug: json-seguro
+  title: Configuração corrompida
+  difficulty: facil
+  kind: js
+  in: [javascript/Erros]
+  statement: |
+    O app guarda preferências como texto JSON. Às vezes o texto chega corrompido ou vazio.
+
+    Escreva `lerJSON(texto, padrao)`, que devolve o valor lido ou `padrao` quando o texto não é um JSON válido. Erros que não são de leitura do JSON não devem ser escondidos.
+  solution: |
+    function lerJSON(texto, padrao) {
+      try {
+        return JSON.parse(texto);
+      } catch (erro) {
+        if (erro instanceof SyntaxError) return padrao;
+        throw erro;
+      }
+    }
+  tests:
+    - name: JSON válido
+      code: |
+        expect(lerJSON('{"tema":"escuro"}', {})).toEqual({ tema: 'escuro' });
+    - name: JSON corrompido
+      code: |
+        expect(lerJSON('{"tema":', { tema: 'claro' })).toEqual({ tema: 'claro' });
+    - name: vazio e nulo
+      hidden: true
+      code: |
+        expect(lerJSON('', 1)).toBe(1);
+        expect(lerJSON('null', 1)).toBeNull();
+        expect(lerJSON('false', true)).toBe(false);
+    - name: não esconde outros erros
+      hidden: true
+      code: |
+        const original = JSON.parse;
+        JSON.parse = () => { throw new TypeError('quebrou'); };
+        try {
+          expect(() => lerJSON('{}', {})).toThrow('quebrou');
+        } finally {
+          JSON.parse = original;
+        }
+  hints:
+    - "`JSON.parse` lança `SyntaxError` quando o texto é inválido."
+    - Um `catch` que devolve o padrão para qualquer erro esconde defeitos de verdade. Confira o tipo do erro.
+  explanation: |
+    `try/catch` permite tratar a falha esperada, aqui o texto inválido, sem derrubar o app. Conferir `instanceof SyntaxError` e relançar o resto evita engolir erros inesperados. `null` e `false` são JSON válidos e não podem virar o valor padrão.
+  traps:
+    - reason: Trata null e false como falha
+      code: |
+        function lerJSON(t, p) { try { return JSON.parse(t) || p; } catch { return p; } }
+    - reason: Engole qualquer erro
+      code: |
+        function lerJSON(t, p) { try { return JSON.parse(t); } catch { return p; } }
+
+- slug: erro-de-validacao
+  title: Erro que diz onde
+  difficulty: medio
+  kind: js
+  in: [javascript/Erros]
+  statement: |
+    O formulário de compra precisa saber qual campo falhou, para destacá-lo na tela.
+
+    1. Crie a classe `ErroDeValidacao`, que estende `Error`, recebe `(campo, mensagem)` e guarda `campo`. O `name` do erro deve ser `'ErroDeValidacao'`.
+    2. Escreva `validarCompra(compra)`: lança `ErroDeValidacao('email', ...)` se o e-mail não tiver `@`, e `ErroDeValidacao('quantidade', ...)` se a quantidade não estiver entre 1 e 6. Se tudo estiver certo, devolve `true`.
+  solution: |
+    class ErroDeValidacao extends Error {
+      constructor(campo, mensagem) {
+        super(mensagem);
+        this.name = 'ErroDeValidacao';
+        this.campo = campo;
+      }
+    }
+
+    function validarCompra(compra) {
+      if (!String(compra.email ?? '').includes('@')) throw new ErroDeValidacao('email', 'E-mail inválido');
+      if (!(compra.quantidade >= 1 && compra.quantidade <= 6)) throw new ErroDeValidacao('quantidade', 'Escolha de 1 a 6 ingressos');
+      return true;
+    }
+  tests:
+    - name: compra válida
+      code: |
+        expect(validarCompra({ email: 'fa@exemplo.com', quantidade: 2 })).toBe(true);
+    - name: campo do erro
+      code: |
+        try {
+          validarCompra({ email: 'sem-arroba', quantidade: 2 });
+          throw new Error('devia ter lançado');
+        } catch (erro) {
+          expect(erro).toBeInstanceOf(ErroDeValidacao);
+          expect(erro.campo).toBe('email');
+        }
+    - name: é um Error de verdade
+      hidden: true
+      code: |
+        const erro = new ErroDeValidacao('quantidade', 'demais');
+        expect(erro).toBeInstanceOf(Error);
+        expect(erro.message).toBe('demais');
+        expect(erro.name).toBe('ErroDeValidacao');
+        expect(typeof erro.stack).toBe('string');
+    - name: quantidade fora do limite
+      hidden: true
+      code: |
+        for (const quantidade of [0, 7, undefined]) {
+          try {
+            validarCompra({ email: 'fa@exemplo.com', quantidade });
+            throw new Error('devia ter lançado');
+          } catch (erro) {
+            expect(erro.campo).toBe('quantidade');
+          }
+        }
+  hints:
+    - Num construtor de subclasse, chame `super(mensagem)` antes de usar `this`.
+  explanation: |
+    Estender `Error` mantém `message`, `stack` e o funcionamento com `instanceof`, e acrescenta o que o código que trata o erro precisa, como o `campo`. Definir `name` faz o console e os logs mostrarem o tipo certo. Lançar um objeto comum perderia o stack trace.
+  traps:
+    - reason: Lança um objeto comum
+      code: |
+        class ErroDeValidacao { constructor(campo, mensagem) { this.campo = campo; this.message = mensagem; this.name = 'ErroDeValidacao'; } }
+        function validarCompra(c) {
+          if (!String(c.email ?? '').includes('@')) throw new ErroDeValidacao('email', 'E-mail inválido');
+          if (!(c.quantidade >= 1 && c.quantidade <= 6)) throw new ErroDeValidacao('quantidade', 'x');
+          return true;
+        }
+    - reason: undefined passa na validação
+      code: |
+        class ErroDeValidacao extends Error { constructor(campo, m) { super(m); this.name = 'ErroDeValidacao'; this.campo = campo; } }
+        function validarCompra(c) {
+          if (!String(c.email ?? '').includes('@')) throw new ErroDeValidacao('email', 'E-mail inválido');
+          if (c.quantidade < 1 || c.quantidade > 6) throw new ErroDeValidacao('quantidade', 'x');
+          return true;
+        }

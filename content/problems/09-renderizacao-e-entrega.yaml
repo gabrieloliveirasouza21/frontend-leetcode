@@ -1,0 +1,1298 @@
+- slug: componente-de-servidor
+  title: O que roda no servidor
+  difficulty: dificil
+  kind: quiz
+  in: [ssr/Next.js]
+  statement: |
+    No App Router do Next.js, a página `app/lineup/page.tsx` busca as bandas no banco e mostra a lista. Dentro dela há um botão de favoritar com `useState`.
+
+    Como organizar os componentes?
+  options:
+    - text: A página fica como Server Component e busca os dados no servidor. O botão vai para um componente separado, marcado com `'use client'`, que a página renderiza
+      why: Certo. Só o botão interativo manda JavaScript para o navegador, e a consulta ao banco nunca sai do servidor.
+    - text: Marcar a página inteira com `'use client'` e buscar o banco dentro de um useEffect
+      why: O navegador não acessa o banco, e toda a página viraria JavaScript no cliente, perdendo a renderização no servidor.
+    - text: Usar useState direto no Server Component
+      why: Server Components não têm estado nem eventos. Hooks como useState só funcionam em Client Components.
+    - text: Colocar a senha do banco numa variável `NEXT_PUBLIC_` para o botão consultar o banco
+      why: Variáveis `NEXT_PUBLIC_` vão para o bundle do navegador e expõem a senha a qualquer visitante.
+  answer: 0
+  explanation: |
+    No App Router, componentes são de servidor por padrão: rodam só no servidor, podem acessar dados diretamente e não mandam o próprio código ao navegador. `'use client'` marca o limite a partir do qual o código também roda no cliente, com estado e eventos. A boa prática é empurrar esse limite para as folhas da árvore.
+
+- slug: dados-antes-de-renderizar
+  title: Os dados chegam antes da página
+  difficulty: medio
+  kind: quiz
+  in: [ssr/Tanstack Start, ssr/react-router, ssr/Svelte]
+  statement: |
+    Na página de uma banda, o componente busca os dados num `useEffect`. Quem abre o link vê primeiro um esqueleto vazio, e buscadores indexam a página sem conteúdo.
+
+    Frameworks com SSR, como TanStack Start, React Router e SvelteKit, oferecem outro caminho. Qual?
+  options:
+    - text: Uma função de carregamento ligada à rota, um loader ou load, que busca os dados no servidor antes de renderizar e entrega o HTML já preenchido
+      why: Certo. A primeira tela chega completa, e na navegação pelo app o mesmo loader roda antes da troca de rota.
+    - text: Aumentar o tempo do useEffect para os dados chegarem antes
+      why: O useEffect só roda no navegador, depois da primeira renderização. Nenhum ajuste de tempo muda isso.
+    - text: Gerar o HTML com document.write no servidor
+      why: document.write é uma API do navegador e não tem relação com renderização no servidor.
+    - text: Colocar os dados direto no código-fonte de cada página
+      why: Isso serve para conteúdo fixo, mas dados que mudam exigiriam um novo deploy a cada alteração.
+  answer: 0
+  explanation: |
+    Na renderização no servidor, o HTML da primeira resposta já vem com o conteúdo. Os loaders ligados às rotas buscam os dados antes de renderizar, evitam a cascata de busca no efeito e permitem tratar erros e redirecionamentos antes de a página aparecer.
+
+- slug: ilhas-de-interatividade
+  title: Uma página quase toda estática
+  difficulty: medio
+  kind: quiz
+  in: [ssr/Astro, ssg/Astro]
+  statement: |
+    A página de notícias do festival é texto e imagem, com um único widget interativo: o contador regressivo para o primeiro show.
+
+    Como o Astro trata isso?
+  options:
+    - text: Gera HTML sem JavaScript para a página e hidrata só o componente do contador, como uma ilha, com uma diretiva como `client:visible`
+      why: Certo. A página continua leve, e só a ilha baixa e executa JavaScript, e só quando necessário.
+    - text: Manda o framework inteiro para hidratar a página toda, como uma SPA
+      why: Esse é o comportamento que a arquitetura de ilhas evita. Por padrão, componentes do Astro não mandam JavaScript.
+    - text: Proíbe componentes interativos
+      why: O Astro aceita componentes React, Vue, Svelte e outros como ilhas interativas.
+    - text: Exige escrever o contador em PHP
+      why: O Astro usa componentes JavaScript ou TypeScript, renderizados no build ou no servidor.
+  answer: 0
+  explanation: |
+    A arquitetura de ilhas trata a página como HTML estático com pequenas áreas interativas independentes. Cada ilha carrega o próprio JavaScript conforme uma diretiva: ao carregar, quando ocioso ou quando visível. O Astro pode gerar as páginas no build, como SSG, ou a cada pedido, como SSR.
+
+- slug: erro-de-hidratacao
+  title: A hora que não bate
+  difficulty: dificil
+  kind: quiz
+  in: [ssr/Angular, ssr/Nuxt.js, ssr/Svelte]
+  statement: |
+    A página do festival, renderizada no servidor, mostra `Agora são {{ horaAtual }}` com a hora calculada no componente. O console avisa sobre diferença de hidratação, e o texto pisca ao carregar. Isso aparece igual em Angular, Nuxt e SvelteKit.
+
+    Qual é a causa e a correção?
+  options:
+    - text: O servidor e o navegador calcularam horas diferentes, e o HTML inicial não bate com o que o cliente renderiza. Calcule a hora só no cliente, depois de montar, ou mande do servidor o valor usado
+      why: Certo. Hidratação espera que o cliente produza o mesmo HTML que o servidor mandou. Valores que mudam entre os dois quebram isso.
+    - text: O servidor está lento, e basta aumentar o tempo limite
+      why: Não é questão de tempo de resposta. O conteúdo gerado nos dois lados é diferente.
+    - text: Frameworks com SSR não permitem mostrar horas
+      why: Permitem, desde que o valor seja o mesmo nos dois lados ou seja calculado só no cliente.
+    - text: Basta desativar o JavaScript da página
+      why: Sem JavaScript, a página não fica interativa.
+  answer: 0
+  explanation: |
+    Na hidratação, o framework percorre o HTML vindo do servidor e liga a ele estado e eventos, assumindo que o cliente renderizaria o mesmo resultado. Datas, números aleatórios, `window` e dados do navegador são fontes comuns de diferença. Valores que só existem no cliente são calculados depois da montagem. Os demais vêm do servidor junto com o HTML.
+
+- slug: spa-no-github-pages
+  title: A página 404 no recarregar
+  difficulty: medio
+  kind: quiz
+  in: [deployment/GitHub Pages]
+  statement: |
+    A SPA do festival foi publicada no GitHub Pages em `usuario.github.io/festival/`. A página inicial abre, mas recarregar em `usuario.github.io/festival/lineup` dá 404, e os arquivos JS também falharam no primeiro deploy.
+
+    O que explica os dois problemas?
+  options:
+    - text: O GitHub Pages serve arquivos estáticos e não conhece as rotas da SPA. O site também fica num subcaminho, então o build precisa da base `/festival/`. Use roteamento por hash ou um fallback de 404, e configure a base no bundler
+      why: Certo. Sem a base, os scripts são pedidos na raiz do domínio. Sem fallback, o servidor procura um arquivo `lineup` que não existe.
+    - text: O GitHub Pages não aceita JavaScript
+      why: Aceita. O problema é o caminho dos arquivos e a falta de um servidor que redirecione rotas.
+    - text: Faltou comprar um domínio próprio
+      why: O subdomínio do GitHub Pages funciona, só exige configurar a base corretamente.
+    - text: O repositório precisa ser privado
+      why: A visibilidade do repositório não muda como as rotas são servidas.
+  answer: 0
+  explanation: |
+    Hospedagens estáticas devolvem o arquivo pedido ou um 404. Numa SPA, rotas como `/lineup` só existem no JavaScript. Hospedagens como Netlify, Vercel e Cloudflare Pages permitem reescrever tudo para `index.html`. No GitHub Pages, as saídas comuns são o roteamento por hash ou um `404.html` que carrega o app. Publicar num subcaminho exige configurar a base, como `base` no Vite.
+
+- slug: variaveis-de-ambiente-no-build
+  title: A variável que vazou
+  difficulty: medio
+  kind: quiz
+  in: [deployment/Vercel, deployment/Netlify, deployment/Cloudflare]
+  statement: |
+    No painel da Vercel, da Netlify ou da Cloudflare, você cadastrou `VITE_STRIPE_SECRET` e usou no frontend com `import.meta.env.VITE_STRIPE_SECRET`. O pagamento funcionou.
+
+    Qual é o problema?
+  options:
+    - text: Variáveis expostas ao cliente, como as `VITE_`, são escritas no JavaScript do build. A chave secreta ficou pública. Ela deve ser usada só numa função de servidor
+      why: Certo. Qualquer visitante pode ler o bundle. No frontend, só valores públicos, como a chave publicável do Stripe.
+    - text: Nenhum, porque o painel guarda a variável com segurança
+      why: O painel guarda com segurança, mas o build copia o valor para dentro dos arquivos públicos.
+    - text: O problema é só o nome, que devia ser em minúsculas
+      why: O nome não muda o fato de que o valor foi embutido no bundle.
+    - text: Variáveis de ambiente não funcionam em sites estáticos
+      why: Funcionam no momento do build. É justamente por isso que acabam dentro dos arquivos.
+  answer: 0
+  explanation: |
+    Plataformas de deploy injetam variáveis de ambiente no build e nas funções. Bundlers como o Vite só expõem ao código do navegador as que têm um prefixo, e essas viram texto no bundle. Segredos ficam em funções serverless ou em um backend, que rodam no servidor da plataforma.
+
+- slug: servidor-ou-estatico
+  title: O site com API própria
+  difficulty: facil
+  kind: quiz
+  in: [deployment/Railway, deployment/Render]
+  statement: |
+    Além do frontend, o festival tem uma API em Node.js com Express, que fica rodando o tempo todo e se conecta a um banco PostgreSQL.
+
+    Onde ela pode ser hospedada?
+  options:
+    - text: Numa plataforma que roda processos e contêineres de longa duração com banco gerenciado, como Railway ou Render
+      why: Certo. Essas plataformas mantêm o servidor ligado, oferecem bancos e fazem deploy a partir do repositório.
+    - text: No GitHub Pages, junto com o frontend
+      why: O GitHub Pages serve só arquivos estáticos. Ele não executa Node.js.
+    - text: No localStorage dos visitantes
+      why: O localStorage é armazenamento do navegador de cada pessoa, não um servidor.
+    - text: Em qualquer CDN, porque CDNs executam qualquer código
+      why: CDNs distribuem arquivos. Algumas executam funções na borda, mas com limites que não servem a um servidor sempre ligado.
+  answer: 0
+  explanation: |
+    Há dois modelos de hospedagem. O estático e serverless, como GitHub Pages, Netlify e Vercel, serve arquivos e executa funções curtas sob demanda. Plataformas de aplicação, como Railway e Render, rodam processos e contêineres contínuos. A escolha depende de a aplicação precisar de um processo sempre ativo, de conexões persistentes ou de tarefas em segundo plano.
+
+- slug: tipar-ingresso
+  title: O formato do ingresso
+  difficulty: facil
+  kind: ts
+  in: [type-checkers/TypeScript]
+  statement: |
+    Declare o tipo `Ingresso`, com:
+
+    - `codigo`: texto
+    - `setor`: só `'pista'`, `'premium'` ou `'camarote'`
+    - `preco`: número
+    - `meia`: booleano opcional
+
+    Depois escreva `function descricao(ingresso: Ingresso): string`, que devolve `"<setor> - R$ <preco>"`, com ` (meia)` no fim quando `meia` for verdadeiro.
+  solution: |
+    interface Ingresso {
+      codigo: string;
+      setor: 'pista' | 'premium' | 'camarote';
+      preco: number;
+      meia?: boolean;
+    }
+
+    function descricao(ingresso: Ingresso): string {
+      return `${ingresso.setor} - R$ ${ingresso.preco}${ingresso.meia ? ' (meia)' : ''}`;
+    }
+  types: |
+    const ok: Ingresso = { codigo: 'A1', setor: 'pista', preco: 300 };
+    const comMeia: Ingresso = { codigo: 'A2', setor: 'camarote', preco: 450, meia: true };
+    // @ts-expect-error setor fora da lista
+    const setorErrado: Ingresso = { codigo: 'A3', setor: 'backstage', preco: 1 };
+    // @ts-expect-error preço como texto
+    const precoTexto: Ingresso = { codigo: 'A4', setor: 'pista', preco: '300' };
+    // @ts-expect-error falta o código
+    const semCodigo: Ingresso = { setor: 'pista', preco: 300 };
+    const texto: string = descricao(ok);
+  tests:
+    - name: descrição simples
+      code: |
+        expect(descricao({ codigo: 'A1', setor: 'pista', preco: 300 })).toBe('pista - R$ 300');
+    - name: meia-entrada
+      hidden: true
+      code: |
+        expect(descricao({ codigo: 'A2', setor: 'camarote', preco: 450, meia: true })).toBe('camarote - R$ 450 (meia)');
+        expect(descricao({ codigo: 'A3', setor: 'premium', preco: 520, meia: false })).toBe('premium - R$ 520');
+  hints:
+    - Uma união de literais, como `'a' | 'b'`, restringe os valores aceitos.
+    - "`?` depois do nome torna a propriedade opcional."
+  explanation: |
+    Tipos descrevem o formato dos dados, e o compilador recusa objetos fora do formato antes de o código rodar. Uniões de literais transformam uma lista de valores válidos em regra verificada, e o editor ainda sugere as opções.
+  traps:
+    - reason: Setor como string qualquer
+      code: |
+        interface Ingresso { codigo: string; setor: string; preco: number; meia?: boolean; }
+        function descricao(i: Ingresso): string { return `${i.setor} - R$ ${i.preco}${i.meia ? ' (meia)' : ''}`; }
+    - reason: Código opcional
+      code: |
+        interface Ingresso { codigo?: string; setor: 'pista' | 'premium' | 'camarote'; preco: number; meia?: boolean; }
+        function descricao(i: Ingresso): string { return `${i.setor} - R$ ${i.preco}${i.meia ? ' (meia)' : ''}`; }
+
+- slug: estados-do-pedido
+  title: Todos os estados do pedido
+  difficulty: medio
+  kind: ts
+  in: [type-checkers/TypeScript]
+  statement: |
+    Um pedido pode estar em três estados, cada um com dados diferentes:
+
+    - `{ status: 'pendente' }`
+    - `{ status: 'pago', codigo: string }`
+    - `{ status: 'recusado', motivo: string }`
+
+    Declare o tipo `Pedido` como uma união discriminada e escreva `function mensagem(pedido: Pedido): string`:
+
+    - pendente: `Aguardando pagamento`
+    - pago: `Pago, código <codigo>`
+    - recusado: `Recusado: <motivo>`
+
+    Use `switch` e garanta, com `never`, que um estado novo adicionado no futuro cause erro de tipo até ser tratado.
+  solution: |
+    type Pedido =
+      | { status: 'pendente' }
+      | { status: 'pago'; codigo: string }
+      | { status: 'recusado'; motivo: string };
+
+    function mensagem(pedido: Pedido): string {
+      switch (pedido.status) {
+        case 'pendente':
+          return 'Aguardando pagamento';
+        case 'pago':
+          return `Pago, código ${pedido.codigo}`;
+        case 'recusado':
+          return `Recusado: ${pedido.motivo}`;
+        default: {
+          const impossivel: never = pedido;
+          return impossivel;
+        }
+      }
+    }
+  types: |
+    mensagem({ status: 'pago', codigo: 'X1' });
+    // @ts-expect-error pago sem código
+    mensagem({ status: 'pago' });
+    // @ts-expect-error estado que não existe
+    mensagem({ status: 'estornado' });
+    // @ts-expect-error recusado não tem código
+    const r: Pedido = { status: 'recusado', motivo: 'cartão', codigo: 'X' };
+  tests:
+    - name: mensagens
+      code: |
+        expect(mensagem({ status: 'pendente' })).toBe('Aguardando pagamento');
+        expect(mensagem({ status: 'pago', codigo: 'X1' })).toBe('Pago, código X1');
+    - name: recusado
+      hidden: true
+      code: |
+        expect(mensagem({ status: 'recusado', motivo: 'saldo insuficiente' })).toBe('Recusado: saldo insuficiente');
+  must_use: [never]
+  hints:
+    - Cada membro da união tem o mesmo campo `status` com um literal diferente. Dentro de cada `case`, o TypeScript sabe qual é o membro.
+    - No `default`, atribua o pedido a uma variável do tipo `never`. Se algum caso faltar, essa atribuição dá erro.
+  explanation: |
+    Numa união discriminada, um campo literal comum, aqui `status`, permite ao TypeScript estreitar o tipo em cada ramo. A variável `never` no `default` é a checagem de exaustividade: se alguém acrescentar `'estornado'` ao tipo e esquecer o `case`, o build quebra.
+  traps:
+    - reason: Campos opcionais num tipo só
+      code: |
+        type Pedido = { status: 'pendente' | 'pago' | 'recusado'; codigo?: string; motivo?: string };
+        function mensagem(p: Pedido): string {
+          const never_: never = undefined as never;
+          if (p.status === 'pago') return `Pago, código ${p.codigo}`;
+          if (p.status === 'recusado') return `Recusado: ${p.motivo}`;
+          return 'Aguardando pagamento';
+        }
+
+- slug: primeiro-generico
+  title: Uma função para qualquer lista
+  difficulty: medio
+  kind: ts
+  in: [type-checkers/TypeScript]
+  statement: |
+    Escreva `function primeiro(lista, condicao)`, que devolve o primeiro item da lista para o qual `condicao(item)` é verdadeira, ou `undefined` se nenhum for.
+
+    Ela deve servir para listas de qualquer tipo e preservar o tipo: com uma lista de bandas, o retorno é `Banda | undefined`, e a condição recebe uma `Banda`. Não use `any`.
+  forbid: [any]
+  solution: |
+    function primeiro<T>(lista: readonly T[], condicao: (item: T) => boolean): T | undefined {
+      for (const item of lista) {
+        if (condicao(item)) return item;
+      }
+      return undefined;
+    }
+  types: |
+    type Banda = { nome: string; ano: number };
+    const bandas: Banda[] = [{ nome: 'Vórtice', ano: 1998 }];
+    const achada = primeiro(bandas, (b) => b.ano > 1990);
+    const nome: string | undefined = achada?.nome;
+    // @ts-expect-error o retorno pode ser undefined
+    const semChecar: Banda = primeiro(bandas, (b) => b.ano > 1990);
+    // @ts-expect-error a condição recebe uma Banda, que não tem idade
+    primeiro(bandas, (b) => b.idade > 3);
+    const n: number | undefined = primeiro([1, 2, 3], (x) => x > 1);
+    // @ts-expect-error lista de números devolve número
+    const s: string | undefined = primeiro([1, 2, 3], (x) => x > 1);
+  tests:
+    - name: acha o primeiro
+      code: |
+        expect(primeiro([3, 8, 12], (n) => n > 5)).toBe(8);
+    - name: nenhum
+      hidden: true
+      code: |
+        expect(primeiro([1, 2], (n) => n > 5)).toBeUndefined();
+        expect(primeiro([], () => true)).toBeUndefined();
+    - name: valores falsos
+      hidden: true
+      code: |
+        expect(primeiro([0, 1], (n) => n === 0)).toBe(0);
+  hints:
+    - Um parâmetro de tipo, como `<T>`, liga o tipo da lista ao tipo do retorno e da condição.
+    - O retorno é `T | undefined`, porque pode não haver item.
+  explanation: |
+    Genéricos deixam uma função servir a vários tipos sem perder informação. O `T` é inferido a partir da lista, então o editor sabe que `achada` é uma `Banda` ou `undefined`. Com `any`, todo o tipo se perderia e o erro de `b.idade` passaria.
+  traps:
+    - reason: unknown perde o tipo
+      code: |
+        function primeiro(lista: unknown[], condicao: (item: unknown) => boolean): unknown { for (const i of lista) if (condicao(i)) return i; return undefined; }
+    - reason: Esquece o undefined no retorno
+      code: |
+        function primeiro<T>(lista: T[], condicao: (item: T) => boolean): T { return lista.find(condicao) as T; }
+
+- slug: atualizacao-parcial
+  title: Atualizar só alguns campos
+  difficulty: medio
+  kind: ts
+  in: [type-checkers/TypeScript]
+  statement: |
+    O tipo `Banda` já existe:
+
+    ```
+    type Banda = { id: number; nome: string; genero: string; ano: number };
+    ```
+
+    Escreva `function atualizarBanda(banda: Banda, mudancas: ...): Banda`, que devolve uma cópia com as mudanças aplicadas. `mudancas` pode trazer qualquer combinação de `nome`, `genero` e `ano`, mas nunca `id`, que não pode ser alterado.
+
+    Use tipos utilitários do TypeScript para definir o tipo de `mudancas` a partir de `Banda`, sem repetir os campos.
+  solution: |
+    type Banda = { id: number; nome: string; genero: string; ano: number };
+
+    function atualizarBanda(banda: Banda, mudancas: Partial<Omit<Banda, 'id'>>): Banda {
+      return { ...banda, ...mudancas };
+    }
+  starter: |
+    type Banda = { id: number; nome: string; genero: string; ano: number };
+
+    function atualizarBanda(banda: Banda, mudancas: Banda): Banda {
+      return { ...banda, ...mudancas };
+    }
+  types: |
+    const b: Banda = { id: 1, nome: 'Vórtice', genero: 'thrash', ano: 1998 };
+    atualizarBanda(b, { nome: 'Vórtice Novo' });
+    atualizarBanda(b, { genero: 'death', ano: 2001 });
+    atualizarBanda(b, {});
+    // @ts-expect-error id não pode mudar
+    atualizarBanda(b, { id: 2 });
+    // @ts-expect-error ano é número
+    atualizarBanda(b, { ano: '2001' });
+    // @ts-expect-error campo que não existe
+    atualizarBanda(b, { pais: 'Brasil' });
+  tests:
+    - name: aplica as mudanças
+      code: |
+        const b = { id: 1, nome: 'Vórtice', genero: 'thrash', ano: 1998 };
+        expect(atualizarBanda(b, { ano: 2001 })).toEqual({ id: 1, nome: 'Vórtice', genero: 'thrash', ano: 2001 });
+    - name: não altera a original
+      hidden: true
+      code: |
+        const b = { id: 1, nome: 'Vórtice', genero: 'thrash', ano: 1998 };
+        atualizarBanda(b, { nome: 'Outro' });
+        expect(b.nome).toBe('Vórtice');
+  hints:
+    - "`Partial<T>` torna todos os campos opcionais."
+    - "`Omit<T, 'campo'>` remove um campo do tipo. Os dois podem ser combinados."
+  explanation: |
+    Tipos utilitários derivam tipos novos de um existente: `Partial` deixa tudo opcional, `Omit` remove campos, e `Pick` e `Readonly` seguem a mesma ideia. Derivar em vez de repetir mantém os tipos sincronizados. Um campo novo em `Banda` passa a valer em `mudancas` automaticamente.
+  traps:
+    - reason: Partial sem tirar o id
+      code: |
+        type Banda = { id: number; nome: string; genero: string; ano: number };
+        function atualizarBanda(b: Banda, m: Partial<Banda>): Banda { return { ...b, ...m }; }
+
+- slug: gerar-no-build
+  title: Gerar no build ou a cada visita
+  difficulty: medio
+  kind: quiz
+  in: [ssg/Next.js, ssg/Nuxt.js, ssg/Vuepress, ssg/Eleventy]
+  statement: |
+    O site tem dois tipos de página: as notícias, que mudam algumas vezes por semana, e a disponibilidade de ingressos, que muda a cada segundo.
+
+    Como usar SSG, a geração estática, com ferramentas como Next.js, Nuxt, VuePress ou Eleventy?
+  options:
+    - text: Gerar as notícias como HTML no build e republicar quando houver notícia nova. A disponibilidade é buscada em tempo real, por SSR ou por uma API chamada no cliente
+      why: Certo. SSG serve conteúdo que muda pouco, com custo mínimo e carregamento rápido. Dados de cada segundo precisam vir na hora.
+    - text: Gerar tudo no build, inclusive a disponibilidade
+      why: A página mostraria o estoque do momento do build, que logo fica errado.
+    - text: Renderizar tudo no servidor a cada visita, porque SSG é coisa do passado
+      why: SSR em tudo funciona, mas custa processamento a cada pedido, inclusive para páginas que mudam pouco.
+    - text: SSG não permite nenhum JavaScript na página
+      why: Páginas geradas podem ter JavaScript e buscar dados no cliente normalmente.
+  answer: 0
+  explanation: |
+    SSG gera HTML no build e serve arquivos prontos, de qualquer CDN. Funciona para documentação, blogs e páginas de marketing, como as do VuePress e do Eleventy. Next.js e Nuxt permitem misturar estratégias por rota e regenerar páginas estáticas de tempos em tempos.
+
+- slug: tokens-de-design
+  title: As cores do festival
+  difficulty: facil
+  kind: dom
+  editor: css
+  in: [design-systems]
+  html: |
+    <style>
+      :root {
+        --cor-primaria: #d7263d;
+        --cor-texto-invertido: #ffffff;
+        --espaco-2: 8px;
+        --espaco-4: 16px;
+        --raio-medio: 6px;
+      }
+    </style>
+    <button class="botao">Comprar</button>
+    <div class="alerta">Últimos ingressos</div>
+  statement: |
+    O design system do festival publica tokens como variáveis CSS, já definidos na página: `--cor-primaria`, `--cor-texto-invertido`, `--espaco-2`, `--espaco-4` e `--raio-medio`.
+
+    Estilize `.botao` e `.alerta` só com os tokens, sem valores soltos:
+
+    - fundo com a cor primária e texto com a cor invertida
+    - padding vertical de `--espaco-2` e horizontal de `--espaco-4`
+    - cantos com `--raio-medio`
+
+    Quando o design system mudar um token, os componentes devem mudar junto.
+  must_use: ['var(--cor-primaria)', 'var(--espaco-4)', 'var(--raio-medio)']
+  forbid: ['#d7263d', '16px', '6px']
+  solution: |
+    .botao,
+    .alerta {
+      background: var(--cor-primaria);
+      color: var(--cor-texto-invertido);
+      padding: var(--espaco-2) var(--espaco-4);
+      border-radius: var(--raio-medio);
+    }
+  tests:
+    - name: cores dos tokens
+      code: |
+        expect(css('.botao', 'background-color')).toBe('rgb(215, 38, 61)');
+        expect(css('.botao', 'color')).toBe('rgb(255, 255, 255)');
+    - name: espaçamento e cantos
+      code: |
+        expect(css('.botao', 'padding-top')).toBe('8px');
+        expect(css('.botao', 'padding-left')).toBe('16px');
+        expect(css('.botao', 'border-top-left-radius')).toBe('6px');
+    - name: acompanha a mudança do token
+      hidden: true
+      code: |
+        document.documentElement.style.setProperty('--cor-primaria', '#0055ff');
+        document.documentElement.style.setProperty('--espaco-4', '24px');
+        expect(css('.alerta', 'background-color')).toBe('rgb(0, 85, 255)');
+        expect(css('.alerta', 'padding-left')).toBe('24px');
+  hints:
+    - "`var(--nome)` lê o valor do token."
+  explanation: |
+    Design tokens são as decisões de design, como cores, espaços, tipografia e raios, guardadas com nome. Os componentes usam os nomes, não os valores, e uma mudança de marca vira uma mudança num lugar só. Componentes que se repetem também compartilham estilo, aqui com um seletor para os dois.
+  traps:
+    - reason: Alerta esquecido
+      code: |
+        .botao { background: var(--cor-primaria); color: var(--cor-texto-invertido); padding: var(--espaco-2) var(--espaco-4); border-radius: var(--raio-medio); }
+
+- slug: design-system-na-pratica
+  title: Três botões diferentes
+  difficulty: facil
+  kind: quiz
+  in: [design-systems]
+  statement: |
+    O site tem três versões do botão primário, com tons de vermelho e cantos levemente diferentes. Cada time criou a sua.
+
+    O que um design system resolve aqui?
+  options:
+    - text: Um componente de botão único, documentado e versionado, construído sobre tokens compartilhados, que todos os times usam
+      why: Certo. Uma fonte só para visual e comportamento, inclusive estados de foco e acessibilidade, evita divergências.
+    - text: Um arquivo de imagem com o botão certo, para cada time copiar
+      why: Uma referência visual ajuda, mas não impede que cada implementação divirja com o tempo.
+    - text: Uma regra que proíbe botões novos
+      why: O objetivo é facilitar o certo, não proibir. Um componente pronto é mais fácil que fazer do zero.
+    - text: Trocar de framework CSS
+      why: O framework não decide quais variantes de botão o produto tem.
+  answer: 0
+  explanation: |
+    Um design system junta princípios, tokens, componentes e documentação. Ele reduz decisões repetidas, acelera o trabalho e mantém o produto consistente, inclusive em acessibilidade. Ferramentas como o Storybook ajudam a documentar e testar os componentes isoladamente.
+
+- slug: lcp-lento
+  title: O pôster que demora
+  difficulty: medio
+  kind: quiz
+  in: [performance/Lighthouse]
+  statement: |
+    O Lighthouse aponta um Largest Contentful Paint de 5 segundos na página inicial. O maior elemento é o pôster do festival no topo, um JPEG de 4 MB com `loading="lazy"`.
+
+    Quais mudanças ajudam mais?
+  options:
+    - text: Tirar o `loading="lazy"` da imagem do topo, servir em formato moderno, como AVIF ou WebP, no tamanho certo com `srcset`, e priorizar com `fetchpriority="high"`
+      why: Certo. A imagem principal deve começar a baixar o quanto antes e ter só os bytes necessários.
+    - text: Adicionar mais `loading="lazy"` às imagens do topo
+      why: Lazy loading adia o download. Na imagem que é o LCP, isso piora a métrica.
+    - text: Minificar o CSS
+      why: Pode ajudar um pouco, mas o gargalo apontado é uma imagem de 4 MB.
+    - text: Trocar a cor de fundo da página
+      why: A cor de fundo não muda o tempo de carregar o maior elemento.
+  answer: 0
+  explanation: |
+    O LCP mede quando o maior elemento visível termina de renderizar. Em geral, esse elemento é uma imagem do topo. Ela não pode ter carregamento adiado, deve ser descoberta cedo no HTML e precisa de formato e tamanho adequados. O Lighthouse aponta as oportunidades, mas confirme com dados de usuários reais.
+
+- slug: tarefa-longa
+  title: A página trava ao filtrar
+  difficulty: medio
+  kind: quiz
+  in: [performance/DevTools Usage]
+  statement: |
+    Clicar num filtro da agenda congela a página por quase um segundo. Você quer descobrir o que está gastando esse tempo.
+
+    Qual é o primeiro passo no DevTools?
+  options:
+    - text: Gravar um perfil na aba Performance enquanto clica no filtro e procurar tarefas longas e as funções que mais consomem tempo
+      why: Certo. A gravação mostra o que roda na thread principal, quanto tempo leva e quem chamou cada função.
+    - text: Abrir a aba Network e limpar o cache
+      why: O travamento acontece depois do clique, sem rede envolvida. É trabalho de CPU na thread principal.
+    - text: Adicionar console.log em todas as funções
+      why: Logs ajudam pouco a medir tempo e ainda deixam o código mais lento.
+    - text: Trocar de navegador
+      why: O código continua lento em qualquer navegador. Medir é o que mostra a causa.
+  answer: 0
+  explanation: |
+    Tarefas longas, acima de 50ms na thread principal, travam cliques e rolagem. A aba Performance mostra cada tarefa, as chamadas de função e os recálculos de layout. Com a causa identificada, as correções comuns são calcular menos, quebrar o trabalho em partes ou evitar layouts forçados em laço.
+
+- slug: offline-com-service-worker
+  title: A programação sem sinal
+  difficulty: medio
+  kind: quiz
+  in: [performance/Service Workers, pwas]
+  statement: |
+    No festival, o sinal de celular cai o tempo todo. O público precisa abrir a programação mesmo sem internet.
+
+    Como um service worker resolve isso?
+  options:
+    - text: O service worker intercepta as requisições da página. Ele guarda a programação no Cache Storage e responde do cache quando a rede falha
+      why: Certo. Ele funciona como um proxy local programável entre a página e a rede.
+    - text: O service worker aumenta o sinal do celular
+      why: Ele não mexe no hardware. Atua nas requisições da página.
+    - text: O service worker roda o servidor do festival dentro do celular
+      why: Ele só responde requisições da sua origem com dados guardados ou gerados no próprio navegador.
+    - text: Basta salvar a programação no localStorage e o navegador abre a página sozinho
+      why: Sem a página carregada, nada lê o localStorage. O service worker é que entrega a página offline.
+  answer: 0
+  explanation: |
+    Um service worker é um script que roda separado da página e intercepta as requisições dela. Estratégias comuns: primeiro o cache, para arquivos que não mudam, primeiro a rede com cache de reserva, para dados, e devolver o cache enquanto atualiza ao fundo. Ele exige HTTPS e é a base do funcionamento offline de PWAs.
+
+- slug: cache-com-hash
+  title: O CSS antigo que não sai
+  difficulty: medio
+  kind: quiz
+  in: [performance/Cache-Control]
+  statement: |
+    Depois de um deploy, parte do público ainda vê o CSS antigo. O arquivo se chama sempre `estilo.css` e é servido com `Cache-Control: max-age=31536000`.
+
+    Qual estratégia resolve sem perder o cache?
+  options:
+    - text: Pôr um hash do conteúdo no nome dos arquivos, como `estilo.3f9a1c.css`, com cache longo e `immutable`, e servir o HTML com `no-cache` para ele sempre apontar para os nomes novos
+      why: Certo. Um conteúdo novo tem nome novo, então o cache antigo nunca é usado por engano, e o HTML sempre revalida.
+    - text: Tirar o cache de todos os arquivos
+      why: Funciona, mas todo visitante baixa tudo de novo a cada página, o que deixa o site lento.
+    - text: Pedir ao público para limpar o cache
+      why: Não dá para depender disso. A estratégia tem de funcionar sem ação do usuário.
+    - text: Mudar o max-age para um dia
+      why: Reduz a janela do problema, mas ainda mostra CSS errado por até um dia e piora o cache.
+  answer: 0
+  explanation: |
+    `Cache-Control` diz por quanto tempo o navegador e as CDNs podem reutilizar uma resposta. Arquivos com hash no nome podem ficar em cache para sempre, porque nunca mudam. O HTML, que referencia esses nomes, é revalidado a cada visita. Bundlers como o Vite geram os hashes automaticamente.
+
+- slug: ler-stream
+  title: A resposta que chega aos poucos
+  difficulty: dificil
+  kind: js
+  in: [performance/Streamed Responses]
+  statement: |
+    A API de busca devolve resultados aos poucos, num corpo em stream. Escreva `async function lerAosPoucos(resposta, aoReceber)`:
+
+    - leia `resposta.body`, um `ReadableStream` de bytes, com `getReader()`
+    - decodifique os bytes como texto UTF-8 com `TextDecoder`, sem quebrar caracteres que venham divididos entre dois pedaços
+    - chame `aoReceber(texto)` a cada pedaço decodificado que não esteja vazio
+    - no fim, devolva o texto completo
+  solution: |
+    async function lerAosPoucos(resposta, aoReceber) {
+      const leitor = resposta.body.getReader();
+      const decodificador = new TextDecoder('utf-8');
+      let completo = '';
+      while (true) {
+        const { done, value } = await leitor.read();
+        if (done) break;
+        const texto = decodificador.decode(value, { stream: true });
+        if (texto) {
+          completo += texto;
+          aoReceber(texto);
+        }
+      }
+      const resto = decodificador.decode();
+      if (resto) {
+        completo += resto;
+        aoReceber(resto);
+      }
+      return completo;
+    }
+  setup: |
+    function respostaEmPedacos(pedacos) {
+      const body = new ReadableStream({
+        start(controle) {
+          for (const p of pedacos) controle.enqueue(p);
+          controle.close();
+        },
+      });
+      return { body };
+    }
+    const bytes = (texto) => new TextEncoder().encode(texto);
+  tests:
+    - name: junta os pedaços
+      code: |
+        const aoReceber = fn();
+        const r = respostaEmPedacos([bytes('Vórtice, '), bytes('Asfalto')]);
+        expect(await lerAosPoucos(r, aoReceber)).toBe('Vórtice, Asfalto');
+        expect(aoReceber).toHaveBeenCalledTimes(2);
+        expect(aoReceber).toHaveBeenCalledWith('Vórtice, ');
+    - name: caractere dividido entre pedaços
+      hidden: true
+      code: |
+        const tudo = bytes('Maré');
+        const r = respostaEmPedacos([tudo.slice(0, 4), tudo.slice(4)]);
+        const pedacos = [];
+        expect(await lerAosPoucos(r, (t) => pedacos.push(t))).toBe('Maré');
+        expect(pedacos.join('')).toBe('Maré');
+        expect(pedacos.some((t) => t.includes('�'))).toBe(false);
+    - name: stream vazio
+      hidden: true
+      code: |
+        const aoReceber = fn();
+        expect(await lerAosPoucos(respostaEmPedacos([]), aoReceber)).toBe('');
+        expect(aoReceber).not.toHaveBeenCalled();
+  hints:
+    - "`leitor.read()` devolve `{ done, value }`. Repita até `done` ser verdadeiro."
+    - "`decode(value, { stream: true })` guarda bytes incompletos para o próximo pedaço."
+  explanation: |
+    Respostas em stream deixam mostrar resultados antes de o servidor terminar, como em buscas longas ou respostas de modelos de linguagem. Os pedaços são bytes, e um caractere como `é` ocupa dois bytes em UTF-8 e pode chegar dividido. `TextDecoder` com `stream: true` segura o pedaço incompleto até chegar o resto.
+  traps:
+    - reason: Decodifica cada pedaço isolado
+      code: |
+        async function lerAosPoucos(r, f) {
+          const l = r.body.getReader(); let t = '';
+          while (true) { const { done, value } = await l.read(); if (done) break; const s = new TextDecoder().decode(value); if (s) { t += s; f(s); } }
+          return t;
+        }
+    - reason: Espera tudo para avisar
+      code: |
+        async function lerAosPoucos(r, f) {
+          const l = r.body.getReader(); const d = new TextDecoder(); let t = '';
+          while (true) { const { done, value } = await l.read(); if (done) break; t += d.decode(value, { stream: true }); }
+          t += d.decode(); if (t) f(t); return t;
+        }
+
+- slug: template-clonado
+  title: O molde do cartão
+  difficulty: facil
+  kind: dom
+  editor: js
+  in: [web-components/HTML Templates]
+  html: |
+    <template id="modelo-banda">
+      <article class="banda">
+        <h3 class="nome"></h3>
+        <p class="horario"></p>
+      </article>
+    </template>
+    <section id="lista"></section>
+  setup: |
+    window.SHOWS = [
+      { nome: 'Vórtice', horario: '22h' },
+      { nome: 'Asfalto', horario: '20h' },
+    ];
+  statement: |
+    A página tem um `<template id="modelo-banda">` com o molde de um cartão. Para cada item da global `SHOWS`, clone o conteúdo do template, preencha `.nome` e `.horario` e acrescente o cartão em `#lista`.
+
+    O template em si não pode ser alterado: ele continua sendo o molde para os próximos cartões.
+  must_use: [content, cloneNode]
+  forbid: [innerHTML]
+  solution: |
+    const modelo = document.getElementById('modelo-banda');
+    const lista = document.getElementById('lista');
+    for (const show of SHOWS) {
+      const cartao = modelo.content.cloneNode(true);
+      cartao.querySelector('.nome').textContent = show.nome;
+      cartao.querySelector('.horario').textContent = show.horario;
+      lista.append(cartao);
+    }
+  tests:
+    - name: um cartão por show
+      code: |
+        const cartoes = $$('#lista .banda');
+        expect(cartoes).toHaveLength(2);
+        expect(cartoes[0].querySelector('.nome').textContent).toBe('Vórtice');
+        expect(cartoes[1].querySelector('.horario').textContent).toBe('20h');
+    - name: template intacto
+      hidden: true
+      code: |
+        const molde = el('#modelo-banda').content;
+        expect(molde.querySelector('.nome').textContent).toBe('');
+        expect(molde.querySelectorAll('.banda')).toHaveLength(1);
+  hints:
+    - "`template.content` é um fragmento com o molde. `cloneNode(true)` copia com todos os filhos."
+  explanation: |
+    `<template>` guarda HTML que o navegador lê mas não mostra nem executa. Clonar o `content` cria cópias prontas para preencher, o que é mais seguro que montar HTML em texto e mais legível que criar cada elemento à mão. Templates também são a base de muitos Web Components.
+  traps:
+    - reason: Move o molde em vez de clonar
+      code: |
+        const m = document.getElementById('modelo-banda');
+        const lista = document.getElementById('lista');
+        for (const s of SHOWS) {
+          const c = m.content.firstElementChild || m.content.cloneNode(true).firstElementChild;
+          c.querySelector('.nome').textContent = s.nome;
+          c.querySelector('.horario').textContent = s.horario;
+          lista.append(c);
+        }
+
+- slug: elemento-personalizado
+  title: A tag do festival
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [web-components/Custom Elements]
+  html: |
+    <selo-setor nome="Pista" restantes="12"></selo-setor>
+    <selo-setor nome="Camarote" restantes="0"></selo-setor>
+  statement: |
+    Defina o elemento `<selo-setor>`, com os atributos `nome` e `restantes`. Ele mostra o próprio texto:
+
+    - com ingressos: `Pista: 12 restantes`
+    - com `restantes` igual a `0`: `Camarote: esgotado`, e o elemento recebe a classe `esgotado`
+
+    Quando o atributo `restantes` mudar depois, o texto e a classe devem acompanhar.
+  must_use: [customElements.define, observedAttributes]
+  solution: |
+    class SeloSetor extends HTMLElement {
+      static observedAttributes = ['nome', 'restantes'];
+
+      connectedCallback() {
+        this.render();
+      }
+
+      attributeChangedCallback() {
+        this.render();
+      }
+
+      render() {
+        const nome = this.getAttribute('nome') ?? '';
+        const restantes = Number(this.getAttribute('restantes'));
+        const esgotado = restantes === 0;
+        this.textContent = esgotado ? `${nome}: esgotado` : `${nome}: ${restantes} restantes`;
+        this.classList.toggle('esgotado', esgotado);
+      }
+    }
+
+    customElements.define('selo-setor', SeloSetor);
+  tests:
+    - name: mostra o texto
+      code: |
+        const [pista, camarote] = $$('selo-setor');
+        expect(pista.textContent).toBe('Pista: 12 restantes');
+        expect(camarote.textContent).toBe('Camarote: esgotado');
+        expect(camarote.classList.contains('esgotado')).toBe(true);
+    - name: acompanha o atributo
+      hidden: true
+      code: |
+        const pista = el('selo-setor');
+        pista.setAttribute('restantes', '0');
+        expect(pista.textContent).toBe('Pista: esgotado');
+        expect(pista.classList.contains('esgotado')).toBe(true);
+        pista.setAttribute('restantes', '3');
+        expect(pista.textContent).toBe('Pista: 3 restantes');
+        expect(pista.classList.contains('esgotado')).toBe(false);
+    - name: elementos criados depois
+      hidden: true
+      code: |
+        const novo = document.createElement('selo-setor');
+        novo.setAttribute('nome', 'Premium');
+        novo.setAttribute('restantes', '5');
+        document.body.append(novo);
+        expect(novo.textContent).toBe('Premium: 5 restantes');
+  hints:
+    - Uma classe que estende `HTMLElement` e é registrada com `customElements.define` vira uma tag nova.
+    - "`static observedAttributes` lista os atributos que disparam `attributeChangedCallback`."
+  explanation: |
+    Custom Elements criam tags com comportamento próprio, que funcionam em qualquer página, com ou sem framework. `connectedCallback` roda quando o elemento entra no documento, e `attributeChangedCallback` roda quando um atributo observado muda. O nome da tag precisa ter hífen.
+  traps:
+    - reason: Não observa os atributos
+      code: |
+        class S extends HTMLElement {
+          connectedCallback() {
+            const n = this.getAttribute('nome'); const r = Number(this.getAttribute('restantes'));
+            this.textContent = r === 0 ? `${n}: esgotado` : `${n}: ${r} restantes`;
+            this.classList.toggle('esgotado', r === 0);
+          }
+          static observedAttributes = [];
+        }
+        customElements.define('selo-setor', S);
+
+- slug: estilo-isolado
+  title: O estilo que vazava
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [web-components/Shadow DOM]
+  html: |
+    <style>p { color: rgb(255, 0, 0); font-size: 30px; }</style>
+    <p id="fora">Texto da página</p>
+    <aviso-portao></aviso-portao>
+  statement: |
+    A página tem uma regra global que pinta todo `p` de vermelho. Crie o elemento `<aviso-portao>`, que mostra um `p` com o texto `Portões abrem às 14h` em `rgb(0, 0, 0)` e 16px.
+
+    Use Shadow DOM para que o CSS da página não afete o aviso e o CSS do aviso não afete a página.
+  must_use: [attachShadow]
+  solution: |
+    class AvisoPortao extends HTMLElement {
+      constructor() {
+        super();
+        const raiz = this.attachShadow({ mode: 'open' });
+        const estilo = document.createElement('style');
+        estilo.textContent = 'p { color: rgb(0, 0, 0); font-size: 16px; }';
+        const paragrafo = document.createElement('p');
+        paragrafo.textContent = 'Portões abrem às 14h';
+        raiz.append(estilo, paragrafo);
+      }
+    }
+
+    customElements.define('aviso-portao', AvisoPortao);
+  tests:
+    - name: texto no shadow root
+      code: |
+        const p = el('aviso-portao').shadowRoot.querySelector('p');
+        expect(p.textContent).toBe('Portões abrem às 14h');
+    - name: estilo próprio
+      hidden: true
+      code: |
+        const p = el('aviso-portao').shadowRoot.querySelector('p');
+        expect(getComputedStyle(p).color).toBe('rgb(0, 0, 0)');
+        expect(getComputedStyle(p).fontSize).toBe('16px');
+    - name: não afeta a página
+      hidden: true
+      code: |
+        expect(css('#fora', 'color')).toBe('rgb(255, 0, 0)');
+        expect(css('#fora', 'font-size')).toBe('30px');
+  hints:
+    - "`this.attachShadow({ mode: 'open' })` cria uma árvore separada, acessível por `shadowRoot`."
+    - Um `<style>` dentro do shadow root vale só para ele.
+  explanation: |
+    Shadow DOM encapsula a estrutura e o estilo de um componente. Seletores de fora não entram, e os de dentro não saem. Propriedades herdadas, como `color`, ainda atravessam, por isso o componente define as próprias. Para personalização intencional, use variáveis CSS e `::part`.
+  traps:
+    - reason: Estilo global com seletor da tag
+      code: |
+        class A extends HTMLElement {
+          connectedCallback() { this.innerText = ''; const p = document.createElement('p'); p.textContent = 'Portões abrem às 14h'; this.append(p); const s = document.createElement('style'); s.textContent = 'aviso-portao p { color: rgb(0,0,0); font-size: 16px; } p { color: rgb(0,0,0); }'; document.head.append(s); this.attachShadow({ mode: 'open' }); }
+        }
+        customElements.define('aviso-portao', A);
+
+- slug: pedir-so-o-necessario
+  title: Dados demais, dados de menos
+  difficulty: facil
+  kind: quiz
+  in: [graphql/Apollo]
+  statement: |
+    A tela do line-up mostra só nome e horário de cada banda. Com a API REST, ela faz um pedido para `/bandas`, que devolve 40 campos por banda, e depois um pedido para `/horarios` de cada banda.
+
+    O que muda com GraphQL, usando um cliente como o Apollo?
+  options:
+    - text: O cliente manda uma única consulta descrevendo exatamente os campos, como bandas com nome e horário, e recebe só isso numa resposta
+      why: Certo. GraphQL resolve o excesso de dados e as múltiplas idas e voltas numa consulta tipada.
+    - text: O GraphQL baixa o banco de dados inteiro para o navegador
+      why: O servidor só devolve os campos pedidos, conforme o esquema e as permissões.
+    - text: O GraphQL substitui o HTTP
+      why: Normalmente as consultas GraphQL viajam por HTTP, num POST para um endpoint.
+    - text: Com GraphQL, não é mais preciso ter servidor
+      why: Continua existindo um servidor que interpreta a consulta e busca os dados.
+  answer: 0
+  explanation: |
+    Em GraphQL, o servidor publica um esquema tipado, e o cliente monta consultas com os campos de que precisa, inclusive relações, numa ida só. Clientes como o Apollo guardam os resultados em cache normalizado, então a mesma banda vista em duas telas é atualizada nas duas.
+
+- slug: fragmentos-por-componente
+  title: Cada componente pede seus campos
+  difficulty: dificil
+  kind: quiz
+  in: [graphql/Relay Modern]
+  statement: |
+    Na página de uma banda, o componente `CabecalhoBanda` usa nome e foto, e `ListaShows` usa data e palco dos shows. A consulta da página é escrita à mão e às vezes esquece campos que um componente passou a usar.
+
+    Como o Relay organiza isso?
+  options:
+    - text: Cada componente declara um fragmento GraphQL com os campos de que precisa, e a consulta da página compõe os fragmentos. O compilador do Relay gera os tipos e garante que cada componente veja só o que pediu
+      why: Certo. Os requisitos de dados ficam junto do componente, e a consulta da página não precisa saber dos detalhes.
+    - text: Uma consulta global gigante com todos os campos possíveis, carregada no início
+      why: Isso baixa dados demais e volta ao problema que GraphQL resolve.
+    - text: Cada componente faz o próprio fetch REST
+      why: Isso traz de volta as várias idas e voltas e impede que a página carregue tudo numa consulta.
+    - text: O Relay adivinha os campos lendo o JSX
+      why: Os requisitos são declarados explicitamente nos fragmentos, e o compilador processa essas declarações.
+  answer: 0
+  explanation: |
+    Colocar os dados junto do componente é a ideia central do Relay: cada componente declara o que usa num fragmento, e a página só compõe. O compilador valida contra o esquema, gera tipos e otimiza as consultas. O isolamento impede que um componente dependa sem querer de campos pedidos por outro.
+
+- slug: consulta-graphql
+  title: Fazer a consulta
+  difficulty: medio
+  kind: js
+  in: [graphql/Apollo]
+  statement: |
+    Sem biblioteca, escreva `async function consultar(endpoint, query, variables)`, que envia uma consulta GraphQL e devolve os dados.
+
+    - Envie um `POST` com `content-type: application/json` e o corpo `{ query, variables }`.
+    - GraphQL costuma responder com status 200 mesmo quando a consulta falha, com um campo `errors`. Se `errors` existir e não estiver vazio, lance um `Error` com as mensagens unidas por `; `.
+    - Se o status HTTP não for de sucesso, lance um `Error` com o status.
+    - Devolva o campo `data`.
+  solution: |
+    async function consultar(endpoint, query, variables = {}) {
+      const resposta = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query, variables }),
+      });
+      if (!resposta.ok) throw new Error(`Erro HTTP ${resposta.status}`);
+      const corpo = await resposta.json();
+      if (corpo.errors?.length) throw new Error(corpo.errors.map((e) => e.message).join('; '));
+      return corpo.data;
+    }
+  tests:
+    - name: devolve data
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: true, status: 200, json: async () => ({ data: { bandas: [{ nome: 'Vórtice' }] } }) }));
+        const q = 'query ($dia: Int!) { bandas(dia: $dia) { nome } }';
+        expect(await consultar('/graphql', q, { dia: 1 })).toEqual({ bandas: [{ nome: 'Vórtice' }] });
+        const [url, opcoes] = fetch.mock.calls[0];
+        expect(url).toBe('/graphql');
+        expect(opcoes.method).toBe('POST');
+        expect(JSON.parse(opcoes.body)).toEqual({ query: q, variables: { dia: 1 } });
+    - name: erros com status 200
+      hidden: true
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: true, status: 200, json: async () => ({ data: null, errors: [{ message: 'Campo idade não existe' }, { message: 'Dia inválido' }] }) }));
+        await expect(consultar('/graphql', '{ x }')).rejects.toMatch('Campo idade não existe; Dia inválido');
+    - name: erro HTTP
+      hidden: true
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: false, status: 500, json: async () => ({}) }));
+        await expect(consultar('/graphql', '{ x }')).rejects.toMatch('500');
+    - name: lista de erros vazia
+      hidden: true
+      code: |
+        globalThis.fetch = fn(async () => ({ ok: true, status: 200, json: async () => ({ data: { ok: true }, errors: [] }) }));
+        expect(await consultar('/graphql', '{ ok }')).toEqual({ ok: true });
+  hints:
+    - Confira `errors` mesmo quando `resposta.ok` é verdadeiro.
+  explanation: |
+    Por baixo de clientes como Apollo e Relay, uma consulta GraphQL costuma ser um POST com `query` e `variables`. Variáveis evitam montar a consulta concatenando texto. Como erros de consulta voltam com status 200, o cliente precisa olhar o campo `errors`.
+  traps:
+    - reason: Ignora errors
+      code: |
+        async function consultar(e, q, v = {}) { const r = await fetch(e, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: q, variables: v }) }); if (!r.ok) throw new Error(`Erro HTTP ${r.status}`); return (await r.json()).data; }
+
+- slug: botao-de-verdade
+  title: O botão que não era botão
+  difficulty: facil
+  kind: dom
+  editor: html
+  in: [accessibility]
+  starter: |
+    <div class="comprar" onclick="comprar()">Comprar ingresso</div>
+    <span class="fechar" onclick="fechar()">✕</span>
+  setup: |
+    window.compras = 0;
+    window.fechou = 0;
+    window.comprar = () => { window.compras++; };
+    window.fechar = () => { window.fechou++; };
+  statement: |
+    Os controles abaixo funcionam com o mouse, mas não com teclado nem com leitor de tela. Reescreva o HTML para que:
+
+    - `Comprar ingresso` seja um botão de verdade, que chama `comprar()`
+    - o `✕` seja um botão que chama `fechar()` e tenha o nome acessível `Fechar aviso`, porque o símbolo sozinho não diz nada
+    - os dois sejam alcançáveis pelo Tab e acionáveis pelo teclado
+  solution: |
+    <button type="button" class="comprar" onclick="comprar()">Comprar ingresso</button>
+    <button type="button" class="fechar" onclick="fechar()" aria-label="Fechar aviso">✕</button>
+  tests:
+    - name: botões de verdade
+      code: |
+        expect($$('button')).toHaveLength(2);
+        expect($('div[onclick], span[onclick]')).toBeNull();
+    - name: nome acessível do fechar
+      code: |
+        expect(el('.fechar').getAttribute('aria-label')).toBe('Fechar aviso');
+    - name: funcionam como antes
+      hidden: true
+      code: |
+        click('.comprar');
+        click('.fechar');
+        expect(window.compras).toBe(1);
+        expect(window.fechou).toBe(1);
+    - name: alcançáveis pelo Tab
+      hidden: true
+      code: |
+        for (const b of $$('button')) {
+          expect(b.tabIndex).toBe(0);
+          expect(b.disabled).toBe(false);
+        }
+        expect(text('.comprar')).toBe('Comprar ingresso');
+  hints:
+    - Um `button` já vem com foco pelo Tab, ativação por Enter e Espaço, e o papel de botão para leitores de tela.
+    - Quando o conteúdo visível é só um ícone, `aria-label` dá o nome que o leitor de tela anuncia.
+  explanation: |
+    Usar o elemento nativo é a regra mais valiosa de acessibilidade. Um `div` com `onclick` precisaria de `role`, `tabindex` e tratamento de teclado para imitar um `button`, e ainda falharia em detalhes. Botões só com ícone precisam de um nome acessível, por `aria-label` ou por um texto visualmente escondido.
+  traps:
+    - reason: Div com role, sem o resto
+      code: |
+        <div role="button" class="comprar" onclick="comprar()">Comprar ingresso</div>
+        <span role="button" class="fechar" onclick="fechar()" aria-label="Fechar aviso">✕</span>
+    - reason: Ícone sem nome
+      code: |
+        <button type="button" class="comprar" onclick="comprar()">Comprar ingresso</button>
+        <button type="button" class="fechar" onclick="fechar()">✕</button>
+
+- slug: imagens-e-alternativas
+  title: Que imagem precisa de descrição
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [accessibility]
+  starter: |
+    <img src="logo.svg">
+    <h1>Festival Ruído</h1>
+    <img src="divisor.png">
+    <a href="/ingressos"><img src="ingresso.svg"></a>
+    <img src="mapa.png">
+  statement: |
+    Corrija o texto alternativo das quatro imagens, mantendo as imagens e a ordem:
+
+    - `logo.svg`: o logo, ao lado do título que já diz o nome. É decorativa aqui
+    - `divisor.png`: um enfeite gráfico entre seções. É decorativa
+    - `ingresso.svg`: o único conteúdo de um link para `/ingressos`. Descreva o destino: `Comprar ingressos`
+    - `mapa.png`: o mapa do local. Descreva a informação, com pelo menos 30 caracteres, como onde ficam os palcos e as entradas
+
+    Imagem decorativa tem `alt` vazio, para o leitor de tela pular.
+  solution: |
+    <img src="logo.svg" alt="">
+    <h1>Festival Ruído</h1>
+    <img src="divisor.png" alt="">
+    <a href="/ingressos"><img src="ingresso.svg" alt="Comprar ingressos"></a>
+    <img src="mapa.png" alt="Mapa do local: palco Norte perto da entrada A, palco Sul ao lado da praça de alimentação">
+  tests:
+    - name: toda imagem tem alt
+      code: |
+        const imgs = $$('img');
+        expect(imgs).toHaveLength(4);
+        for (const img of imgs) expect(img.hasAttribute('alt')).toBe(true);
+    - name: link com nome
+      code: |
+        expect(el('a[href="/ingressos"] img').getAttribute('alt')).toBe('Comprar ingressos');
+    - name: decorativas com alt vazio
+      hidden: true
+      code: |
+        expect(el('img[src="logo.svg"]').getAttribute('alt')).toBe('');
+        expect(el('img[src="divisor.png"]').getAttribute('alt')).toBe('');
+    - name: mapa descrito
+      hidden: true
+      code: |
+        const alt = el('img[src="mapa.png"]').getAttribute('alt') ?? '';
+        expect(alt.length).toBeGreaterThanOrEqual(30);
+        expect(alt.toLowerCase()).not.toMatch(/^(imagem|foto|figura)/);
+  hints:
+    - "`alt=\"\"` é diferente de não ter `alt`. Sem o atributo, leitores de tela podem ler o nome do arquivo."
+    - O alt de uma imagem dentro de um link vira o nome do link.
+  explanation: |
+    O texto alternativo depende da função da imagem. Imagens decorativas, ou que repetem o texto ao lado, levam `alt=""`. Imagens que são o conteúdo de um link descrevem o destino. Imagens informativas descrevem a informação, sem começar com "imagem de", porque o leitor de tela já anuncia que é uma imagem.
+  traps:
+    - reason: Nome do arquivo como alt
+      code: |
+        <img src="logo.svg" alt="logo"><h1>Festival Ruído</h1><img src="divisor.png" alt="divisor">
+        <a href="/ingressos"><img src="ingresso.svg" alt="ingresso"></a><img src="mapa.png" alt="mapa">
+    - reason: Decorativas sem alt
+      code: |
+        <img src="logo.svg"><h1>Festival Ruído</h1><img src="divisor.png">
+        <a href="/ingressos"><img src="ingresso.svg" alt="Comprar ingressos"></a><img src="mapa.png" alt="Mapa do local com os palcos Norte e Sul e as entradas">
+
+- slug: menu-expansivel
+  title: O menu que abre e fecha
+  difficulty: medio
+  kind: dom
+  editor: js
+  in: [accessibility]
+  html: |
+    <nav>
+      <button id="abrir-menu" aria-expanded="false" aria-controls="menu">Menu</button>
+      <ul id="menu" hidden>
+        <li><a href="#lineup">Line-up</a></li>
+        <li><a href="#ingressos">Ingressos</a></li>
+      </ul>
+    </nav>
+  statement: |
+    O botão `#abrir-menu` mostra e esconde a lista `#menu`. Escreva o JavaScript:
+
+    - clicar alterna o atributo `hidden` da lista
+    - `aria-expanded` do botão acompanha o estado, `"true"` ou `"false"`, para o leitor de tela anunciar se o menu está aberto
+    - com o menu aberto, a tecla Escape fecha o menu e devolve o foco ao botão
+  solution: |
+    const botao = document.getElementById('abrir-menu');
+    const menu = document.getElementById('menu');
+
+    function definir(aberto) {
+      menu.hidden = !aberto;
+      botao.setAttribute('aria-expanded', String(aberto));
+    }
+
+    botao.addEventListener('click', () => definir(menu.hidden));
+    document.addEventListener('keydown', (evento) => {
+      if (evento.key === 'Escape' && !menu.hidden) {
+        definir(false);
+        botao.focus();
+      }
+    });
+  tests:
+    - name: abre e fecha
+      code: |
+        click('#abrir-menu');
+        expect(el('#menu').hidden).toBe(false);
+        click('#abrir-menu');
+        expect(el('#menu').hidden).toBe(true);
+    - name: aria-expanded acompanha
+      code: |
+        click('#abrir-menu');
+        expect(el('#abrir-menu').getAttribute('aria-expanded')).toBe('true');
+        click('#abrir-menu');
+        expect(el('#abrir-menu').getAttribute('aria-expanded')).toBe('false');
+    - name: Escape fecha e devolve o foco
+      hidden: true
+      code: |
+        click('#abrir-menu');
+        el('#menu a').focus();
+        press('#menu a', 'Escape');
+        expect(el('#menu').hidden).toBe(true);
+        expect(el('#abrir-menu').getAttribute('aria-expanded')).toBe('false');
+        expect(document.activeElement).toBe(el('#abrir-menu'));
+  hints:
+    - O valor de `aria-expanded` é texto. Use `String(aberto)` ou `'true'` e `'false'`.
+    - O evento de teclado sobe até o `document`, então um listener ali pega o Escape de qualquer link do menu.
+  explanation: |
+    ARIA não muda o comportamento, só o que a tecnologia assistiva anuncia. Por isso `aria-expanded` precisa ser atualizado junto com o estado visual. Fechar com Escape e devolver o foco ao botão é o padrão esperado, e sem isso quem usa teclado se perde na página.
+  traps:
+    - reason: Esquece o aria-expanded
+      code: |
+        const b = document.getElementById('abrir-menu'); const m = document.getElementById('menu');
+        b.addEventListener('click', () => { m.hidden = !m.hidden; });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { m.hidden = true; b.focus(); } });
+    - reason: Escape sem devolver o foco
+      code: |
+        const b = document.getElementById('abrir-menu'); const m = document.getElementById('menu');
+        const set = (a) => { m.hidden = !a; b.setAttribute('aria-expanded', String(a)); };
+        b.addEventListener('click', () => set(m.hidden));
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') set(false); });
+
+- slug: requisitos-do-pwa
+  title: O botão de instalar não aparece
+  difficulty: medio
+  kind: quiz
+  in: [pwas]
+  statement: |
+    O time quer que o site do festival possa ser instalado no celular, com ícone na tela inicial, abrindo em tela cheia, sem a barra do navegador.
+
+    O que é necessário?
+  options:
+    - text: Servir por HTTPS e ter um web app manifest com nome, ícones, `start_url` e `display` como `standalone`, além de um service worker para funcionar offline
+      why: Certo. O manifest descreve como o app aparece instalado, e o HTTPS é exigido. O service worker dá a experiência offline que se espera de um app.
+    - text: Publicar o site nas lojas de aplicativos
+      why: PWAs são instalados direto pelo navegador. As lojas são opcionais.
+    - text: Reescrever o site em uma linguagem nativa
+      why: PWAs usam as mesmas tecnologias web do site.
+    - text: Basta um favicon
+      why: O favicon aparece na aba. A instalação depende do manifest e dos outros critérios.
+  answer: 0
+  explanation: |
+    Um Progressive Web App é um site com recursos de aplicativo: instalação, funcionamento offline e, em alguns sistemas, notificações. O manifest JSON define nome, ícones, cores e modo de exibição, e o service worker cuida de cache e eventos em segundo plano. O suporte varia entre navegadores e sistemas.
+
+- slug: electron-ou-tauri
+  title: O app de credenciamento
+  difficulty: medio
+  kind: quiz
+  in: [desktop-apps/Electron, desktop-apps/Tauri]
+  statement: |
+    A equipe de credenciamento precisa de um app de computador que leia um leitor de código de barras USB e funcione sem internet. O time só conhece frontend.
+
+    Qual comparação entre Electron e Tauri está correta?
+  options:
+    - text: O Electron empacota o Chromium e o Node.js junto com o app. O Tauri usa o webview do próprio sistema e um backend em Rust, gerando instaladores bem menores
+      why: Certo. Os dois usam HTML, CSS e JS na interface. A diferença está no motor embutido, no tamanho e na linguagem do lado nativo.
+    - text: Os dois exigem reescrever a interface em C++
+      why: A interface continua em tecnologias web nos dois casos.
+    - text: O Tauri só roda no navegador, como um site
+      why: O Tauri gera aplicativos instaláveis para Windows, macOS e Linux, e também para celular.
+    - text: O Electron não acessa recursos do sistema, como arquivos e USB
+      why: Pelo processo principal em Node.js, o Electron acessa arquivos, rede e periféricos.
+  answer: 0
+  explanation: |
+    Desktop com tecnologias web reaproveita o que o time sabe. O Electron, usado no VS Code e no Slack, traz o mesmo Chromium em todo sistema, o que facilita a consistência, mas pesa no tamanho e na memória. O Tauri usa o webview nativo, é mais leve e põe a lógica sensível em Rust, com permissões declaradas.
+
+- slug: flutter-multiplataforma
+  title: Uma base para celular e computador
+  difficulty: medio
+  kind: quiz
+  in: [desktop-apps/Flutter, mobile-apps/Flutter]
+  statement: |
+    O festival quer um app para Android, iOS e computador com a mesma interface. Uma pessoa propõe Flutter.
+
+    Como o Flutter funciona?
+  options:
+    - text: O app é escrito em Dart, e o Flutter desenha a interface com o próprio motor de renderização, em vez de usar componentes nativos de cada sistema ou um webview
+      why: Certo. Por isso a interface fica idêntica em todas as plataformas, e o código compila para nativo.
+    - text: O Flutter roda o site existente dentro de um webview
+      why: Isso descreve abordagens como o Ionic com Capacitor. O Flutter não usa HTML.
+    - text: O Flutter converte o código para Swift e Kotlin, e você mantém os dois
+      why: Você mantém uma única base em Dart. O Flutter compila para cada plataforma.
+    - text: O Flutter só gera apps de desktop
+      why: Ele nasceu para celular e depois ganhou suporte a web e desktop.
+  answer: 0
+  explanation: |
+    Ferramentas multiplataforma seguem estratégias diferentes. O Flutter desenha tudo com o próprio motor. O React Native usa componentes nativos controlados por JavaScript. O Ionic roda tecnologias web num webview. A escolha afeta desempenho, aparência nativa e quanto do conhecimento de web o time reaproveita.
+
+- slug: react-native-nao-e-web
+  title: O div que não existe
+  difficulty: medio
+  kind: quiz
+  in: [mobile-apps/React Native]
+  statement: |
+    Você leva um componente React do site para o React Native e o app quebra: `div`, `span` e `className` não funcionam.
+
+    Por quê?
+  options:
+    - text: O React Native não renderiza HTML. Os componentes viram elementos nativos do sistema, como `View` e `Text`, e o estilo é um objeto JavaScript com um subconjunto do CSS
+      why: Certo. A lógica em React e os hooks se reaproveitam, mas a camada de apresentação usa os componentes da plataforma.
+    - text: Falta instalar o pacote do HTML no projeto
+      why: Não existe DOM no React Native. Os componentes primitivos são outros.
+    - text: O React Native só aceita componentes de classe
+      why: Componentes de função e hooks são o padrão também no React Native.
+    - text: O app precisa abrir um navegador para mostrar divs
+      why: Isso seria um webview, que é outra abordagem. O React Native renderiza componentes nativos.
+  answer: 0
+  explanation: |
+    O React Native usa o React para descrever a interface, mas o renderizador cria componentes nativos em vez de nós do DOM. Texto precisa estar dentro de `Text`, o layout usa um Flexbox próprio, e o estilo é um objeto. Bibliotecas como o React Native Web fazem o caminho contrário.
+
+- slug: ionic-e-webview
+  title: O site vira app
+  difficulty: facil
+  kind: quiz
+  in: [mobile-apps/Ionic]
+  statement: |
+    O time quer publicar nas lojas um app com o mesmo código web do site, com acesso à câmera para ler ingressos.
+
+    Como o Ionic com o Capacitor faz isso?
+  options:
+    - text: O app roda o código web dentro de um webview nativo, e plugins do Capacitor expõem ao JavaScript recursos do aparelho, como a câmera
+      why: Certo. O time reaproveita HTML, CSS e JS, e os componentes do Ionic imitam a aparência de cada plataforma.
+    - text: O Ionic converte o site em Dart
+      why: Isso não acontece. O código continua sendo web.
+    - text: O app abre o site no navegador do celular
+      why: O código fica empacotado no app, num webview, e pode funcionar offline.
+    - text: Sem código nativo, não dá para acessar a câmera
+      why: Os plugins do Capacitor fazem a ponte entre o JavaScript e as APIs nativas.
+  answer: 0
+  explanation: |
+    Apps híbridos empacotam um app web num contêiner nativo. Eles maximizam o reaproveitamento de código e de conhecimento web, mas o desempenho depende do webview. Para listas enormes ou animações pesadas, abordagens nativas ou o React Native costumam ir melhor.

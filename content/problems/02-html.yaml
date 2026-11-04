@@ -1,0 +1,536 @@
+- slug: pagina-do-festival
+  title: Divs demais
+  difficulty: facil
+  kind: dom
+  editor: html
+  in: [html/Estrutura e semântica]
+  statement: |
+    A página inicial do festival foi feita só com `div`. Ela aparece certa na tela, mas leitores de tela e buscadores não sabem o que é cabeçalho, menu ou conteúdo principal.
+
+    Reescreva a página com elementos semânticos, mantendo os textos e os links:
+
+    - um `header` com o `h1` e um `nav` com os três links
+    - um `main` com a seção do line-up, que tem `id="lineup"` e um `h2`
+    - um `footer` com o aviso de direitos
+  starter: |
+    <div class="topo">
+      <div class="titulo">Festival Ruído</div>
+      <div class="menu">
+        <a href="#lineup">Line-up</a>
+        <a href="#ingressos">Ingressos</a>
+        <a href="#local">Local</a>
+      </div>
+    </div>
+    <div class="conteudo">
+      <div class="secao" id="lineup">
+        <div class="subtitulo">Line-up</div>
+        <p>Três dias, dois palcos e quarenta bandas.</p>
+      </div>
+    </div>
+    <div class="rodape">© 2026 Festival Ruído</div>
+  solution: |
+    <header>
+      <h1>Festival Ruído</h1>
+      <nav>
+        <a href="#lineup">Line-up</a>
+        <a href="#ingressos">Ingressos</a>
+        <a href="#local">Local</a>
+      </nav>
+    </header>
+    <main>
+      <section id="lineup">
+        <h2>Line-up</h2>
+        <p>Três dias, dois palcos e quarenta bandas.</p>
+      </section>
+    </main>
+    <footer>© 2026 Festival Ruído</footer>
+  tests:
+    - name: cabeçalho com título e menu
+      code: |
+        expect(text('header h1')).toBe('Festival Ruído');
+        expect($$('header nav a')).toHaveLength(3);
+    - name: conteúdo principal e rodapé
+      code: |
+        expect($$('main')).toHaveLength(1);
+        expect(text('main #lineup h2')).toBe('Line-up');
+        expect(text('footer')).toContain('© 2026 Festival Ruído');
+    - name: links mantidos
+      hidden: true
+      code: |
+        expect($$('nav a').map((a) => a.getAttribute('href'))).toEqual(['#lineup', '#ingressos', '#local']);
+    - name: um único h1, fora do conteúdo principal
+      hidden: true
+      code: |
+        expect($$('h1')).toHaveLength(1);
+        expect($('main h1')).toBeNull();
+        expect($('main footer')).toBeNull();
+  hints:
+    - Pense no papel de cada bloco. O topo é um `header`, o menu é um `nav`, o conteúdo é o `main`.
+    - A seção do line-up tem título, então é uma `section` com um `h2`.
+  explanation: |
+    Elementos semânticos não mudam a aparência, mas dizem o papel de cada parte. Leitores de tela usam `header`, `nav`, `main` e `footer` como pontos de navegação, e o `main` permite pular direto para o conteúdo. Só um `h1` por página deixa claro qual é o título.
+  traps:
+    - reason: Divs com nomes de classe semânticos
+      code: |
+        <div class="header"><div class="h1">Festival Ruído</div><div class="nav"><a href="#lineup">Line-up</a><a href="#ingressos">Ingressos</a><a href="#local">Local</a></div></div>
+        <div class="main"><div id="lineup"><h2>Line-up</h2></div></div>
+        <div class="footer">© 2026 Festival Ruído</div>
+    - reason: Rodapé dentro do main
+      code: |
+        <header><h1>Festival Ruído</h1><nav><a href="#lineup">Line-up</a><a href="#ingressos">Ingressos</a><a href="#local">Local</a></nav></header>
+        <main><section id="lineup"><h2>Line-up</h2></section><footer>© 2026 Festival Ruído</footer></main>
+
+- slug: artigo-de-noticia
+  title: A notícia do anúncio
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [html/Estrutura e semântica]
+  statement: |
+    A página de notícias tem o título `Notícias` em `h1`. Abaixo dele, escreva a notícia do anúncio do line-up como um `article`:
+
+    - título `Line-up completo anunciado` num `h2`
+    - data de publicação num `time`, com o texto `14 de março de 2026` e o atributo `datetime` no formato que máquinas leem
+    - pelo menos dois parágrafos de texto
+    - uma subseção com o título `Ingressos` e um parágrafo, sem pular nível de título
+  solution: |
+    <h1>Notícias</h1>
+    <article>
+      <h2>Line-up completo anunciado</h2>
+      <p>Publicado em <time datetime="2026-03-14">14 de março de 2026</time></p>
+      <p>Quarenta bandas vão tocar nos três dias de festival.</p>
+      <p>As atrações principais fecham cada noite no palco maior.</p>
+      <section>
+        <h3>Ingressos</h3>
+        <p>A venda do segundo lote começa na sexta-feira.</p>
+      </section>
+    </article>
+  tests:
+    - name: artigo com título
+      code: |
+        expect(text('h1')).toBe('Notícias');
+        expect(text('article h2')).toBe('Line-up completo anunciado');
+    - name: data legível por máquinas
+      code: |
+        const time = el('article time');
+        expect(time.textContent.trim()).toBe('14 de março de 2026');
+        expect(time.getAttribute('datetime')).toBe('2026-03-14');
+    - name: parágrafos
+      hidden: true
+      code: |
+        expect($$('article p').length).toBeGreaterThanOrEqual(3);
+    - name: títulos sem pular nível
+      hidden: true
+      code: |
+        const levels = $$('h1, h2, h3, h4, h5, h6').map((h) => Number(h.tagName[1]));
+        for (let i = 1; i < levels.length; i++) expect(levels[i] - levels[i - 1]).toBeLessThanOrEqual(1);
+        expect(text('article section h3')).toBe('Ingressos');
+  hints:
+    - O atributo `datetime` usa o formato ano-mês-dia, como `2026-03-14`.
+    - Depois de um `h2`, a subseção usa `h3`. Escolha o nível pela hierarquia, não pelo tamanho da fonte.
+  explanation: |
+    `article` marca um conteúdo que faz sentido sozinho, como uma notícia. O `time` com `datetime` deixa a data legível para buscadores e agregadores, enquanto o texto continua no formato do leitor. Títulos sem saltos formam um sumário que leitores de tela usam para navegar.
+  traps:
+    - reason: Pula de h2 para h4
+      code: |
+        <h1>Notícias</h1>
+        <article><h2>Line-up completo anunciado</h2><p><time datetime="2026-03-14">14 de março de 2026</time></p><p>Texto.</p><p>Mais texto.</p>
+        <section><h4>Ingressos</h4><p>Lote dois.</p></section></article>
+    - reason: Data em formato brasileiro no datetime
+      code: |
+        <h1>Notícias</h1>
+        <article><h2>Line-up completo anunciado</h2><p><time datetime="14/03/2026">14 de março de 2026</time></p><p>Texto.</p><p>Mais texto.</p>
+        <section><h3>Ingressos</h3><p>Lote dois.</p></section></article>
+
+- slug: setlist
+  title: O setlist da noite
+  difficulty: facil
+  kind: dom
+  editor: html
+  in: ["html/Textos, listas e links"]
+  statement: |
+    Publique o setlist da banda de abertura. A ordem das músicas importa: é a ordem em que serão tocadas.
+
+    1. Abertura em Ruído
+    2. Concreto
+    3. Asfalto Quente
+    4. Madrugada Elétrica
+    5. Último Acorde
+
+    Depois da lista, adicione o link `Ouvir no site da banda` para `https://exemplo.com/banda`. Ele deve abrir em outra aba sem dar à página nova acesso a esta, com `rel="noopener"`.
+  solution: |
+    <h2>Setlist</h2>
+    <ol>
+      <li>Abertura em Ruído</li>
+      <li>Concreto</li>
+      <li>Asfalto Quente</li>
+      <li>Madrugada Elétrica</li>
+      <li>Último Acorde</li>
+    </ol>
+    <a href="https://exemplo.com/banda" target="_blank" rel="noopener">Ouvir no site da banda</a>
+  tests:
+    - name: cinco músicas
+      code: |
+        expect($$('li')).toHaveLength(5);
+        expect(text('li:first-child')).toBe('Abertura em Ruído');
+    - name: link para outra aba
+      code: |
+        const a = el('a');
+        expect(a.getAttribute('href')).toBe('https://exemplo.com/banda');
+        expect(a.target).toBe('_blank');
+        expect(a.textContent.trim()).toBe('Ouvir no site da banda');
+    - name: lista ordenada, na ordem certa
+      hidden: true
+      code: |
+        expect($$('ol > li').map((li) => li.textContent.trim())).toEqual(['Abertura em Ruído', 'Concreto', 'Asfalto Quente', 'Madrugada Elétrica', 'Último Acorde']);
+    - name: rel no link
+      hidden: true
+      code: |
+        expect(el('a').relList.contains('noopener')).toBe(true);
+  hints:
+    - Quando a ordem tem significado, use `ol`. Quando não tem, `ul`.
+    - "`target=\"_blank\"` abre em outra aba. O `rel` vai no mesmo link."
+  explanation: |
+    `ol` comunica sequência: leitores de tela anunciam "item 3 de 5", e a numeração aparece mesmo sem CSS. Em links com `target="_blank"`, `rel="noopener"` impede que a página aberta controle esta pelo `window.opener`. Navegadores modernos já aplicam isso por padrão, mas o atributo deixa a intenção explícita.
+  traps:
+    - reason: Lista sem ordem
+      code: |
+        <ul><li>Abertura em Ruído</li><li>Concreto</li><li>Asfalto Quente</li><li>Madrugada Elétrica</li><li>Último Acorde</li></ul>
+        <a href="https://exemplo.com/banda" target="_blank" rel="noopener">Ouvir no site da banda</a>
+    - reason: Link sem rel
+      code: |
+        <ol><li>Abertura em Ruído</li><li>Concreto</li><li>Asfalto Quente</li><li>Madrugada Elétrica</li><li>Último Acorde</li></ol>
+        <a href="https://exemplo.com/banda" target="_blank">Ouvir no site da banda</a>
+
+- slug: poster-com-legenda
+  title: O pôster oficial
+  difficulty: facil
+  kind: dom
+  editor: html
+  in: [html/Imagens e mídia]
+  statement: |
+    Mostre o pôster oficial, o arquivo `poster.jpg`, com 600 por 800 pixels, e a legenda `Arte de Marina Couto`.
+
+    - A imagem precisa de um texto alternativo que descreva o pôster para quem não vê. Use pelo menos 10 caracteres.
+    - Informe largura e altura no HTML, para o navegador reservar o espaço antes de baixar a imagem.
+    - O pôster fica no fim da página: carregue-o só quando o usuário chegar perto dele.
+    - Imagem e legenda ficam juntas num `figure`.
+  solution: |
+    <figure>
+      <img src="poster.jpg" alt="Pôster do Festival Ruído com uma guitarra em chamas sobre fundo preto" width="600" height="800" loading="lazy">
+      <figcaption>Arte de Marina Couto</figcaption>
+    </figure>
+  tests:
+    - name: imagem com texto alternativo
+      code: |
+        const img = el('img');
+        expect(img.getAttribute('src')).toBe('poster.jpg');
+        expect((img.getAttribute('alt') ?? '').trim().length).toBeGreaterThanOrEqual(10);
+    - name: legenda junto da imagem
+      code: |
+        expect(text('figure figcaption')).toBe('Arte de Marina Couto');
+        expect($('figure img')).not.toBeNull();
+    - name: espaço reservado
+      hidden: true
+      code: |
+        const img = el('img');
+        expect(img.getAttribute('width')).toBe('600');
+        expect(img.getAttribute('height')).toBe('800');
+    - name: carregamento adiado
+      hidden: true
+      code: |
+        expect(el('img').getAttribute('loading')).toBe('lazy');
+  hints:
+    - O `alt` descreve o que a imagem mostra, não diz "imagem de".
+    - O atributo `loading` aceita `lazy`.
+  explanation: |
+    O `alt` é o que leitores de tela leem e o que aparece se a imagem falhar. `width` e `height` permitem reservar o espaço certo, evitando que o conteúdo pule quando a imagem chega. `loading="lazy"` adia o download de imagens fora da tela, e `figure` com `figcaption` liga a legenda à imagem.
+  traps:
+    - reason: Sem texto alternativo
+      code: |
+        <figure><img src="poster.jpg" width="600" height="800" loading="lazy"><figcaption>Arte de Marina Couto</figcaption></figure>
+    - reason: Sem dimensões
+      code: |
+        <figure><img src="poster.jpg" alt="Pôster com guitarra em chamas" loading="lazy"><figcaption>Arte de Marina Couto</figcaption></figure>
+
+- slug: tabela-de-precos
+  title: Tabela de preços
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [html/Tabelas]
+  statement: |
+    Monte a tabela de preços com o título `Preços dos ingressos`. As colunas são `Setor`, `Inteira` e `Meia`. As linhas são:
+
+    - Pista: R$ 300 e R$ 150
+    - Pista Premium: R$ 520 e R$ 260
+    - Camarote: R$ 900 e R$ 450
+
+    Um leitor de tela precisa conseguir anunciar, em cada célula de preço, a coluna e o setor. Use `caption`, `thead`, `tbody` e cabeçalhos com `scope`.
+  solution: |
+    <table>
+      <caption>Preços dos ingressos</caption>
+      <thead>
+        <tr><th scope="col">Setor</th><th scope="col">Inteira</th><th scope="col">Meia</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">Pista</th><td>R$ 300</td><td>R$ 150</td></tr>
+        <tr><th scope="row">Pista Premium</th><td>R$ 520</td><td>R$ 260</td></tr>
+        <tr><th scope="row">Camarote</th><td>R$ 900</td><td>R$ 450</td></tr>
+      </tbody>
+    </table>
+  tests:
+    - name: título da tabela
+      code: |
+        expect(text('table caption')).toBe('Preços dos ingressos');
+    - name: cabeçalho das colunas
+      code: |
+        const ths = $$('thead th');
+        expect(ths.map((th) => th.textContent.trim())).toEqual(['Setor', 'Inteira', 'Meia']);
+        expect(ths.every((th) => th.getAttribute('scope') === 'col')).toBe(true);
+    - name: setores como cabeçalho de linha
+      hidden: true
+      code: |
+        const rows = $$('tbody tr');
+        expect(rows).toHaveLength(3);
+        for (const row of rows) {
+          expect(row.cells[0].tagName).toBe('TH');
+          expect(row.cells[0].getAttribute('scope')).toBe('row');
+        }
+    - name: preços nas células certas
+      hidden: true
+      code: |
+        const rows = $$('tbody tr').map((tr) => Array.from(tr.cells).map((c) => c.textContent.trim()));
+        expect(rows).toEqual([['Pista', 'R$ 300', 'R$ 150'], ['Pista Premium', 'R$ 520', 'R$ 260'], ['Camarote', 'R$ 900', 'R$ 450']]);
+  hints:
+    - "`caption` é o primeiro filho de `table`."
+    - O nome do setor é o cabeçalho da linha. Ele é um `th` com `scope=\"row\"`, não um `td`.
+  explanation: |
+    `scope="col"` e `scope="row"` dizem ao leitor de tela a que cabeçalhos cada célula pertence, então ele lê "Camarote, Meia, R$ 450" em vez de só "R$ 450". O `caption` dá nome à tabela, e `thead` e `tbody` separam cabeçalho e dados.
+  traps:
+    - reason: Setor como célula comum
+      code: |
+        <table><caption>Preços dos ingressos</caption>
+        <thead><tr><th scope="col">Setor</th><th scope="col">Inteira</th><th scope="col">Meia</th></tr></thead>
+        <tbody><tr><td>Pista</td><td>R$ 300</td><td>R$ 150</td></tr><tr><td>Pista Premium</td><td>R$ 520</td><td>R$ 260</td></tr><tr><td>Camarote</td><td>R$ 900</td><td>R$ 450</td></tr></tbody></table>
+    - reason: Título fora da tabela
+      code: |
+        <h3>Preços dos ingressos</h3>
+        <table><thead><tr><th scope="col">Setor</th><th scope="col">Inteira</th><th scope="col">Meia</th></tr></thead>
+        <tbody><tr><th scope="row">Pista</th><td>R$ 300</td><td>R$ 150</td></tr><tr><th scope="row">Pista Premium</th><td>R$ 520</td><td>R$ 260</td></tr><tr><th scope="row">Camarote</th><td>R$ 900</td><td>R$ 450</td></tr></tbody></table>
+
+- slug: cadastro-newsletter
+  title: Assine a newsletter
+  difficulty: facil
+  kind: dom
+  editor: html
+  in: [html/Formulários]
+  statement: |
+    Crie o formulário da newsletter com um campo de e-mail e o botão `Assinar`.
+
+    - O campo tem o rótulo `Seu e-mail`, ligado a ele, e o nome `email`.
+    - O navegador deve recusar o envio com o campo vazio ou com um texto que não seja e-mail, sem JavaScript.
+  solution: |
+    <form>
+      <label for="email">Seu e-mail</label>
+      <input id="email" name="email" type="email" required>
+      <button type="submit">Assinar</button>
+    </form>
+  tests:
+    - name: rótulo ligado ao campo
+      code: |
+        const input = el('input[name="email"]');
+        expect(input.labels.length).toBe(1);
+        expect(input.labels[0].textContent.trim()).toBe('Seu e-mail');
+    - name: campo vazio é recusado
+      code: |
+        const input = el('input[name="email"]');
+        expect(input.checkValidity()).toBe(false);
+    - name: texto que não é e-mail é recusado
+      hidden: true
+      code: |
+        const input = el('input[name="email"]');
+        type(input, 'fã do festival');
+        expect(input.checkValidity()).toBe(false);
+        type(input, 'fa@exemplo.com');
+        expect(input.checkValidity()).toBe(true);
+    - name: botão de envio dentro do formulário
+      hidden: true
+      code: |
+        const button = el('form button');
+        expect(button.type).toBe('submit');
+        expect(button.textContent.trim()).toBe('Assinar');
+  hints:
+    - Um `label` com `for` igual ao `id` do campo liga os dois. Clicar no rótulo foca o campo.
+    - "`type=\"email\"` valida o formato, e `required` recusa o campo vazio."
+  explanation: |
+    O rótulo ligado ao campo é o que o leitor de tela anuncia ao focar o input, e ainda aumenta a área de clique. `type="email"` também abre o teclado com @ no celular. A validação nativa não dispensa a validação no servidor, mas evita envios errados sem nenhum código.
+  traps:
+    - reason: Placeholder no lugar do rótulo
+      code: |
+        <form><input name="email" type="email" placeholder="Seu e-mail" required><button type="submit">Assinar</button></form>
+    - reason: Campo de texto comum
+      code: |
+        <form><label for="email">Seu e-mail</label><input id="email" name="email" type="text" required><button type="submit">Assinar</button></form>
+
+- slug: formulario-de-ingresso
+  title: Escolha seu ingresso
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [html/Formulários]
+  statement: |
+    Monte o formulário de compra com três escolhas:
+
+    - Tipo: `Inteira` ou `Meia`, em botões de rádio com o nome `tipo` e os valores `inteira` e `meia`. É obrigatório escolher um. Agrupe-os com o título `Tipo de ingresso`.
+    - Setor: uma lista de seleção com `id="setor"` e as opções `pista` e `camarote`.
+    - Quantidade: um número com `id="quantidade"`, de 1 a 6, começando em 1.
+
+    Cada campo precisa de um rótulo.
+  solution: |
+    <form>
+      <fieldset>
+        <legend>Tipo de ingresso</legend>
+        <label><input type="radio" name="tipo" value="inteira" required> Inteira</label>
+        <label><input type="radio" name="tipo" value="meia"> Meia</label>
+      </fieldset>
+      <label for="setor">Setor</label>
+      <select id="setor" name="setor">
+        <option value="pista">Pista</option>
+        <option value="camarote">Camarote</option>
+      </select>
+      <label for="quantidade">Quantidade</label>
+      <input id="quantidade" name="quantidade" type="number" min="1" max="6" value="1" required>
+      <button type="submit">Comprar</button>
+    </form>
+  tests:
+    - name: rádios agrupados
+      code: |
+        const radios = $$('input[type="radio"]');
+        expect(radios.map((r) => r.value)).toEqual(['inteira', 'meia']);
+        expect(radios.every((r) => r.name === 'tipo')).toBe(true);
+        expect(text('fieldset legend')).toBe('Tipo de ingresso');
+    - name: setor e quantidade
+      code: |
+        expect($$('#setor option').map((o) => o.value)).toEqual(['pista', 'camarote']);
+        expect(el('#quantidade').value).toBe('1');
+    - name: tipo obrigatório
+      hidden: true
+      code: |
+        const radio = el('input[value="inteira"]');
+        expect(radio.checkValidity()).toBe(false);
+        click('input[value="meia"]');
+        expect(radio.checkValidity()).toBe(true);
+    - name: limites da quantidade
+      hidden: true
+      code: |
+        const input = el('#quantidade');
+        type(input, '0');
+        expect(input.checkValidity()).toBe(false);
+        type(input, '7');
+        expect(input.checkValidity()).toBe(false);
+        type(input, '6');
+        expect(input.checkValidity()).toBe(true);
+    - name: todo campo tem rótulo
+      hidden: true
+      code: |
+        for (const field of $$('input, select')) expect(field.labels.length).toBeGreaterThan(0);
+  hints:
+    - Rádios com o mesmo `name` formam um grupo. `fieldset` e `legend` dão um título ao grupo.
+    - Num grupo de rádios, `required` em um deles já torna o grupo obrigatório.
+    - "`min` e `max` limitam um `input type=\"number\"`."
+  explanation: |
+    Mesmo `name` faz os rádios serem mutuamente exclusivos e enviarem um único valor. O `legend` é anunciado junto de cada opção, então o leitor de tela diz "Tipo de ingresso, Meia". `min`, `max` e `required` dão validação nativa, e um `label` envolvendo o input também vale como rótulo.
+  traps:
+    - reason: Rádios com nomes diferentes
+      code: |
+        <form><fieldset><legend>Tipo de ingresso</legend>
+        <label><input type="radio" name="inteira" value="inteira" required> Inteira</label>
+        <label><input type="radio" name="meia" value="meia"> Meia</label></fieldset>
+        <label for="setor">Setor</label><select id="setor"><option value="pista">Pista</option><option value="camarote">Camarote</option></select>
+        <label for="quantidade">Quantidade</label><input id="quantidade" type="number" min="1" max="6" value="1"></form>
+    - reason: Quantidade sem limite
+      code: |
+        <form><fieldset><legend>Tipo de ingresso</legend>
+        <label><input type="radio" name="tipo" value="inteira" required> Inteira</label>
+        <label><input type="radio" name="tipo" value="meia"> Meia</label></fieldset>
+        <label for="setor">Setor</label><select id="setor"><option value="pista">Pista</option><option value="camarote">Camarote</option></select>
+        <label for="quantidade">Quantidade</label><input id="quantidade" type="number" value="1"></form>
+
+- slug: metadados-da-pagina
+  title: Como a página aparece fora dela
+  difficulty: medio
+  kind: dom
+  editor: html
+  in: [html/Metadados e SEO]
+  statement: |
+    A página do line-up aparece mal no Google e nas prévias de link das redes sociais. Complete o documento:
+
+    - idioma `pt-BR`
+    - título da aba `Festival Ruído 2026 | Line-up`
+    - descrição para buscadores, com 50 a 160 caracteres
+    - `meta viewport` para celular, com `width=device-width`
+    - `og:title` para as prévias de link, com o mesmo título da aba
+  starter: |
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+      </head>
+      <body>
+        <h1>Line-up 2026</h1>
+      </body>
+    </html>
+  solution: |
+    <!doctype html>
+    <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Festival Ruído 2026 | Line-up</title>
+        <meta name="description" content="Veja as quarenta bandas confirmadas nos três dias do Festival Ruído 2026, com horários e palcos.">
+        <meta property="og:title" content="Festival Ruído 2026 | Line-up">
+      </head>
+      <body>
+        <h1>Line-up 2026</h1>
+      </body>
+    </html>
+  tests:
+    - name: idioma e título
+      code: |
+        expect(document.documentElement.lang).toBe('pt-BR');
+        expect(document.title).toBe('Festival Ruído 2026 | Line-up');
+    - name: descrição
+      code: |
+        const content = el('meta[name="description"]').getAttribute('content') ?? '';
+        expect(content.length).toBeGreaterThanOrEqual(50);
+        expect(content.length).toBeLessThanOrEqual(160);
+    - name: viewport para celular
+      hidden: true
+      code: |
+        expect(el('meta[name="viewport"]').getAttribute('content')).toContain('width=device-width');
+    - name: prévia de link
+      hidden: true
+      code: |
+        expect(el('meta[property="og:title"]').getAttribute('content')).toBe('Festival Ruído 2026 | Line-up');
+    - name: metadados no head
+      hidden: true
+      code: |
+        expect($('body meta')).toBeNull();
+        expect($('body title')).toBeNull();
+  hints:
+    - O idioma vai no atributo `lang` da tag `html`.
+    - Open Graph usa `property`, não `name`, como em `<meta property="og:title" content="...">`.
+  explanation: |
+    `lang` define a pronúncia do leitor de tela e ajuda tradutores e buscadores. O `title` aparece na aba e no resultado de busca, a descrição costuma virar o texto abaixo do link, e as tags Open Graph controlam a prévia em redes sociais e mensageiros. Sem `meta viewport`, o celular renderiza a página como se fosse de computador e encolhe tudo.
+  traps:
+    - reason: Sem idioma
+      code: |
+        <!doctype html><html><head><meta name="viewport" content="width=device-width"><title>Festival Ruído 2026 | Line-up</title>
+        <meta name="description" content="Veja as quarenta bandas confirmadas nos três dias do Festival Ruído 2026, com horários.">
+        <meta property="og:title" content="Festival Ruído 2026 | Line-up"></head><body><h1>Line-up 2026</h1></body></html>
+    - reason: Open Graph com name
+      code: |
+        <!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width"><title>Festival Ruído 2026 | Line-up</title>
+        <meta name="description" content="Veja as quarenta bandas confirmadas nos três dias do Festival Ruído 2026, com horários.">
+        <meta name="og:title" content="Festival Ruído 2026 | Line-up"></head><body><h1>Line-up 2026</h1></body></html>
